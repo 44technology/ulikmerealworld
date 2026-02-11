@@ -1,0 +1,149 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Shield, Mail, Lock, Building2, GraduationCap } from 'lucide-react';
+import { toast } from 'sonner';
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'venue' | 'instructor'>('admin');
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      await login(email, password, selectedRole);
+      toast.success('Login successful!');
+      navigate('/dashboard');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-card rounded-2xl shadow-xl p-8 border border-border">
+          {/* Logo & Title */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+              {selectedRole === 'admin' && <Shield className="w-8 h-8 text-primary-foreground" />}
+              {selectedRole === 'venue' && <Building2 className="w-8 h-8 text-primary-foreground" />}
+              {selectedRole === 'instructor' && <GraduationCap className="w-8 h-8 text-primary-foreground" />}
+            </div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Ulikme Portal</h1>
+            <p className="text-muted-foreground">Sign in to manage your account</p>
+          </div>
+
+          {/* Role Selection */}
+          <div className="mb-6">
+            <Label className="mb-3 block">Select Role</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                type="button"
+                variant={selectedRole === 'admin' ? 'default' : 'outline'}
+                onClick={() => setSelectedRole('admin')}
+                className="flex flex-col items-center gap-2 h-auto py-3"
+              >
+                <Shield className="w-5 h-5" />
+                <span className="text-xs">Admin</span>
+              </Button>
+              <Button
+                type="button"
+                variant={selectedRole === 'venue' ? 'default' : 'outline'}
+                onClick={() => setSelectedRole('venue')}
+                className="flex flex-col items-center gap-2 h-auto py-3"
+              >
+                <Building2 className="w-5 h-5" />
+                <span className="text-xs">Venue</span>
+              </Button>
+              <Button
+                type="button"
+                variant={selectedRole === 'instructor' ? 'default' : 'outline'}
+                onClick={() => setSelectedRole('instructor')}
+                className="flex flex-col items-center gap-2 h-auto py-3"
+              >
+                <GraduationCap className="w-5 h-5" />
+                <span className="text-xs">Instructor</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@ulikme.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-12 bg-gradient-primary text-primary-foreground"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            <p>Two-factor authentication required</p>
+          </div>
+
+          {/* Signup Links */}
+          <div className="mt-6 pt-6 border-t border-border">
+            <div className="text-center text-sm text-muted-foreground mb-4">
+              <p>Don't have an account?</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/signup/venue')}
+              className="w-full"
+            >
+              <Building2 className="w-4 h-4 mr-2" />
+              Venue Signup
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,46 @@
+redirectsOrigin = "config"
+plugins = []
+headers = []
+
+[dev]
+command = "npm run dev"
+port = 8080.0
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "C:\\Users\\ALI\\Downloads\\meetupapp\\vibe-connect-main\\dist"
+publishOrigin = "config"
+commandOrigin = "config"
+base = "C:\\Users\\ALI\\Downloads\\meetupapp\\vibe-connect-main"
+command = "npm install --legacy-peer-deps && npm run build"
+
+[build.environment]
+NODE_VERSION = "18"
+NPM_VERSION = "9"
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]

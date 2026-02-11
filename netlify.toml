@@ -1,0 +1,31 @@
+# Main Mobile App Build Configuration
+[build]
+  base = "."
+  command = "npm install --legacy-peer-deps && npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+
+[dev]
+  command = "npm run dev"
+  port = 8080
+
+# Admin Portal Context (for separate Netlify site deployment)
+# Netlify Dashboard'da bu context'i kullanmak için:
+# Site settings → Build & deploy → Environment → Add context → admin-portal
+# VEYA Netlify Dashboard'da Base directory: admin-portal olarak ayarlayın
+[context.admin-portal]
+  base = "admin-portal"
+  command = "npm install --legacy-peer-deps && npm run build"
+  publish = "dist"
+  
+[context.admin-portal.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
