@@ -19,15 +19,74 @@ import { useCommunities } from '@/hooks/useCommunities';
 import { toast } from 'sonner';
 import { apiRequest, API_ENDPOINTS, apiUpload } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 const CreateClassPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const communityIdFromQuery = searchParams.get('communityId') || undefined;
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, updateUser } = useAuth();
   const { data: venues = [] } = useVenues();
   const { data: communities = [] } = useCommunities();
   const [communityId, setCommunityId] = useState<string>(communityIdFromQuery || '');
+
+  const neverCreatedClass = (user?.createdClassesCount ?? 0) === 0;
+  const missingFollowersOrExpertise =
+    user?.socialMediaFollowers == null ||
+    !(user?.expertise && user.expertise.length > 0);
+  const mustCollectCreatorInfo = neverCreatedClass && missingFollowersOrExpertise && isAuthenticated;
+  const [showRequiredInfoModal, setShowRequiredInfoModal] = useState(false);
+  const [requiredFollowerCount, setRequiredFollowerCount] = useState('');
+  const [requiredExpertise, setRequiredExpertise] = useState('');
+  const [savingCreatorInfo, setSavingCreatorInfo] = useState(false);
+
+  useEffect(() => {
+    if (mustCollectCreatorInfo) {
+      setShowRequiredInfoModal(true);
+      setRequiredFollowerCount(String(user?.socialMediaFollowers ?? ''));
+      setRequiredExpertise(user?.expertise?.join(', ') ?? '');
+    }
+  }, [mustCollectCreatorInfo, user?.socialMediaFollowers, user?.expertise]);
+
+  const handleSaveCreatorInfo = async () => {
+    if (!requiredFollowerCount.trim()) {
+      toast.error('Please enter your social media follower count');
+      return;
+    }
+    const num = parseInt(requiredFollowerCount, 10);
+    if (isNaN(num) || num < 0) {
+      toast.error('Please enter a valid follower count');
+      return;
+    }
+    const expertiseList = requiredExpertise
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (expertiseList.length === 0) {
+      toast.error('Please enter at least one area of experience (e.g. Marketing, Tech)');
+      return;
+    }
+    setSavingCreatorInfo(true);
+    try {
+      await updateUser({
+        socialMediaFollowers: num,
+        expertise: expertiseList,
+      });
+      setShowRequiredInfoModal(false);
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to save');
+    } finally {
+      setSavingCreatorInfo(false);
+    }
+  };
 
   useEffect(() => {
     if (communityIdFromQuery) setCommunityId(communityIdFromQuery);
@@ -703,6 +762,56 @@ const CreateClassPage = () => {
           </Button>
         </div>
       </div>
+
+      {/* Required: followers + expertise when user has never created a class */}
+      <Dialog
+        open={showRequiredInfoModal}
+        onOpenChange={(open) => {
+          if (!open && mustCollectCreatorInfo) navigate('/home');
+          else if (!open) setShowRequiredInfoModal(false);
+        }}
+      >
+        <DialogContent className="max-w-md" onPointerDownOutside={(e) => mustCollectCreatorInfo && e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Tell us about your reach & experience</DialogTitle>
+            <DialogDescription>
+              Before creating your first class, we need your social media follower count and the areas you're experienced in. This helps learners find the right experts.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="required-followers">Social media followers (total)</Label>
+              <Input
+                id="required-followers"
+                type="number"
+                min={0}
+                placeholder="e.g. 10000"
+                value={requiredFollowerCount}
+                onChange={(e) => setRequiredFollowerCount(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Instagram, YouTube, Twitter, TikTok, etc.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="required-expertise">Areas of experience (deneyim alanları)</Label>
+              <Input
+                id="required-expertise"
+                placeholder="e.g. Marketing, Startup, Tech"
+                value={requiredExpertise}
+                onChange={(e) => setRequiredExpertise(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Separate with commas</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => navigate('/home')}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveCreatorInfo} disabled={savingCreatorInfo}>
+              {savingCreatorInfo ? 'Saving...' : 'Continue'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };

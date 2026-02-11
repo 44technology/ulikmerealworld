@@ -132,6 +132,10 @@ const getDummyUser = (id: string, data?: any) => {
     photos: allMedia.length > 0 ? allMedia : (data?.photos || []),
     interests: data?.interests || defaultInterests,
     lookingFor: data?.lookingFor || ['friendship', 'networking'],
+    occupation: data?.occupation,
+    socialMediaFollowers: data?.socialMediaFollowers,
+    expertise: data?.expertise,
+    createdClassesCount: data?.createdClassesCount,
     isVerified: true,
     createdAt: new Date().toISOString(),
   };
@@ -1250,9 +1254,11 @@ export const mockApiRequest = async <T = any>(
       throw new Error('Unauthorized');
     }
     const user = getStorage(`${USER_STORAGE_KEY}_current-user`, getDummyUser('current-user'));
+    const classes = getStorage(CLASS_STORAGE_KEY, []);
+    const createdClassesCount = classes.filter((c: any) => c.creator?.id === currentUserId).length;
     return {
       success: true,
-      data: user,
+      data: { ...user, createdClassesCount },
     } as T;
   }
 
@@ -1394,8 +1400,8 @@ export const mockApiRequest = async <T = any>(
           data: meetup,
         } as T;
       }
-      // List meetups
-      let filtered = [...meetups];
+      // List meetups (exclude pending venue approval from public list)
+      let filtered = meetups.filter((m: any) => m.venueApprovalStatus !== 'pending');
       if (searchParams.get('category')) {
         filtered = filtered.filter((m: any) => m.category === searchParams.get('category'));
       }
@@ -1416,11 +1422,24 @@ export const mockApiRequest = async <T = any>(
       } as T;
     }
 
+    // GET /meetups/venue/pending - pending requests for venue (venue portal)
+    if (method === 'GET' && pathname.includes('/venue/pending')) {
+      const venueId = searchParams.get('venueId');
+      if (!venueId) throw new Error('venueId query required');
+      const pending = meetups.filter(
+        (m: any) => m.venueId === venueId && m.venueApprovalStatus === 'pending'
+      );
+      return { success: true, data: pending } as T;
+    }
+
     if (method === 'POST') {
       if (!currentUserId) throw new Error('Unauthorized');
+      const hasVenue = !!body.venueId;
       const newMeetup = {
         id: generateId(),
         ...body,
+        status: hasVenue ? 'PENDING_APPROVAL' : 'UPCOMING',
+        venueApprovalStatus: hasVenue ? 'pending' : null,
         creator: {
           id: 'current-user',
           firstName: 'Current',
@@ -1437,6 +1456,7 @@ export const mockApiRequest = async <T = any>(
       return {
         success: true,
         data: newMeetup,
+        message: hasVenue ? 'Activity created! Waiting for venue approval.' : undefined,
       } as T;
     }
 

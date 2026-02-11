@@ -18,7 +18,6 @@ import {
   PieChart,
   Wallet,
   BarChart3,
-  GraduationCap,
   MessageCircle,
   MessageSquare,
   Users,
@@ -39,7 +38,6 @@ const navigation: Array<{
   { name: 'Locations', href: '/locations', icon: MapPin },
   { name: 'Content', href: '/content', icon: Image },
   { name: 'Chat', href: '/chat', icon: MessageSquare },
-  { name: 'Classes', href: '/classes', icon: GraduationCap },
   { name: 'Vibes', href: '/vibes', icon: Users },
   { name: 'Events', href: '/events', icon: Calendar },
   {

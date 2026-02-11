@@ -20,8 +20,6 @@ import VenueChatPage from './pages/venue/ChatPage';
 import VenueCampaignsPage from './pages/venue/CampaignsPage';
 import VenueVibesPage from './pages/venue/VibesPage';
 import VenueVibeDetailPage from './pages/venue/VibeDetailPage';
-import VenueClassesPage from './pages/venue/ClassesPage';
-import VenueClassDetailPage from './pages/venue/ClassDetailPage';
 import VenueEventsPage from './pages/venue/EventsPage';
 import VenueEventDetailPage from './pages/venue/EventDetailPage';
 import VenueDiscountsPage from './pages/venue/DiscountsPage';
@@ -98,12 +96,9 @@ function AppRoutes() {
               {/* Venue Features (Admin can access all) */}
               <Route path="/venue/content" element={<VenueContentPage />} />
               <Route path="/venue/chat" element={<VenueChatPage />} />
-              <Route path="/venue/classes" element={<VenueClassesPage />} />
-              <Route path="/venue/classes/:id" element={<VenueClassDetailPage />} />
               <Route path="/venue/vibes" element={<VenueVibesPage />} />
               <Route path="/venue/events" element={<VenueEventsPage />} />
               <Route path="/venue/campaigns" element={<VenueCampaignsPage />} />
-              <Route path="/venue/vibes" element={<VenueVibesPage />} />
               <Route path="/venue/discounts" element={<VenueDiscountsPage />} />
               <Route path="/venue/ads" element={<VenueAdsPage />} />
               
@@ -148,8 +143,6 @@ function AppRoutes() {
               <Route path="/locations" element={<LocationsPage />} />
               <Route path="/content" element={<VenueContentPage />} />
               <Route path="/chat" element={<VenueChatPage />} />
-              <Route path="/classes" element={<VenueClassesPage />} />
-              <Route path="/classes/:id" element={<VenueClassDetailPage />} />
               <Route path="/vibes" element={<VenueVibesPage />} />
               <Route path="/vibes/:id" element={<VenueVibeDetailPage />} />
               <Route path="/events" element={<VenueEventsPage />} />

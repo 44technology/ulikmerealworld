@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { API_ENDPOINTS, apiRequest } from '@/lib/api';
 
-type OnboardingStep = 'welcome' | 'method' | 'phone' | 'otp' | 'name' | 'birthday' | 'gender' | 'lookingFor' | 'interests' | 'bio' | 'photos' | 'selfie' | 'complete';
+type OnboardingStep = 'welcome' | 'method' | 'phone' | 'otp' | 'name' | 'birthday' | 'gender' | 'occupation' | 'lookingFor' | 'interests' | 'bio' | 'photos' | 'selfie' | 'complete';
 
 // Mexico cities for location preference (optional)
 const mexicoCities = [
@@ -31,6 +31,15 @@ const genderOptions = [
   { id: 'female', label: 'Female', emoji: '👩' },
   { id: 'nonbinary', label: 'Non-binary', emoji: '🧑' },
   { id: 'prefer-not', label: 'Prefer not to say', emoji: '🤐' },
+];
+
+const occupationOptions = [
+  { id: 'entrepreneur', label: 'Entrepreneur', emoji: '🚀' },
+  { id: 'freelancer', label: 'Freelancer', emoji: '💼' },
+  { id: 'corporate', label: 'Corporate', emoji: '🏢' },
+  { id: 'creator', label: 'Creator / Influencer', emoji: '📱' },
+  { id: 'educator', label: 'Educator', emoji: '📚' },
+  { id: 'other', label: 'Other', emoji: '✨' },
 ];
 
 const lookingForOptions = [
@@ -177,6 +186,10 @@ const messages: Record<OnboardingStep, string[]> = {
     "Got it!",
     "How do you identify?",
   ],
+  occupation: [
+    "Thanks!",
+    "What's your profession? (Meslek)",
+  ],
   lookingFor: [
     "Great!",
     "What are you looking to learn or achieve?",
@@ -229,6 +242,7 @@ const OnboardingPage = () => {
   const [lastName, setLastName] = useState('');
   const [birthday, setBirthday] = useState('');
   const [gender, setGender] = useState('');
+  const [occupation, setOccupation] = useState('');
   const [lookingFor, setLookingFor] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
   const [bio, setBio] = useState('');
@@ -504,6 +518,7 @@ const OnboardingPage = () => {
         method: 'PUT',
         body: JSON.stringify({
           gender,
+          occupation,
           lookingFor,
           interests,
           bio,
@@ -524,7 +539,7 @@ const OnboardingPage = () => {
   };
 
   const handleNext = () => {
-    const steps: OnboardingStep[] = ['welcome', 'method', 'phone', 'otp', 'name', 'birthday', 'gender', 'lookingFor', 'interests', 'photos', 'selfie', 'bio', 'complete'];
+    const steps: OnboardingStep[] = ['welcome', 'method', 'phone', 'otp', 'name', 'birthday', 'gender', 'occupation', 'lookingFor', 'interests', 'photos', 'selfie', 'bio', 'complete'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1) {
       const nextStep = steps[currentIndex + 1];
@@ -841,8 +856,38 @@ const OnboardingPage = () => {
               ))}
             </div>
             <Button 
-              onClick={() => setStep('lookingFor')} 
+              onClick={() => setStep('occupation')} 
               disabled={!gender || loading}
+              className="w-full bg-gradient-primary h-14 text-lg font-semibold shadow-glow disabled:opacity-50"
+            >
+              Continue <ChevronRight className="ml-2" />
+            </Button>
+          </div>
+        );
+
+      case 'occupation':
+        return (
+          <div className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-3">
+              {occupationOptions.map((option) => (
+                <motion.button
+                  key={option.id}
+                  onClick={() => setOccupation(option.id)}
+                  className={`p-4 rounded-2xl border-2 transition-all ${
+                    occupation === option.id 
+                      ? 'border-primary bg-primary/10' 
+                      : 'border-border bg-card'
+                  }`}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="text-2xl">{option.emoji}</span>
+                  <p className="mt-2 font-medium text-xs">{option.label}</p>
+                </motion.button>
+              ))}
+            </div>
+            <Button 
+              onClick={() => setStep('lookingFor')} 
+              disabled={!occupation || loading}
               className="w-full bg-gradient-primary h-14 text-lg font-semibold shadow-glow disabled:opacity-50"
             >
               Continue <ChevronRight className="ml-2" />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, User, Camera, MessageSquare, CheckCircle2, XCircle, MoreVertical } from 'lucide-react';
+import { Search, Filter, User, Camera, MessageSquare, CheckCircle2, XCircle, MoreVertical, Users, Award } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
@@ -32,6 +32,8 @@ const mockUsers = [
     status: 'active',
     joinedDate: '2024-01-15',
     lastActive: '2 hours ago',
+    socialMediaFollowers: 12500,
+    expertise: ['Entrepreneurship', 'Startup', 'Marketing'],
   },
   {
     id: '2',
@@ -43,6 +45,8 @@ const mockUsers = [
     status: 'suspended',
     joinedDate: '2024-01-10',
     lastActive: '5 days ago',
+    socialMediaFollowers: 3200,
+    expertise: ['Content Creation', 'Social Media'],
   },
   {
     id: '3',
@@ -54,19 +58,24 @@ const mockUsers = [
     status: 'active',
     joinedDate: '2024-01-20',
     lastActive: '1 hour ago',
+    socialMediaFollowers: 89000,
+    expertise: ['Tech', 'Leadership', 'Public Speaking'],
   },
 ];
 
 export default function UsersPage() {
   const navigate = useNavigate();
+  const [users, setUsers] = useState(mockUsers);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'suspended'>('all');
   const [selectedUser, setSelectedUser] = useState<typeof mockUsers[0] | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showSuspendDialog, setShowSuspendDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [editFollowers, setEditFollowers] = useState<string>('');
+  const [editExpertise, setEditExpertise] = useState<string>('');
 
-  const filteredUsers = mockUsers.filter((user) => {
+  const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
@@ -164,6 +173,21 @@ export default function UsersPage() {
                         <span>•</span>
                         <span>Last active: {user.lastActive}</span>
                       </div>
+                      {/* Social followers & expertise */}
+                      <div className="flex flex-wrap items-center gap-3 mt-2">
+                        <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Users className="w-4 h-4" />
+                          {(user as any).socialMediaFollowers != null
+                            ? Number((user as any).socialMediaFollowers).toLocaleString() + ' takipçi'
+                            : '—'}
+                        </span>
+                        {(user as any).expertise?.length > 0 && (
+                          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Award className="w-4 h-4" />
+                            {(user as any).expertise.join(', ')}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Actions */}
@@ -182,6 +206,8 @@ export default function UsersPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => {
                           setSelectedUser(user);
+                          setEditFollowers(String((user as any).socialMediaFollowers ?? ''));
+                          setEditExpertise(Array.isArray((user as any).expertise) ? (user as any).expertise.join(', ') : ((user as any).expertise ?? ''));
                           setShowEditDialog(true);
                         }}>
                           Edit User
@@ -285,14 +311,52 @@ export default function UsersPage() {
                 <option value="suspended">Suspended</option>
               </select>
             </div>
+            <div>
+              <label className="text-sm font-medium">Sosyal medya takipçi sayısı</label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="Örn: 10000"
+                value={editFollowers}
+                onChange={(e) => setEditFollowers(e.target.value)}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Instagram, Twitter, YouTube vb. toplam takipçi</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Deneyim alanları (expertise)</label>
+              <Input
+                placeholder="Örn: Girişimcilik, Pazarlama, Tech"
+                value={editExpertise}
+                onChange={(e) => setEditExpertise(e.target.value)}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Virgülle ayırarak yazın</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
               Cancel
             </Button>
             <Button onClick={() => {
-              // TODO: Implement API call to update user
-              alert('User updated successfully');
+              if (!selectedUser) return;
+              const followersNum = editFollowers.trim() === '' ? undefined : parseInt(editFollowers, 10);
+              const expertiseList = editExpertise
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean);
+              setUsers((prev) =>
+                prev.map((u) =>
+                  u.id === selectedUser.id
+                    ? {
+                        ...u,
+                        socialMediaFollowers: followersNum ?? (u as any).socialMediaFollowers,
+                        expertise: expertiseList.length > 0 ? expertiseList : (u as any).expertise ?? [],
+                      }
+                    : u
+                )
+              );
+              // TODO: Implement API call to update user (socialMediaFollowers, expertise)
               setShowEditDialog(false);
             }}>
               Save Changes

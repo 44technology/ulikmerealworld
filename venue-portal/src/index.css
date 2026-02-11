@@ -6,48 +6,58 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 38% 13%;
-    --card: 240 20% 99%;
-    --card-foreground: 240 38% 13%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 38% 13%;
-    --primary: 251 57% 47%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 252 77% 26%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 240 20% 96%;
-    --muted-foreground: 240 10% 45%;
-    --accent: 251 57% 95%;
-    --accent-foreground: 251 57% 30%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 20% 90%;
-    --input: 240 20% 90%;
-    --ring: 251 57% 47%;
+    /* ULIKME Brand Palette */
+    /* Full White #F4F6F5 | Classic Orange #F5B027 | Vivid Tangelo #ED6C27 */
+    /* Black Steel #0D1216 | Rich Light Blue #4799D4 | Subtle Pastel Red #F0827A */
+    --color-white: 120 8% 96%;
+    --color-orange: 38 90% 56%;
+    --color-tangelo: 19 85% 54%;
+    --color-black-steel: 210 27% 7%;
+    --color-blue: 204 60% 55%;
+    --color-red: 5 78% 71%;
+
+    --background: var(--color-white);
+    --foreground: var(--color-black-steel);
+    --card: 120 8% 98%;
+    --card-foreground: var(--color-black-steel);
+    --popover: var(--color-white);
+    --popover-foreground: var(--color-black-steel);
+    --primary: var(--color-blue);
+    --primary-foreground: var(--color-white);
+    --secondary: var(--color-orange);
+    --secondary-foreground: var(--color-black-steel);
+    --muted: 120 8% 94%;
+    --muted-foreground: 210 10% 45%;
+    --accent: var(--color-tangelo);
+    --accent-foreground: var(--color-white);
+    --destructive: var(--color-red);
+    --destructive-foreground: var(--color-white);
+    --border: 120 8% 88%;
+    --input: 120 8% 88%;
+    --ring: var(--color-blue);
     --radius: 1rem;
   }
 
   .dark {
-    --background: 240 38% 13%;
-    --foreground: 240 20% 98%;
-    --card: 240 38% 18%;
-    --card-foreground: 240 20% 98%;
-    --popover: 240 38% 16%;
-    --popover-foreground: 240 20% 98%;
-    --primary: 251 57% 47%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 252 77% 26%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 240 30% 20%;
-    --muted-foreground: 240 15% 70%;
-    --accent: 251 50% 25%;
-    --accent-foreground: 251 57% 70%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 30% 25%;
-    --input: 240 30% 25%;
-    --ring: 251 57% 47%;
+    --background: var(--color-black-steel);
+    --foreground: var(--color-white);
+    --card: 210 27% 12%;
+    --card-foreground: var(--color-white);
+    --popover: 210 27% 10%;
+    --popover-foreground: var(--color-white);
+    --primary: var(--color-blue);
+    --primary-foreground: var(--color-white);
+    --secondary: var(--color-orange);
+    --secondary-foreground: var(--color-black-steel);
+    --muted: 210 20% 15%;
+    --muted-foreground: 120 8% 70%;
+    --accent: var(--color-tangelo);
+    --accent-foreground: var(--color-white);
+    --destructive: var(--color-red);
+    --destructive-foreground: var(--color-white);
+    --border: 210 20% 20%;
+    --input: 210 20% 20%;
+    --ring: var(--color-blue);
   }
 }
 
