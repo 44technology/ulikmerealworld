@@ -5,24 +5,32 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
-import { Plus, Percent, UtensilsCrossed, Coffee, Calendar } from 'lucide-react';
+import { Plus, Percent, UtensilsCrossed, Coffee, Calendar, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import { VENUE_LOCATIONS, getLocationNameById } from '../lib/venueLocations';
 
 export default function DiscountsPage() {
   const [discounts, setDiscounts] = useState([
-    { id: 1, type: 'food', item: 'Pizza', discount: 20, status: 'active', endDate: '2025-02-15' },
-    { id: 2, type: 'drink', item: 'Coffee', discount: 15, status: 'active', endDate: '2025-02-20' },
-    { id: 3, type: 'food', item: 'Burger', discount: 25, status: 'ended', endDate: '2025-01-10' },
+    { id: 1, type: 'food', item: 'Pizza', discount: 20, status: 'active', endDate: '2025-02-15', locationId: 'loc-1' },
+    { id: 2, type: 'drink', item: 'Coffee', discount: 15, status: 'active', endDate: '2025-02-20', locationId: 'loc-2' },
+    { id: 3, type: 'food', item: 'Burger', discount: 25, status: 'ended', endDate: '2025-01-10', locationId: 'loc-1' },
   ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [type, setType] = useState<'food' | 'drink'>('food');
   const [item, setItem] = useState('');
   const [discount, setDiscount] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [locationId, setLocationId] = useState(VENUE_LOCATIONS[0]?.id ?? '');
+
+  const hasMultipleLocations = VENUE_LOCATIONS.length > 1;
 
   const handleSubmit = () => {
     if (!item.trim() || !discount || !endDate) {
       toast.error('Please fill all fields');
+      return;
+    }
+    if (hasMultipleLocations && !locationId) {
+      toast.error('Please select a location');
       return;
     }
     const newDiscount = {
@@ -32,11 +40,13 @@ export default function DiscountsPage() {
       discount: parseInt(discount),
       status: 'active' as const,
       endDate,
+      locationId: hasMultipleLocations ? locationId : (VENUE_LOCATIONS[0]?.id ?? ''),
     };
     setDiscounts([newDiscount, ...discounts]);
     setItem('');
     setDiscount('');
     setEndDate('');
+    setLocationId(VENUE_LOCATIONS[0]?.id ?? '');
     setIsDialogOpen(false);
     toast.success('Discount created successfully!');
   };
@@ -99,6 +109,23 @@ export default function DiscountsPage() {
                   onChange={(e) => setDiscount(e.target.value)}
                 />
               </div>
+              {hasMultipleLocations && (
+                <div className="space-y-2">
+                  <Label>Apply to location</Label>
+                  <select
+                    value={locationId}
+                    onChange={(e) => setLocationId(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    {VENUE_LOCATIONS.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.name}{loc.address ? ` — ${loc.address}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">This discount will apply only to the selected location.</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>End Date</Label>
                 <Input
@@ -136,9 +163,17 @@ export default function DiscountsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                <span>Ends: {disc.endDate}</span>
+              <div className="space-y-2">
+                {hasMultipleLocations && (disc as { locationId?: string }).locationId && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="w-4 h-4" />
+                    <span>{getLocationNameById((disc as { locationId?: string }).locationId ?? '')}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4" />
+                  <span>Ends: {disc.endDate}</span>
+                </div>
               </div>
             </CardContent>
           </Card>

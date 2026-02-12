@@ -78,6 +78,7 @@ const CreateClassPage = () => {
   const [showRequiredInfoModal, setShowRequiredInfoModal] = useState(false);
   const [requiredFollowerCount, setRequiredFollowerCount] = useState('');
   const [requiredExpertise, setRequiredExpertise] = useState('');
+  const [requiredCertifiedAreas, setRequiredCertifiedAreas] = useState('');
   const [savingCreatorInfo, setSavingCreatorInfo] = useState(false);
 
   useEffect(() => {
@@ -85,8 +86,9 @@ const CreateClassPage = () => {
       setShowRequiredInfoModal(true);
       setRequiredFollowerCount(String(user?.socialMediaFollowers ?? ''));
       setRequiredExpertise(user?.expertise?.join(', ') ?? '');
+      setRequiredCertifiedAreas(user?.certifiedAreas?.join(', ') ?? '');
     }
-  }, [mustCollectCreatorInfo, user?.socialMediaFollowers, user?.expertise]);
+  }, [mustCollectCreatorInfo, user?.socialMediaFollowers, user?.expertise, user?.certifiedAreas]);
 
   const handleSaveCreatorInfo = async () => {
     if (!requiredFollowerCount.trim()) {
@@ -106,11 +108,16 @@ const CreateClassPage = () => {
       toast.error('Please enter at least one area of experience (e.g. Marketing, Tech)');
       return;
     }
+    const certifiedList = requiredCertifiedAreas
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     setSavingCreatorInfo(true);
     try {
       await updateUser({
         socialMediaFollowers: num,
         expertise: expertiseList,
+        certifiedAreas: certifiedList.length > 0 ? certifiedList : undefined,
       });
       setShowRequiredInfoModal(false);
     } catch (e: any) {
@@ -1152,6 +1159,16 @@ const CreateClassPage = () => {
                 onChange={(e) => setRequiredExpertise(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">Separate with commas</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="required-certified">Certified in (sertifikalı olduğunuz alanlar)</Label>
+              <Input
+                id="required-certified"
+                placeholder="e.g. Google Ads, AWS, PMP (optional)"
+                value={requiredCertifiedAreas}
+                onChange={(e) => setRequiredCertifiedAreas(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Optional. Separate with commas. Shows as certified on your profile.</p>
             </div>
           </div>
           <DialogFooter>

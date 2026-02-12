@@ -15,6 +15,7 @@ export interface User {
   firstName: string;
   lastName: string;
   displayName?: string;
+  name?: string;
   email?: string;
   phone?: string;
   avatar?: string;
@@ -24,6 +25,8 @@ export interface User {
   lookingFor?: string[];
   photos?: string[];
   isVerified: boolean;
+  /** Certified in these areas (sertifikalı olduğu alanlar) */
+  certifiedAreas?: string[];
   spotifyConnected?: boolean;
   spotifyLastTrack?: SpotifyTrack;
   createdAt: string;

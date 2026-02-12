@@ -18,6 +18,8 @@ interface User {
   socialMediaFollowers?: number;
   /** Areas of experience/expertise (deneyim alanları) */
   expertise?: string[];
+  /** Certified in these areas (sertifikalı olduğu alanlar) */
+  certifiedAreas?: string[];
   canCreateClasses?: boolean;
   classCreationRequestStatus?: 'pending' | 'approved' | 'rejected' | null;
   /** User paid for ad-free experience ($19.99 one-time); when true, ads are not shown */

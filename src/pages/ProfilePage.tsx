@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Settings, ChevronRight, MapPin, Star, Trophy, Users, Calendar, CalendarRange, Heart, Share2, Edit, GraduationCap, X, Music, ExternalLink, Sparkles, Play, Image as ImageIcon, Video as VideoIcon, Check, Ticket, Users2, Wallet, Compass } from 'lucide-react';
+import { Settings, ChevronRight, MapPin, Star, Trophy, Users, Calendar, CalendarRange, Heart, Share2, Edit, GraduationCap, X, Music, ExternalLink, Sparkles, Play, Image as ImageIcon, Video as VideoIcon, Check, CheckCircle, Ticket, Users2, Wallet, Compass } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -133,6 +133,7 @@ const ProfilePage = () => {
     bio: user?.bio || '',
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
+    certifiedAreas: (user as any)?.certifiedAreas?.join(', ') || '',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState<'all' | 'photos' | 'videos'>('all');
@@ -211,6 +212,7 @@ const ProfilePage = () => {
         bio: user.bio || '',
         firstName: user.firstName || '',
         lastName: user.lastName || '',
+        certifiedAreas: (user as any).certifiedAreas?.join(', ') || '',
       });
       setSelectedInterests(user.interests || []);
     }
@@ -275,6 +277,9 @@ const ProfilePage = () => {
 
     setIsSaving(true);
     try {
+      const certifiedList = editForm.certifiedAreas
+        ? editForm.certifiedAreas.split(',').map((s) => s.trim()).filter(Boolean)
+        : undefined;
       await apiRequest(API_ENDPOINTS.USERS.UPDATE, {
         method: 'PUT',
         body: JSON.stringify({
@@ -282,6 +287,7 @@ const ProfilePage = () => {
           lastName: editForm.lastName,
           displayName: editForm.displayName || `${editForm.firstName} ${editForm.lastName}`,
           bio: editForm.bio,
+          certifiedAreas: certifiedList,
         }),
       });
 
@@ -291,6 +297,7 @@ const ProfilePage = () => {
         lastName: editForm.lastName,
         displayName: editForm.displayName || `${editForm.firstName} ${editForm.lastName}`,
         bio: editForm.bio,
+        certifiedAreas: certifiedList,
       });
 
       toast.success('Profile updated successfully!');
@@ -344,10 +351,15 @@ const ProfilePage = () => {
               <MapPin className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm truncate">Miami, FL</span>
             </div>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
                 <Star className="w-3 h-3 fill-primary" /> Verified
               </span>
+              {(user as any)?.certifiedAreas?.length > 0 && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+                  <CheckCircle className="w-3 h-3" /> Certified: {(user as any).certifiedAreas.join(', ')}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -885,6 +897,17 @@ const ProfilePage = () => {
                     rows={4}
                     className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                   />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Certified in (sertifikalı olduğunuz alanlar)
+                  </label>
+                  <Input
+                    value={editForm.certifiedAreas}
+                    onChange={(e) => setEditForm({ ...editForm, certifiedAreas: e.target.value })}
+                    placeholder="e.g. Google Ads, AWS, PMP (optional)"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Optional. Separate with commas.</p>
                 </div>
               </div>
 

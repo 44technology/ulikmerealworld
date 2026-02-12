@@ -67,6 +67,7 @@ const MeetupCard = ({
   showJoinButton = false,
 }: MeetupCardProps) => {
   const isEvent = type === 'event';
+  const typeLabel = isEvent ? 'Event' : 'Activity';
   const isPaid = pricePerPerson != null && pricePerPerson > 0 && !isFree;
   // Normalize data - support both mock data and backend data
   const hostData = host || (creator ? {
@@ -115,12 +116,10 @@ const MeetupCard = ({
             {displayDate && <span className="text-sm font-medium text-card">{displayDate}</span>}
           </div>
           <div className="absolute top-2 right-2 flex items-center gap-1.5">
-            {isEvent && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-violet-500/90 text-white text-[10px] font-semibold">
-                <Ticket className="w-3 h-3" />
-                Event
-              </span>
-            )}
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${isEvent ? 'bg-violet-500/90 text-white' : 'bg-primary/90 text-white'}`}>
+              {isEvent && <Ticket className="w-3 h-3" />}
+              {typeLabel}
+            </span>
             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
               isPaid ? 'bg-card/90 backdrop-blur-sm text-card' : 'bg-green-500/90 text-white'
             }`}>
@@ -137,12 +136,10 @@ const MeetupCard = ({
       <div className="p-4 space-y-3">
         {!image && (
           <div className="flex flex-wrap items-center gap-1.5">
-            {isEvent && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 text-xs font-semibold">
-                <Ticket className="w-3 h-3" />
-                Event
-              </span>
-            )}
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${isEvent ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400' : 'bg-primary/10 text-primary'}`}>
+              {isEvent && <Ticket className="w-3 h-3" />}
+              {typeLabel}
+            </span>
             <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
               isPaid ? 'bg-primary/10 text-primary' : 'bg-green-500/10 text-green-600 dark:text-green-400'
             }`}>
@@ -207,7 +204,7 @@ const MeetupCard = ({
               }}
               className="w-full bg-gradient-primary"
             >
-              Join Vibe
+              Join {typeLabel}
             </Button>
           </div>
         )}

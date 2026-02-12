@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Trophy, Users, Calendar, Heart, Share2, MessageCircle, Settings, UserPlus, Check, X, Music, ExternalLink, Play, Image as ImageIcon, Video as VideoIcon, Sparkles } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Trophy, Users, Calendar, Heart, Share2, MessageCircle, Settings, UserPlus, Check, CheckCircle, X, Music, ExternalLink, Play, Image as ImageIcon, Video as VideoIcon, Sparkles } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import UserAvatar from '@/components/ui/UserAvatar';
 import CategoryChip from '@/components/ui/CategoryChip';
@@ -317,6 +317,11 @@ const UserProfilePage = () => {
               {user.isVerified && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium mt-1.5">
                   <Star className="w-3 h-3 fill-primary" /> Verified
+                </span>
+              )}
+              {user.certifiedAreas && user.certifiedAreas.length > 0 && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium mt-1.5">
+                  <CheckCircle className="w-3 h-3" /> Certified: {user.certifiedAreas.join(', ')}
                 </span>
               )}
             </div>

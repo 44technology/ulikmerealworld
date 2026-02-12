@@ -706,11 +706,11 @@ const HomePage = () => {
                           <PartyPopper className="w-10 h-10 text-muted-foreground" />
                         </div>
                       )}
-                      {vibe.type === 'event' && (
-                        <div className="absolute top-1 right-1">
-                          <span className="px-1.5 py-0.5 rounded bg-primary/90 text-white text-[10px] font-semibold">Event</span>
-                        </div>
-                      )}
+                      <div className="absolute top-1 right-1">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${vibe.type === 'event' ? 'bg-violet-500/90 text-white' : 'bg-primary/90 text-white'}`}>
+                          {vibe.type === 'event' ? 'Event' : 'Activity'}
+                        </span>
+                      </div>
                     </div>
                     <div className="p-3">
                       <h3 className="font-semibold text-foreground text-sm line-clamp-2">{vibe.title}</h3>

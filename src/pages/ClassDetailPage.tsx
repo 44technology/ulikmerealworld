@@ -823,6 +823,23 @@ const ClassDetailPage = () => {
                   </p>
                 </div>
               </div>
+
+              {((classItem as any).instructor || (classItem as any).creator) && (
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Host</p>
+                    <p className="font-medium text-foreground">
+                      {(classItem as any).instructor?.displayName || (classItem as any).creator?.displayName || `${(classItem as any).instructor?.firstName || (classItem as any).creator?.firstName || ''} ${(classItem as any).instructor?.lastName || (classItem as any).creator?.lastName || ''}`.trim() || 'Host'}
+                    </p>
+                    {((classItem as any).instructor?.certifiedAreas || (classItem as any).creator?.certifiedAreas)?.length > 0 && (
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" /> Certified: {((classItem as any).instructor?.certifiedAreas || (classItem as any).creator?.certifiedAreas || []).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Enrolled Students - Visible to everyone */}

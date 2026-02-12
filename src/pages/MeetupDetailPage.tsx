@@ -270,7 +270,7 @@ const MeetupDetailPage = () => {
             <ArrowLeft className="w-6 h-6 text-foreground" />
           </motion.button>
           <h1 className="text-xl font-bold text-foreground">
-            {(meetup as any)?.type === 'event' ? 'Event' : 'Vibe'} Details
+            {(meetup as any)?.type === 'event' ? 'Event' : 'Activity'} Details
           </h1>
           <div className="flex gap-2 ml-auto">
             {isHost && (
@@ -327,12 +327,10 @@ const MeetupDetailPage = () => {
                 <>
                   <h1 className="text-2xl font-bold text-card mb-2">{meetup.title}</h1>
                   <div className="flex flex-wrap items-center gap-2">
-                    {(meetup as any)?.type === 'event' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet-500/90 text-white text-xs font-semibold">
-                        <Ticket className="w-3.5 h-3.5" />
-                        Event
-                      </span>
-                    )}
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${(meetup as any)?.type === 'event' ? 'bg-violet-500/90 text-white' : 'bg-primary/90 text-white'}`}>
+                      {(meetup as any)?.type === 'event' && <Ticket className="w-3.5 h-3.5" />}
+                      {(meetup as any)?.type === 'event' ? 'Event' : 'Activity'}
+                    </span>
                     {meetup.category && (
                       <span className="px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm text-card text-sm font-medium">
                         {meetup.category}
@@ -722,7 +720,7 @@ const MeetupDetailPage = () => {
                       className="w-full h-12 bg-gradient-primary"
                     >
                       <Edit className="w-5 h-5 mr-2" />
-                      Edit Vibe
+                      Edit {(meetup as any)?.type === 'event' ? 'Event' : 'Activity'}
                     </Button>
                     <Button
                       variant="outline"
@@ -756,7 +754,7 @@ const MeetupDetailPage = () => {
                     onClick={handleJoin}
                     className="flex-1 h-12 bg-gradient-primary"
                   >
-                    Join Vibe
+                    Join {(meetup as any)?.type === 'event' ? 'Event' : 'Activity'}
                   </Button>
                 </div>
                 

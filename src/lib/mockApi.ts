@@ -135,6 +135,7 @@ const getDummyUser = (id: string, data?: any) => {
     occupation: data?.occupation,
     socialMediaFollowers: data?.socialMediaFollowers,
     expertise: data?.expertise,
+    certifiedAreas: data?.certifiedAreas,
     createdClassesCount: data?.createdClassesCount,
     isVerified: true,
     createdAt: new Date().toISOString(),
@@ -1990,9 +1991,24 @@ export const mockApiRequest = async <T = any>(
         const cls = classes.find((c: any) => c.id === classId);
         if (!cls) throw new Error('Class not found');
         const enriched = getDefaultSyllabusForClass({ ...cls });
+        const creatorId = cls.creatorId || cls.creator?.id || currentUserId;
+        const creatorData = getDummyUser(creatorId);
+        const withCreator = {
+          ...enriched,
+          creator: {
+            id: creatorData.id,
+            firstName: creatorData.firstName,
+            lastName: creatorData.lastName,
+            displayName: creatorData.displayName,
+            avatar: creatorData.avatar,
+            certifiedAreas: (creatorData as any).certifiedAreas,
+          },
+          instructor: undefined as any,
+        };
+        (withCreator as any).instructor = withCreator.creator;
         return {
           success: true,
-          data: enriched,
+          data: withCreator,
         } as T;
       }
       let list = [...classes];
@@ -2011,6 +2027,7 @@ export const mockApiRequest = async <T = any>(
       const newClass = {
         id: generateId(),
         ...body,
+        creatorId: (body as any)?.creatorId || currentUserId,
         createdAt: new Date().toISOString(),
       };
       classes.push(newClass);

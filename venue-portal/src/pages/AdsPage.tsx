@@ -5,14 +5,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
-import { Plus, Upload, Image, Video, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Upload, Image, Video, Calendar, CheckCircle, XCircle, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import { VENUE_LOCATIONS, getLocationNameById } from '../lib/venueLocations';
 
 export default function AdsPage() {
   const [ads, setAds] = useState([
-    { id: 1, title: 'Summer Campaign', type: 'image', status: 'approved', startDate: '2025-02-01', endDate: '2025-02-28' },
-    { id: 2, title: 'New Menu Launch', type: 'video', status: 'pending', startDate: '2025-02-15', endDate: '2025-03-15' },
-    { id: 3, title: 'Valentine Special', type: 'image', status: 'rejected', startDate: '2025-02-10', endDate: '2025-02-14' },
+    { id: 1, title: 'Summer Campaign', type: 'image', status: 'approved', startDate: '2025-02-01', endDate: '2025-02-28', locationId: 'loc-1' },
+    { id: 2, title: 'New Menu Launch', type: 'video', status: 'pending', startDate: '2025-02-15', endDate: '2025-03-15', locationId: 'loc-2' },
+    { id: 3, title: 'Valentine Special', type: 'image', status: 'rejected', startDate: '2025-02-10', endDate: '2025-02-14', locationId: 'loc-1' },
   ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -20,10 +21,17 @@ export default function AdsPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [locationId, setLocationId] = useState(VENUE_LOCATIONS[0]?.id ?? '');
+
+  const hasMultipleLocations = VENUE_LOCATIONS.length > 1;
 
   const handleSubmit = () => {
     if (!title.trim() || !startDate || !endDate || !selectedFile) {
       toast.error('Please fill all fields and upload media');
+      return;
+    }
+    if (hasMultipleLocations && !locationId) {
+      toast.error('Please select a location');
       return;
     }
     const newAd = {
@@ -33,12 +41,14 @@ export default function AdsPage() {
       status: 'pending' as const,
       startDate,
       endDate,
+      locationId: hasMultipleLocations ? locationId : (VENUE_LOCATIONS[0]?.id ?? ''),
     };
     setAds([newAd, ...ads]);
     setTitle('');
     setStartDate('');
     setEndDate('');
     setSelectedFile(null);
+    setLocationId(VENUE_LOCATIONS[0]?.id ?? '');
     setIsDialogOpen(false);
     toast.success('Ad uploaded successfully! Waiting for approval.');
   };
@@ -103,6 +113,23 @@ export default function AdsPage() {
                   </Button>
                 </div>
               </div>
+              {hasMultipleLocations && (
+                <div className="space-y-2">
+                  <Label>Apply to location</Label>
+                  <select
+                    value={locationId}
+                    onChange={(e) => setLocationId(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    {VENUE_LOCATIONS.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.name}{loc.address ? ` — ${loc.address}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">This ad will apply only to the selected location.</p>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Start Date</Label>
@@ -160,6 +187,12 @@ export default function AdsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
+                {hasMultipleLocations && (ad as { locationId?: string }).locationId && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="w-4 h-4" />
+                    <span>{getLocationNameById((ad as { locationId?: string }).locationId ?? '')}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="w-4 h-4" />
                   <span>{ad.startDate} - {ad.endDate}</span>

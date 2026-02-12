@@ -18,7 +18,9 @@ import {
   Ticket,
   ToggleLeft,
   ToggleRight,
-  Gift
+  Gift,
+  Percent,
+  QrCode
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -131,6 +133,65 @@ export default function EventDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Discount, Free & QR Code */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Percent className="w-4 h-4 text-primary" />
+              Discount
+            </CardTitle>
+            <CardDescription>Venue discount for this event</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 text-sm">
+              <p className="text-muted-foreground">e.g. Early bird 10% off</p>
+              <p className="text-foreground font-medium">Manage in Venue → Discounts</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Gift className="w-4 h-4 text-primary" />
+              Free
+            </CardTitle>
+            <CardDescription>Free tickets / spots</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1 text-sm">
+              {tickets.some(t => t.type === 'free') ? (
+                <>
+                  <p className="text-foreground font-medium">
+                    {tickets.filter(t => t.type === 'free').reduce((acc, t) => acc + (t.available - t.sold), 0)} free spots available
+                  </p>
+                  <p className="text-muted-foreground text-xs">See Tickets tab for details</p>
+                </>
+              ) : (
+                <p className="text-muted-foreground">No free tickets. Add a Free ticket in the Tickets tab.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <QrCode className="w-4 h-4 text-primary" />
+              QR Code
+            </CardTitle>
+            <CardDescription>Check-in / share</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/meetup/${eventData.id}` : `https://app.example.com/meetup/${eventData.id}`)}`}
+              alt="QR Code"
+              className="rounded border border-border"
+            />
+            <p className="text-xs text-muted-foreground mt-2 text-center">Scan for event page</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Tabs: Tickets */}
       <Tabs defaultValue="tickets" className="space-y-4">
