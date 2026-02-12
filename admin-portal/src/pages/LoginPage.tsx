@@ -4,13 +4,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Shield, Mail, Lock, Building2, GraduationCap } from 'lucide-react';
+import { Shield, Mail, Lock, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<'admin' | 'venue' | 'instructor'>('admin');
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'venue'>('admin');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -39,7 +39,6 @@ export default function LoginPage() {
             <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
               {selectedRole === 'admin' && <Shield className="w-8 h-8 text-primary-foreground" />}
               {selectedRole === 'venue' && <Building2 className="w-8 h-8 text-primary-foreground" />}
-              {selectedRole === 'instructor' && <GraduationCap className="w-8 h-8 text-primary-foreground" />}
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Ulikme Portal</h1>
             <p className="text-muted-foreground">Sign in to manage your account</p>
@@ -48,7 +47,7 @@ export default function LoginPage() {
           {/* Role Selection */}
           <div className="mb-6">
             <Label className="mb-3 block">Select Role</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant={selectedRole === 'admin' ? 'default' : 'outline'}
@@ -66,15 +65,6 @@ export default function LoginPage() {
               >
                 <Building2 className="w-5 h-5" />
                 <span className="text-xs">Venue</span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedRole === 'instructor' ? 'default' : 'outline'}
-                onClick={() => setSelectedRole('instructor')}
-                className="flex flex-col items-center gap-2 h-auto py-3"
-              >
-                <GraduationCap className="w-5 h-5" />
-                <span className="text-xs">Instructor</span>
               </Button>
             </div>
           </div>
