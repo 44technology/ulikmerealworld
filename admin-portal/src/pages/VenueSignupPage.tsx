@@ -4,8 +4,26 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
-import { Building2, Mail, Lock, MapPin, Phone, Globe, User, ArrowLeft } from 'lucide-react';
+import { Building2, Mail, Lock, MapPin, Phone, Globe, User, ArrowLeft, Clock, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+
+const VENUE_CATEGORIES = [
+  'Restaurant',
+  'Café',
+  'Bar',
+  'Park',
+  'Event Space',
+  'Hotel',
+  'Gallery',
+  'Other',
+];
 
 export default function VenueSignupPage() {
   const navigate = useNavigate();
@@ -21,6 +39,7 @@ export default function VenueSignupPage() {
     
     // Venue Info
     venueName: '',
+    category: '',
     description: '',
     address: '',
     city: '',
@@ -29,6 +48,9 @@ export default function VenueSignupPage() {
     zipCode: '',
     website: '',
     phoneNumber: '',
+    businessHours: '',
+    businessLicense: '',
+    taxId: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -47,6 +69,11 @@ export default function VenueSignupPage() {
 
     if (formData.password.length < 6) {
       toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    if (!formData.category) {
+      toast.error('Please select a venue category');
       return;
     }
 
@@ -70,6 +97,7 @@ export default function VenueSignupPage() {
           // Venue-specific data will be sent in a separate API call
           venueData: {
             name: formData.venueName,
+            category: formData.category,
             description: formData.description,
             address: formData.address,
             city: formData.city,
@@ -78,6 +106,9 @@ export default function VenueSignupPage() {
             zipCode: formData.zipCode,
             website: formData.website,
             phone: formData.phoneNumber,
+            businessHours: formData.businessHours,
+            businessLicense: formData.businessLicense,
+            taxId: formData.taxId,
           },
         }),
       });
@@ -255,6 +286,25 @@ export default function VenueSignupPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="category">Category / Type</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VENUE_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
@@ -359,6 +409,51 @@ export default function VenueSignupPage() {
                       value={formData.website}
                       onChange={handleChange}
                       className="pl-10"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="businessHours">Business Hours</Label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="businessHours"
+                    name="businessHours"
+                    placeholder="e.g. Mon–Fri 9:00–18:00, Sat 10:00–16:00"
+                    value={formData.businessHours}
+                    onChange={handleChange}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-2 border-t border-border">
+                <h3 className="text-sm font-medium text-foreground">Verification (optional at signup)</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="businessLicense">Business License No.</Label>
+                    <div className="relative">
+                      <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="businessLicense"
+                        name="businessLicense"
+                        placeholder="License number"
+                        value={formData.businessLicense}
+                        onChange={handleChange}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taxId">Tax ID</Label>
+                    <Input
+                      id="taxId"
+                      name="taxId"
+                      placeholder="Tax ID / EIN"
+                      value={formData.taxId}
+                      onChange={handleChange}
                     />
                   </div>
                 </div>

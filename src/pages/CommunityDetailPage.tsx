@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper } from 'lucide-react';
+import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper, UserPlus, Check, X } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCommunities, addUserToCommunity } from '@/hooks/useCommunities';
+import {
+  useCommunities,
+  addUserToCommunity,
+  getUserCommunityIds,
+  getCommunityJoinRequests,
+  addCommunityJoinRequest,
+  removeCommunityJoinRequest,
+  hasUserRequestedCommunity,
+  type JoinRequest,
+} from '@/hooks/useCommunities';
 import { useClasses } from '@/hooks/useClasses';
 import { useMeetups } from '@/hooks/useMeetups';
 import { usePosts, type Post as ApiPost } from '@/hooks/usePosts';
@@ -123,6 +132,9 @@ export default function CommunityDetailPage() {
   const [newCommentText, setNewCommentText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'members' | 'classes' | 'vibes'>('posts');
+  const [pendingJoinRequests, setPendingJoinRequests] = useState<JoinRequest[]>(() =>
+    id ? getCommunityJoinRequests(id) : []
+  );
 
   const communityFromList = useMemo(() => (id ? communitiesList.find((c: any) => c.id === id) : null), [id, communitiesList]);
   const [community, setCommunity] = useState<Community | null>(null);
@@ -151,6 +163,8 @@ export default function CommunityDetailPage() {
 
   useEffect(() => {
     if (communityFromList) {
+      const isMember = id ? getUserCommunityIds(user?.id ?? '').includes(id) : false;
+      const isOwner = user?.id === communityFromList.creator?.id;
       setCommunity({
         id: communityFromList.id,
         name: communityFromList.name,
@@ -159,10 +173,11 @@ export default function CommunityDetailPage() {
         isPublic: communityFromList.isPublic ?? true,
         creator: communityFromList.creator,
         memberCount: communityFromList.memberCount ?? 0,
-        isMember: true,
-        isOwner: user?.id === communityFromList.creator?.id,
+        isMember,
+        isOwner,
       });
     } else if (id && user) {
+      const isMember = getUserCommunityIds(user.id ?? '').includes(id);
       setCommunity({
         id,
         name: 'My Community',
@@ -171,12 +186,16 @@ export default function CommunityDetailPage() {
         isPublic: true,
         creator: { id: user.id, displayName: user.displayName || `${user.firstName} ${user.lastName}` || 'You', avatar: user.avatar },
         memberCount: MOCK_MEMBERS.length,
-        isMember: true,
-        isOwner: true,
+        isMember,
+        isOwner: false,
       });
     }
   }, [id, user, communityFromList]);
-  
+
+  useEffect(() => {
+    if (id) setPendingJoinRequests(getCommunityJoinRequests(id));
+  }, [id]);
+
   // User's social media followers count (from user profile)
   // For testing: if not set, allow class creation (set to 10000 for testing)
   const userFollowers = user?.socialMediaFollowers ?? 10000; // Default to 10000 for testing
@@ -221,32 +240,44 @@ export default function CommunityDetailPage() {
     }
   };
 
+  const joinRequestPending = !!(community && !community.isMember && hasUserRequestedCommunity(user?.id, id));
+
+  const handleAcceptJoinRequest = (request: JoinRequest) => {
+    if (!id) return;
+    addUserToCommunity(request.userId, id);
+    removeCommunityJoinRequest(id, request.userId);
+    setPendingJoinRequests(getCommunityJoinRequests(id));
+    setCommunity((prev) => (prev ? { ...prev, memberCount: prev.memberCount + 1 } : null));
+    toast.success(`${request.displayName} joined the community.`);
+  };
+
+  const handleRejectJoinRequest = (request: JoinRequest) => {
+    if (!id) return;
+    removeCommunityJoinRequest(id, request.userId);
+    setPendingJoinRequests(getCommunityJoinRequests(id));
+    toast.success('Request rejected.');
+  };
+
   const handleJoinCommunity = async () => {
     if (!user) {
       toast.error('Please login to join');
       return;
     }
+    if (!id) return;
 
     setIsLoading(true);
     try {
-      const token = getAuthToken();
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communities/${id}/join`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      addCommunityJoinRequest(id, {
+        id: user.id,
+        displayName: user.displayName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to join community');
-      }
-
-      toast.success('Joined community successfully!');
-      if (id) addUserToCommunity(user.id || 'current-user', id);
-      setCommunity(prev => prev ? { ...prev, isMember: true, memberCount: prev.memberCount + 1 } : null);
+      setPendingJoinRequests(getCommunityJoinRequests(id));
+      toast.success('Request sent! The community creator will review your request.');
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to join community');
+      toast.error(error instanceof Error ? error.message : 'Failed to send request');
     } finally {
       setIsLoading(false);
     }
@@ -372,16 +403,22 @@ export default function CommunityDetailPage() {
           </div>
         )}
 
-        {/* Actions */}
+        {/* Actions - Join / Request to join */}
         <div className="px-4 pt-4 flex gap-2">
-          {!community.isMember && (
+          {!community.isMember && !joinRequestPending && (
             <Button
               onClick={handleJoinCommunity}
               className="flex-1 bg-gradient-primary text-primary-foreground"
               disabled={isLoading}
             >
-              <Users className="w-4 h-4 mr-2" />
+              <UserPlus className="w-4 h-4 mr-2" />
               Join Community
+            </Button>
+          )}
+          {!community.isMember && joinRequestPending && (
+            <Button variant="secondary" className="flex-1" disabled>
+              <AlertCircle className="w-4 h-4 mr-2" />
+              Request Pending
             </Button>
           )}
         </div>
@@ -485,6 +522,50 @@ export default function CommunityDetailPage() {
             </TabsContent>
 
             <TabsContent value="members" className="mt-4 space-y-3">
+              {community.isOwner && pendingJoinRequests.length > 0 && (
+                <div className="mb-4 p-4 rounded-xl border border-border bg-muted/30 space-y-3">
+                  <p className="text-sm font-medium text-foreground">Join requests</p>
+                  <p className="text-xs text-muted-foreground">Accept or reject requests to join this community.</p>
+                  <div className="space-y-2">
+                    {pendingJoinRequests.map((req) => (
+                      <div
+                        key={req.userId}
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border bg-card"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <UserAvatar src={req.avatar} alt={req.displayName} size="md" />
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground truncate">{req.displayName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Requested {new Date(req.requestedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 border-green-600/50 hover:bg-green-600/10"
+                            onClick={() => handleAcceptJoinRequest(req)}
+                          >
+                            <Check className="w-4 h-4 mr-1" />
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                            onClick={() => handleRejectJoinRequest(req)}
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <p className="text-sm text-muted-foreground mb-2">{community.memberCount} members</p>
               {members.map((member) => (
                 <motion.div

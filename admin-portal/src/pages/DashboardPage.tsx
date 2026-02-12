@@ -1,4 +1,4 @@
-import { Users, Building2, GraduationCap, Calendar, AlertCircle, Image, MessageCircle, MessageSquare, Megaphone, Sparkles, Percent, Camera, BookOpen, Video, Ticket, QrCode, TrendingUp, Star, MapPin, DollarSign, PieChart, Wallet, BarChart3, Bot, Shield, ArrowRight } from 'lucide-react';
+import { Users, Building2, Calendar, AlertCircle, Image, MessageCircle, MessageSquare, Megaphone, Sparkles, Percent, Camera, BookOpen, Video, Ticket, QrCode, TrendingUp, Star, MapPin, DollarSign, PieChart, Wallet, BarChart3, Bot, Shield, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Link } from 'react-router-dom';
@@ -19,13 +19,6 @@ export default function DashboardPage() {
       change: '+8.2%',
       icon: Building2,
       color: 'text-green-600',
-    },
-    {
-      title: 'Instructors',
-      value: '156',
-      change: '+5.1%',
-      icon: GraduationCap,
-      color: 'text-purple-600',
     },
     {
       title: 'Active Events',
@@ -86,18 +79,6 @@ export default function DashboardPage() {
                 </div>
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/venues">Review</Link>
-                </Button>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="font-medium">8 Instructors</p>
-                    <p className="text-sm text-muted-foreground">Pending verification</p>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/instructors">Review</Link>
                 </Button>
               </div>
             </div>
@@ -221,64 +202,36 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Admin Quick Access - Instructor Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5" />
-            Instructor Management
-          </CardTitle>
-          <CardDescription>Manage instructor classes, content, and streaming</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link to="/instructor/content" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <Image className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Content</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Posts & Stories</p>
-              </div>
-            </Link>
-            <Link to="/instructor/classes" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <BookOpen className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Classes</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Create & manage classes</p>
-              </div>
-            </Link>
-            <Link to="/instructor/streaming" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <Video className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Streaming</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Live streaming setup</p>
-              </div>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Admin Quick Access - Production, Tickets, Visibility, Monetization */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
-              Production & Tickets
+              User Content & Tickets
             </CardTitle>
-            <CardDescription>Create events and manage ticket systems</CardDescription>
+            <CardDescription>Manage user-created content and ticket systems</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Link to="/production/create" className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted transition-colors">
+              <Link to="/instructor/classes" className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted transition-colors">
                 <div className="flex items-center gap-3">
-                  <GraduationCap className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">Create Class / Event / Vibe</span>
+                  <BookOpen className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Manage Classes</span>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              </Link>
+              <Link to="/venue/events" className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted transition-colors">
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Manage Events</span>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              </Link>
+              <Link to="/venue/vibes" className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted transition-colors">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Manage Vibes</span>
                 </div>
                 <ArrowRight className="w-4 h-4 text-muted-foreground" />
               </Link>

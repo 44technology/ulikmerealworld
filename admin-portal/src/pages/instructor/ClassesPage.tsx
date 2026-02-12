@@ -12,6 +12,7 @@ import { Checkbox } from '../../components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
 import { toast } from 'sonner';
+import { useAuth } from '../../contexts/AuthContext';
 
 const classCategories = [
   { id: 'ecommerce', label: 'E-commerce & Digital', emoji: '🛒' },
@@ -27,6 +28,8 @@ const classCategories = [
 
 export default function ClassesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [classes, setClasses] = useState([
     { id: 1, title: 'Diction Class', category: 'diction', type: 'online', price: 50, maxStudents: 20, currentStudents: 12, location: 'Zoom', meetingPlatform: 'zoom', meetingLink: 'https://zoom.us/j/123456789', date: '2025-02-05', time: '18:00', duration: '1 hour', frequency: 'Monday, Wednesday, Friday', isPremium: false, isExclusive: false, isPopular: false, recentEnrollments: 0 },
     { id: 2, title: 'AutoCAD Basics', category: 'tech', type: 'onsite', price: 75, maxStudents: 15, currentStudents: 8, location: 'Training Center', date: '2025-02-10', time: '14:00', duration: '2 hours', frequency: 'weekly', isPremium: true, isExclusive: false, isPopular: true, recentEnrollments: 15 },
@@ -209,8 +212,9 @@ export default function ClassesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Classes</h1>
-          <p className="text-muted-foreground mt-2">Create and manage your classes</p>
+          <p className="text-muted-foreground mt-2">{isAdmin ? 'View and modify user-created classes' : 'Create and manage your classes'}</p>
         </div>
+        {!isAdmin && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -562,6 +566,7 @@ export default function ClassesPage() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

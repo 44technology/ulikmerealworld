@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { 
   X, ChevronRight, MapPin, Calendar, Clock, Users, 
   Coffee, UtensilsCrossed, Dumbbell, Film, Heart, 
   Palette, PartyPopper, Briefcase, Sparkles, Camera,
   Globe, Lock, DollarSign, Search, Info, Star, Phone, ExternalLink,
-  Shield, Share2, CheckCircle2, ArrowRight, Ticket, Users2, Gift
+  Shield, Share2, CheckCircle2, ArrowRight, Ticket, Users2, Gift, Navigation
 } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -100,6 +100,7 @@ type Step = 'category' | 'details' | 'location' | 'datetime' | 'settings';
 
 const CreateVibePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const communityIdFromQuery = searchParams.get('communityId') || '';
   const [step, setStep] = useState<Step>('category');
@@ -128,6 +129,16 @@ const CreateVibePage = () => {
   useEffect(() => {
     if (communityIdFromQuery) setCommunityId(communityIdFromQuery);
   }, [communityIdFromQuery]);
+
+  useEffect(() => {
+    const fromState = (location.state as any)?.selectedVenue;
+    if (fromState?.id) {
+      setVenue(fromState.name);
+      setVenueAddress(fromState.address || fromState.addressOnly || '');
+      setSelectedVenueId(fromState.id);
+      window.history.replaceState({}, '', location.pathname + (location.search || ''));
+    }
+  }, [location.state, location.pathname, location.search]);
 
   const { data: communities = [] } = useCommunities();
   // Fetch venues from backend
@@ -501,6 +512,16 @@ const CreateVibePage = () => {
                   <h2 className="text-2xl font-bold text-foreground">Where to meet?</h2>
                   <p className="text-muted-foreground mt-1">Choose a location for your vibe</p>
                 </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-14 rounded-2xl gap-2 border-2 border-dashed"
+                  onClick={() => navigate('/select-venue?returnTo=create-vibe')}
+                >
+                  <Navigation className="w-5 h-5 text-muted-foreground" />
+                  Browse venues by distance
+                </Button>
                 
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />

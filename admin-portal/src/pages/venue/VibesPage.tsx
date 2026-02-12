@@ -10,6 +10,7 @@ import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Plus, Calendar, MapPin, Users, Ticket, CheckCircle2, XCircle, Clock, DollarSign, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../../contexts/AuthContext';
 
 type VibeTicket = {
   id: number;
@@ -41,6 +42,8 @@ type PendingActivity = {
 
 export default function VibesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [vibes, setVibes] = useState([
     { 
       id: 1, 
@@ -213,8 +216,9 @@ export default function VibesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Vibes & Activities</h1>
-          <p className="text-muted-foreground mt-2">Manage your vibes and approve user-created activities</p>
+          <p className="text-muted-foreground mt-2">{isAdmin ? 'View and modify user-created vibes, approve activities' : 'Manage your vibes and approve user-created activities'}</p>
         </div>
+        {!isAdmin && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -286,6 +290,7 @@ export default function VibesPage() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'pending' | 'approved')}>

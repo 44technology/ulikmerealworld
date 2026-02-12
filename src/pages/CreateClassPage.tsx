@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { X, BookOpen, Camera, Calendar, Clock, DollarSign, Users, MapPin, Plus, AlertCircle, Crown, Lock, Monitor, Video, Building } from 'lucide-react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { X, BookOpen, Camera, Calendar, Clock, DollarSign, Users, MapPin, Plus, AlertCircle, Crown, Lock, Monitor, Video, Building, Paperclip, FileText } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import { useVenues } from '@/hooks/useVenues';
 import { CLASS_AND_COMMUNITY_CATEGORIES } from '@/constants/categories';
 import { useCommunities } from '@/hooks/useCommunities';
 import { toast } from 'sonner';
-import { apiRequest, API_ENDPOINTS, apiUpload } from '@/lib/api';
+import { apiRequest, API_ENDPOINTS, apiUpload, getAuthToken } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
@@ -29,8 +29,11 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
+type MaterialItem = { id: string; file: File; name: string };
+
 const CreateClassPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const communityIdFromQuery = searchParams.get('communityId') || undefined;
   const { isAuthenticated, user, updateUser } = useAuth();
@@ -92,6 +95,16 @@ const CreateClassPage = () => {
     if (communityIdFromQuery) setCommunityId(communityIdFromQuery);
   }, [communityIdFromQuery]);
 
+  const [selectedVenueDisplay, setSelectedVenueDisplay] = useState<{ id: string; name: string } | null>(null);
+  useEffect(() => {
+    const fromState = (location.state as any)?.selectedVenue;
+    if (fromState?.id) {
+      setVenueId(fromState.id);
+      setSelectedVenueDisplay({ id: fromState.id, name: fromState.name });
+      window.history.replaceState({}, '', location.pathname + (location.search || ''));
+    }
+  }, [location.state, location.pathname, location.search]);
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [skill, setSkill] = useState('');
@@ -109,7 +122,8 @@ const CreateClassPage = () => {
   const [loading, setLoading] = useState(false);
   const [frequency, setFrequency] = useState<'once' | 'weekly' | 'custom'>('once');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [lessons, setLessons] = useState<Array<{id: string; day: string; time: string; title: string}>>([]);
+  const [classMaterials, setClassMaterials] = useState<MaterialItem[]>([]);
+  const [lessons, setLessons] = useState<Array<{ id: string; day: string; time: string; title: string; materials: MaterialItem[] }>>([]);
   const [type, setType] = useState<'online' | 'onsite' | 'hybrid'>('online');
   const [meetingPlatform, setMeetingPlatform] = useState<'zoom' | 'teams' | 'meet' | 'webex' | 'custom' | ''>('');
   const [meetingLink, setMeetingLink] = useState('');
@@ -160,6 +174,7 @@ const CreateClassPage = () => {
       day,
       time: timeOnly,
       title: `${weekDays.find(w => w.value === day)?.label} - ${title || 'Lesson'}`,
+      materials: [] as MaterialItem[],
     }));
     
     setLessons([...lessons, ...newLessons]);
@@ -168,6 +183,45 @@ const CreateClassPage = () => {
 
   const handleRemoveLesson = (lessonId: string) => {
     setLessons(lessons.filter(l => l.id !== lessonId));
+  };
+
+  const classMaterialInputRef = useRef<HTMLInputElement>(null);
+  const lessonMaterialInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const handleAddClassMaterials = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    const newItems: MaterialItem[] = Array.from(files).map((file) => ({
+      id: `cm-${Date.now()}-${file.name}`,
+      file,
+      name: file.name,
+    }));
+    setClassMaterials((prev) => [...prev, ...newItems]);
+    e.target.value = '';
+  };
+  const handleRemoveClassMaterial = (id: string) => {
+    setClassMaterials((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  const handleAddLessonMaterials = (lessonId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    const newItems: MaterialItem[] = Array.from(files).map((file) => ({
+      id: `lm-${Date.now()}-${lessonId}-${file.name}`,
+      file,
+      name: file.name,
+    }));
+    setLessons((prev) =>
+      prev.map((l) => (l.id === lessonId ? { ...l, materials: [...l.materials, ...newItems] } : l))
+    );
+    e.target.value = '';
+  };
+  const handleRemoveLessonMaterial = (lessonId: string, materialId: string) => {
+    setLessons((prev) =>
+      prev.map((l) =>
+        l.id === lessonId ? { ...l, materials: l.materials.filter((m) => m.id !== materialId) } : l
+      )
+    );
   };
 
   const handleSubmit = async () => {
@@ -214,10 +268,28 @@ const CreateClassPage = () => {
         maxStudents: maxStudents ? parseInt(maxStudents) : undefined,
         price: priceNum !== undefined && !isNaN(priceNum) ? priceNum : undefined,
         schedule: schedule || undefined,
+        lessons: lessons.map((l) => ({ day: l.day, time: l.time, title: l.title })),
       };
 
-      if (image) {
-        await apiUpload(API_ENDPOINTS.CLASSES.CREATE, image, classData);
+      const hasMaterials = image || classMaterials.length > 0 || lessons.some((l) => l.materials.length > 0);
+      if (hasMaterials) {
+        const formData = new FormData();
+        if (image) formData.append('image', image);
+        formData.append('data', JSON.stringify(classData));
+        classMaterials.forEach((m) => formData.append('classMaterials', m.file));
+        lessons.forEach((lesson, idx) => {
+          lesson.materials.forEach((m) => formData.append(`lesson_${idx}_materials`, m.file));
+        });
+        const token = getAuthToken();
+        const res = await fetch(API_ENDPOINTS.CLASSES.CREATE, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ message: 'Failed to create class' }));
+          throw new Error(err.message || 'Failed to create class');
+        }
       } else {
         await apiRequest(API_ENDPOINTS.CLASSES.CREATE, {
           method: 'POST',
@@ -447,18 +519,24 @@ const CreateClassPage = () => {
                 <label className="text-sm font-medium text-foreground mb-2 block">
                   Venue *
                 </label>
-                <select
-                  value={venueId}
-                  onChange={(e) => setVenueId(e.target.value)}
-                  className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground"
-                >
-                  <option value="">Select a venue...</option>
-                  {venues.map((venue) => (
-                    <option key={venue.id} value={venue.id}>
-                      {venue.name} - {venue.city}
-                    </option>
-                  ))}
-                </select>
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-12 rounded-xl justify-start gap-2"
+                    onClick={() => navigate('/select-venue?returnTo=create-class')}
+                  >
+                    <MapPin className="w-5 h-5 text-muted-foreground" />
+                    {venueId
+                      ? (selectedVenueDisplay?.name ?? venues.find((v) => v.id === venueId)?.name ?? 'Venue selected')
+                      : 'Browse venues near me'}
+                  </Button>
+                  {venueId && (
+                    <p className="text-xs text-muted-foreground">
+                      {selectedVenueDisplay?.name ?? venues.find((v) => v.id === venueId)?.name} selected. Tap above to change.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 
@@ -502,6 +580,52 @@ const CreateClassPage = () => {
                 onChange={(e) => setDescription(e.target.value)}
                 className="rounded-xl min-h-[120px]"
               />
+            </div>
+
+            {/* Class materials (optional) */}
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
+                <Paperclip className="w-4 h-4" /> Class materials (optional)
+              </label>
+              <p className="text-xs text-muted-foreground mb-2">PDF, documents, or files for the whole class</p>
+              <input
+                ref={classMaterialInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
+                className="hidden"
+                onChange={handleAddClassMaterials}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-xl border-dashed"
+                onClick={() => classMaterialInputRef.current?.click()}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Add materials
+              </Button>
+              {classMaterials.length > 0 && (
+                <ul className="mt-2 space-y-2">
+                  {classMaterials.map((m) => (
+                    <li
+                      key={m.id}
+                      className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50 border border-border text-sm"
+                    >
+                      <span className="truncate text-foreground">{m.name}</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="shrink-0 h-8 w-8 p-0"
+                        onClick={() => handleRemoveClassMaterial(m.id)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -612,19 +736,67 @@ const CreateClassPage = () => {
                       ) : (
                         <div className="space-y-2">
                           {lessons.map((lesson) => (
-                            <div key={lesson.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-foreground">{weekDays.find(w => w.value === lesson.day)?.label}</p>
-                                <p className="text-xs text-muted-foreground">{lesson.time}</p>
+                            <div key={lesson.id} className="p-3 rounded-lg border border-border bg-card space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-foreground">{weekDays.find(w => w.value === lesson.day)?.label}</p>
+                                  <p className="text-xs text-muted-foreground">{lesson.time}</p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleRemoveLesson(lesson.id)}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
                               </div>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleRemoveLesson(lesson.id)}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
+                              <div className="border-t border-border pt-2 mt-2">
+                                <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                                  <Paperclip className="w-3 h-3" /> Lesson materials
+                                </p>
+                                <input
+                                  type="file"
+                                  multiple
+                                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
+                                  className="hidden"
+                                  ref={(el) => {
+                                    lessonMaterialInputRefs.current[lesson.id] = el;
+                                  }}
+                                  onChange={(e) => handleAddLessonMaterials(lesson.id, e)}
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 text-xs border-dashed"
+                                  onClick={() => lessonMaterialInputRefs.current[lesson.id]?.click()}
+                                >
+                                  <FileText className="w-3 h-3 mr-1" />
+                                  Add material
+                                </Button>
+                                {lesson.materials.length > 0 && (
+                                  <ul className="mt-2 space-y-1">
+                                    {lesson.materials.map((m) => (
+                                      <li
+                                        key={m.id}
+                                        className="flex items-center justify-between gap-2 py-1.5 px-2 rounded bg-muted/50 text-xs"
+                                      >
+                                        <span className="truncate text-foreground">{m.name}</span>
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="ghost"
+                                          className="shrink-0 h-6 w-6 p-0"
+                                          onClick={() => handleRemoveLessonMaterial(lesson.id, m.id)}
+                                        >
+                                          <X className="w-3 h-3" />
+                                        </Button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>

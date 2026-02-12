@@ -40,6 +40,7 @@ import CommunitiesPage from "./pages/CommunitiesPage";
 import CreateCommunityPage from "./pages/CreateCommunityPage";
 import CommunityDetailPage from "./pages/CommunityDetailPage";
 import SchedulePage from "./pages/SchedulePage";
+import SelectVenuePage from "./pages/SelectVenuePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/create" element={<CreateVibePage />} />
             <Route path="/create-event" element={<CreateVibePage />} />
             <Route path="/create-class" element={<CreateClassPage />} />
+            <Route path="/select-venue" element={<SelectVenuePage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/profile" element={<ProfilePage />} />

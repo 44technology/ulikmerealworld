@@ -10,7 +10,7 @@ import InstructorLayout from './layouts/InstructorLayout';
 import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/UsersPage';
 import VenuesPage from './pages/VenuesPage';
-import InstructorsPage from './pages/InstructorsPage';
+import VenueDetailPage from './pages/VenueDetailPage';
 import RefundsPage from './pages/RefundsPage';
 
 // Venue pages
@@ -40,7 +40,6 @@ import InstructorSettingsPage from './pages/instructor/SettingsPage';
 
 // Production pages
 import ScheduleCapacityPage from './pages/instructor/ScheduleCapacityPage';
-import ProductionCreatePage from './pages/instructor/ProductionCreatePage';
 import AIContentAssistantPage from './pages/instructor/AIContentAssistantPage';
 
 // Tickets pages
@@ -89,7 +88,7 @@ function AppRoutes() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/venues" element={<VenuesPage />} />
-              <Route path="/instructors" element={<InstructorsPage />} />
+              <Route path="/venues/:id" element={<VenueDetailPage />} />
               <Route path="/refunds" element={<RefundsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               
@@ -108,8 +107,7 @@ function AppRoutes() {
               <Route path="/instructor/classes" element={<InstructorClassesPage />} />
               <Route path="/instructor/classes/:id" element={<InstructorClassDetailPage />} />
               
-              {/* Production (Admin can access) */}
-              <Route path="/production/create" element={<ProductionCreatePage />} />
+              {/* Production (Admin can access - manage user content, no create) */}
               <Route path="/production/ai-assistant" element={<AIContentAssistantPage />} />
               <Route path="/production/schedule" element={<ScheduleCapacityPage />} />
               

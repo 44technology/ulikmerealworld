@@ -147,3 +147,77 @@ export function addUserToCommunity(userId: string, communityId: string): void {
   if (ids.includes(communityId)) return;
   setUserCommunityIds(userId, [...ids, communityId]);
 }
+
+// Join requests: user requests to join, creator approves/rejects
+const JOIN_REQUESTS_KEY = 'ulikme_community_join_requests';
+
+export interface JoinRequest {
+  userId: string;
+  displayName: string;
+  avatar?: string;
+  requestedAt: string;
+}
+
+function getStoredJoinRequests(): Record<string, JoinRequest[]> {
+  try {
+    const raw = localStorage.getItem(JOIN_REQUESTS_KEY);
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    return typeof obj === 'object' && obj !== null ? obj : {};
+  } catch {
+    return {};
+  }
+}
+
+function setStoredJoinRequests(requests: Record<string, JoinRequest[]>): void {
+  try {
+    localStorage.setItem(JOIN_REQUESTS_KEY, JSON.stringify(requests));
+  } catch (_) {}
+}
+
+export function getCommunityJoinRequests(communityId: string): JoinRequest[] {
+  if (!communityId) return [];
+  const all = getStoredJoinRequests();
+  const list = all[communityId];
+  return Array.isArray(list) ? list : [];
+}
+
+export function addCommunityJoinRequest(
+  communityId: string,
+  user: { id: string | undefined; displayName?: string | null; firstName?: string | null; lastName?: string | null; avatar?: string | null }
+): void {
+  if (!communityId || !user.id) return;
+  const all = getStoredJoinRequests();
+  const list = all[communityId] ?? [];
+  if (list.some((r) => r.userId === user.id)) return;
+  const displayName =
+    user.displayName ||
+    [user.firstName, user.lastName].filter(Boolean).join(' ') ||
+    'User';
+  list.push({
+    userId: user.id,
+    displayName,
+    avatar: user.avatar ?? undefined,
+    requestedAt: new Date().toISOString(),
+  });
+  setStoredJoinRequests({ ...all, [communityId]: list });
+}
+
+export function removeCommunityJoinRequest(communityId: string, userId: string): void {
+  if (!communityId || !userId) return;
+  const all = getStoredJoinRequests();
+  const list = (all[communityId] ?? []).filter((r) => r.userId !== userId);
+  if (list.length === 0) {
+    const next = { ...all };
+    delete next[communityId];
+    setStoredJoinRequests(next);
+  } else {
+    setStoredJoinRequests({ ...all, [communityId]: list });
+  }
+}
+
+export function hasUserRequestedCommunity(userId: string | undefined, communityId: string | undefined): boolean {
+  if (!userId || !communityId) return false;
+  const list = getCommunityJoinRequests(communityId);
+  return list.some((r) => r.userId === userId);
+}

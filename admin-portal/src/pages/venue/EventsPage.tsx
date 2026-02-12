@@ -10,6 +10,7 @@ import { Badge } from '../../components/ui/badge';
 import { Plus, Calendar, MapPin, Users, Ticket } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { useAuth } from '../../contexts/AuthContext';
 
 type EventTicket = {
   id: number;
@@ -22,6 +23,8 @@ type EventTicket = {
 
 export default function EventsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [events, setEvents] = useState([
     { 
       id: 1, 
@@ -95,8 +98,9 @@ export default function EventsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Events</h1>
-          <p className="text-muted-foreground mt-2">Organize professional events and workshops</p>
+          <p className="text-muted-foreground mt-2">{isAdmin ? 'View and modify user-created events' : 'Organize professional events and workshops'}</p>
         </div>
+        {!isAdmin && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -182,6 +186,7 @@ export default function EventsPage() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

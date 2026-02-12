@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Search, Edit, Upload, Box, Camera, Video, Image as ImageIcon, MapPin } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Link } from 'react-router-dom';
+import { Search, Edit, Upload, Box, Camera, Video, Image as ImageIcon, MapPin, Eye } from 'lucide-react';
+import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -13,6 +14,9 @@ import {
 } from '../components/ui/dialog';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
+
+type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
 // Mock data
 const mockVenues = [
@@ -23,6 +27,7 @@ const mockVenues = [
     address: '123 Main St, Miami, FL',
     rating: 4.5,
     status: 'active',
+    approvalStatus: 'pending' as ApprovalStatus,
     has3D: true,
     hasAR: true,
     menuItems: 15,
@@ -36,6 +41,7 @@ const mockVenues = [
     address: '456 Ocean Dr, Miami, FL',
     rating: 4.8,
     status: 'active',
+    approvalStatus: 'approved' as ApprovalStatus,
     has3D: false,
     hasAR: true,
     menuItems: 25,
@@ -46,14 +52,25 @@ const mockVenues = [
 
 export default function VenuesPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedVenue, setSelectedVenue] = useState<any>(null);
+  const [approvalFilter, setApprovalFilter] = useState<'all' | ApprovalStatus>('all');
+  const [selectedVenue, setSelectedVenue] = useState<typeof mockVenues[0] | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
-  const filteredVenues = mockVenues.filter((venue) =>
-    venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    venue.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredVenues = mockVenues.filter((venue) => {
+    const matchesSearch =
+      venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      venue.address.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      approvalFilter === 'all' || venue.approvalStatus === approvalFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const pendingCount = mockVenues.filter((v) => v.approvalStatus === 'pending').length;
+  const getApprovalBadgeVariant = (status: ApprovalStatus) =>
+    status === 'pending' ? 'secondary' : status === 'approved' ? 'default' : 'destructive';
+  const getApprovalLabel = (status: ApprovalStatus) =>
+    status === 'pending' ? 'Pending' : status === 'approved' ? 'Approved' : 'Rejected';
 
   return (
     <div className="space-y-6 p-6">
@@ -66,9 +83,9 @@ export default function VenuesPage() {
         <Button>Add New Venue</Button>
       </div>
 
-      {/* Search */}
+      {/* Search & Filter */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
@@ -78,6 +95,16 @@ export default function VenuesPage() {
               className="pl-10"
             />
           </div>
+          <Tabs value={approvalFilter} onValueChange={(v) => setApprovalFilter(v as 'all' | ApprovalStatus)}>
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="pending">
+                Pending {pendingCount > 0 && `(${pendingCount})`}
+              </TabsTrigger>
+              <TabsTrigger value="approved">Approved</TabsTrigger>
+              <TabsTrigger value="rejected">Rejected</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -100,9 +127,12 @@ export default function VenuesPage() {
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className="text-lg font-semibold text-foreground">{venue.name}</h3>
                         <Badge>{venue.category}</Badge>
+                        <Badge variant={getApprovalBadgeVariant(venue.approvalStatus)}>
+                          {getApprovalLabel(venue.approvalStatus)}
+                        </Badge>
                         <Badge variant={venue.status === 'active' ? 'default' : 'outline'}>
                           {venue.status}
                         </Badge>
@@ -119,7 +149,13 @@ export default function VenuesPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      <Button variant="default" size="sm" asChild>
+                        <Link to={`/venues/${venue.id}`}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          {venue.approvalStatus === 'pending' ? 'Review' : 'View'}
+                        </Link>
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
