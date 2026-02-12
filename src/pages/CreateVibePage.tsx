@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useVenues, useVenue } from '@/hooks/useVenues';
+import { checkVenueHours } from '@/lib/venueHours';
 import { useCommunities } from '@/hooks/useCommunities';
 import { useCreateMeetup } from '@/hooks/useMeetups';
 import {
@@ -237,6 +238,15 @@ const CreateVibePage = () => {
       // Ensure future date
       if (startTimeDate < new Date()) {
         toast.error('Please select a future date and time');
+        return;
+      }
+
+      // Check venue open hours when a venue is selected
+      const venueHours = selectedVenueId && venueDetailData?.businessHours
+        ? checkVenueHours(venueDetailData.businessHours, startTimeDate)
+        : { valid: true };
+      if (!venueHours.valid) {
+        toast.error(venueHours.message);
         return;
       }
       
@@ -536,15 +546,29 @@ const CreateVibePage = () => {
                 {/* Selected venue */}
                 {venue && (
                   <div className="space-y-3">
-                    <div className="p-4 rounded-xl bg-primary/10 border-2 border-primary">
+                    <motion.button
+                      type="button"
+                      onClick={() => {
+                        const place = allVenues.find((v: any) => v.id === selectedVenueId);
+                        if (place) handleVenueDetailClick(place);
+                        else if (venueDetailData) {
+                          setSelectedVenueDetail(venueDetailData);
+                          setShowVenueDetail(true);
+                        }
+                      }}
+                      className="w-full text-left p-4 rounded-xl bg-primary/10 border-2 border-primary cursor-pointer hover:bg-primary/15 transition-colors"
+                      whileTap={{ scale: 0.98 }}
+                    >
                       <div className="flex items-center gap-3">
-                        <MapPin className="w-5 h-5 text-primary" />
-                        <div>
+                        <MapPin className="w-5 h-5 text-primary shrink-0" />
+                        <div className="flex-1 min-w-0">
                           <p className="font-medium text-foreground">{venue}</p>
                           <p className="text-sm text-muted-foreground">{venueAddress}</p>
                         </div>
+                        <Info className="w-5 h-5 text-muted-foreground shrink-0" />
                       </div>
-                    </div>
+                      <p className="text-xs text-muted-foreground mt-2">Tap to view venue details</p>
+                    </motion.button>
                     {/* Venue approval notice */}
                     {selectedVenueId && (
                       <motion.div

@@ -25,6 +25,26 @@ const VENUE_CATEGORIES = [
   'Other',
 ];
 
+const DAYS = [
+  { key: 'monday', label: 'Monday' },
+  { key: 'tuesday', label: 'Tuesday' },
+  { key: 'wednesday', label: 'Wednesday' },
+  { key: 'thursday', label: 'Thursday' },
+  { key: 'friday', label: 'Friday' },
+  { key: 'saturday', label: 'Saturday' },
+  { key: 'sunday', label: 'Sunday' },
+] as const;
+
+const defaultHours = { open: '09:00', close: '18:00', closed: false };
+
+function businessHoursToString(h: Record<string, { open: string; close: string; closed: boolean }>): string {
+  return DAYS.map(({ key, label }) => {
+    const d = h[key];
+    if (!d || d.closed) return `${label.slice(0, 3)}: Closed`;
+    return `${label.slice(0, 3)}: ${d.open}-${d.close}`;
+  }).join('; ');
+}
+
 export default function VenueSignupPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -48,10 +68,17 @@ export default function VenueSignupPage() {
     zipCode: '',
     website: '',
     phoneNumber: '',
-    businessHours: '',
     businessLicense: '',
     taxId: '',
   });
+
+  const [businessHoursByDay, setBusinessHoursByDay] = useState<Record<string, { open: string; close: string; closed: boolean }>>(() => {
+    const o: Record<string, { open: string; close: string; closed: boolean }> = {};
+    DAYS.forEach((d) => { o[d.key] = { ...defaultHours }; });
+    return o;
+  });
+  const [applyAllOpen, setApplyAllOpen] = useState('09:00');
+  const [applyAllClose, setApplyAllClose] = useState('18:00');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -106,7 +133,7 @@ export default function VenueSignupPage() {
             zipCode: formData.zipCode,
             website: formData.website,
             phone: formData.phoneNumber,
-            businessHours: formData.businessHours,
+            businessHours: businessHoursToString(businessHoursByDay),
             businessLicense: formData.businessLicense,
             taxId: formData.taxId,
           },
@@ -414,18 +441,95 @@ export default function VenueSignupPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="businessHours">Business Hours</Label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="businessHours"
-                    name="businessHours"
-                    placeholder="e.g. Mon–Fri 9:00–18:00, Sat 10:00–16:00"
-                    value={formData.businessHours}
-                    onChange={handleChange}
-                    className="pl-10"
-                  />
+              <div className="space-y-3">
+                <Label className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" /> Business Hours
+                </Label>
+                <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Apply to all days:</span>
+                    <Input
+                      type="time"
+                      value={applyAllOpen}
+                      onChange={(e) => setApplyAllOpen(e.target.value)}
+                      className="w-28 h-9"
+                    />
+                    <span className="text-muted-foreground">–</span>
+                    <Input
+                      type="time"
+                      value={applyAllClose}
+                      onChange={(e) => setApplyAllClose(e.target.value)}
+                      className="w-28 h-9"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setBusinessHoursByDay((prev) => {
+                          const next = { ...prev };
+                          DAYS.forEach((d) => {
+                            next[d.key] = { open: applyAllOpen, close: applyAllClose, closed: false };
+                          });
+                          return next;
+                        });
+                        toast.success('Hours applied to all days');
+                      }}
+                    >
+                      Apply to all
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {DAYS.map(({ key, label }) => {
+                      const day = businessHoursByDay[key] || defaultHours;
+                      return (
+                        <div key={key} className="flex flex-wrap items-center gap-2 text-sm">
+                          <span className="w-24 shrink-0 font-medium text-foreground">{label}</span>
+                          <label className="flex items-center gap-1.5 shrink-0">
+                            <input
+                              type="checkbox"
+                              checked={day.closed}
+                              onChange={(e) => {
+                                setBusinessHoursByDay((prev) => ({
+                                  ...prev,
+                                  [key]: { ...prev[key], closed: e.target.checked },
+                                }));
+                              }}
+                              className="rounded border-border"
+                            />
+                            <span className="text-muted-foreground">Closed</span>
+                          </label>
+                          {!day.closed && (
+                            <>
+                              <Input
+                                type="time"
+                                value={day.open}
+                                onChange={(e) =>
+                                  setBusinessHoursByDay((prev) => ({
+                                    ...prev,
+                                    [key]: { ...prev[key], open: e.target.value },
+                                  }))
+                                }
+                                className="w-28 h-8"
+                              />
+                              <span className="text-muted-foreground">–</span>
+                              <Input
+                                type="time"
+                                value={day.close}
+                                onChange={(e) =>
+                                  setBusinessHoursByDay((prev) => ({
+                                    ...prev,
+                                    [key]: { ...prev[key], close: e.target.value },
+                                  }))
+                                }
+                                className="w-28 h-8"
+                              />
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 

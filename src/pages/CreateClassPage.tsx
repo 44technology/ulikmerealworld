@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { X, BookOpen, Camera, Calendar, Clock, DollarSign, Users, MapPin, Plus, AlertCircle, Crown, Lock, Monitor, Video, Building, Paperclip, FileText } from 'lucide-react';
+import { X, BookOpen, Camera, Calendar, Clock, DollarSign, Users, MapPin, Plus, AlertCircle, Crown, Lock, Monitor, Video, Building, Paperclip, FileText, ListOrdered } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useVenues } from '@/hooks/useVenues';
+import { useVenues, useVenue } from '@/hooks/useVenues';
+import { checkVenueHours } from '@/lib/venueHours';
 import { CLASS_AND_COMMUNITY_CATEGORIES } from '@/constants/categories';
 import { useCommunities } from '@/hooks/useCommunities';
 import { toast } from 'sonner';
@@ -31,6 +32,33 @@ import { Label } from '@/components/ui/label';
 
 type MaterialItem = { id: string; file: File; name: string };
 
+type SyllabusLesson = { id: string; title: string; description: string };
+type SyllabusModule = { id: string; title: string; lessons: SyllabusLesson[] };
+
+/** Placeholder and hint per meeting platform so users know the right link format. */
+const MEETING_PLATFORM_CONFIG: Record<string, { placeholder: string; hint: string }> = {
+  zoom: {
+    placeholder: 'e.g. https://zoom.us/j/123456789 or https://us06web.zoom.us/j/...',
+    hint: 'Create a meeting at zoom.us → Copy "Join URL" or "Invite link".',
+  },
+  teams: {
+    placeholder: 'e.g. https://teams.microsoft.com/l/meetup-join/19%3a...',
+    hint: 'Calendar → New meeting → Add participants → Copy "Get link to join".',
+  },
+  meet: {
+    placeholder: 'e.g. https://meet.google.com/abc-defg-hij',
+    hint: 'Create a meeting at meet.google.com or Google Calendar → Copy the meeting link.',
+  },
+  webex: {
+    placeholder: 'e.g. https://example.webex.com/meet/... or meeting number link',
+    hint: 'Schedule a meeting in Webex → Copy "Join meeting" or invitation link.',
+  },
+  custom: {
+    placeholder: 'e.g. https://discord.gg/... or any meeting URL',
+    hint: 'Paste the link participants will use to join (Discord, Skype, etc.).',
+  },
+};
+
 const CreateClassPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,6 +66,7 @@ const CreateClassPage = () => {
   const communityIdFromQuery = searchParams.get('communityId') || undefined;
   const { isAuthenticated, user, updateUser } = useAuth();
   const { data: venues = [] } = useVenues();
+  const { data: venueDetails } = useVenue(type === 'onsite' && venueId ? venueId : '');
   const { data: communities = [] } = useCommunities();
   const [communityId, setCommunityId] = useState<string>(communityIdFromQuery || '');
 
@@ -113,6 +142,8 @@ const CreateClassPage = () => {
   const [venueId, setVenueId] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  /** When frequency is 'custom', only end time (HH:mm) is needed; same day as start. */
+  const [endTimeOnly, setEndTimeOnly] = useState('');
   const [maxStudents, setMaxStudents] = useState('');
   const [price, setPrice] = useState('');
   const [schedule, setSchedule] = useState('');
@@ -120,9 +151,10 @@ const CreateClassPage = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [isExclusive, setIsExclusive] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [frequency, setFrequency] = useState<'once' | 'weekly' | 'custom'>('once');
+  const [frequency, setFrequency] = useState<'once' | 'custom'>('once');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [classMaterials, setClassMaterials] = useState<MaterialItem[]>([]);
+  const [syllabus, setSyllabus] = useState<SyllabusModule[]>([]);
   const [lessons, setLessons] = useState<Array<{ id: string; day: string; time: string; title: string; materials: MaterialItem[] }>>([]);
   const [type, setType] = useState<'online' | 'onsite' | 'hybrid'>('online');
   const [meetingPlatform, setMeetingPlatform] = useState<'zoom' | 'teams' | 'meet' | 'webex' | 'custom' | ''>('');
@@ -140,49 +172,73 @@ const CreateClassPage = () => {
     { value: 'sunday', label: 'Sunday' },
   ];
   
-  const toggleDay = (day: string) => {
-    setSelectedDays(prev => 
-      prev.includes(day) 
-        ? prev.filter(d => d !== day)
-        : [...prev, day]
-    );
+  /** Custom days: only one day at a time; select day then add lessons one by one. */
+  const selectDay = (day: string) => {
+    setSelectedDays([day]);
   };
   
   const handleAddLesson = () => {
     if (frequency !== 'custom' || selectedDays.length === 0) {
-      toast.error('Please select custom days first');
+      toast.error('Please select a day first');
       return;
     }
     if (!startTime) {
       toast.error('Please set start time first');
       return;
     }
-    
-    // Add a lesson for each selected day that doesn't have a lesson yet
-    const daysWithoutLessons = selectedDays.filter(day => 
-      !lessons.some(lesson => lesson.day === day)
-    );
-    
-    if (daysWithoutLessons.length === 0) {
-      toast.info('All selected days already have lessons');
-      return;
-    }
-    
+    const day = selectedDays[0];
     const timeOnly = startTime.split('T')[1] || startTime.split(' ')[1] || '10:00';
-    const newLessons = daysWithoutLessons.map(day => ({
-      id: `lesson-${Date.now()}-${day}`,
+    const newLesson = {
+      id: `lesson-${Date.now()}-${day}-${lessons.length}`,
       day,
       time: timeOnly,
-      title: `${weekDays.find(w => w.value === day)?.label} - ${title || 'Lesson'}`,
+      title: `${weekDays.find(w => w.value === day)?.label} - ${title || 'Lesson'}${lessons.filter(l => l.day === day).length > 0 ? ` (${lessons.filter(l => l.day === day).length + 1})` : ''}`,
       materials: [] as MaterialItem[],
-    }));
-    
-    setLessons([...lessons, ...newLessons]);
-    toast.success(`${newLessons.length} lesson(s) added`);
+    };
+    setLessons([...lessons, newLesson]);
+    toast.success('Lesson added');
   };
 
   const handleRemoveLesson = (lessonId: string) => {
     setLessons(lessons.filter(l => l.id !== lessonId));
+  };
+
+  const handleAddSyllabusModule = () => {
+    setSyllabus((prev) => [...prev, { id: `mod-${Date.now()}`, title: '', lessons: [] }]);
+  };
+  const handleRemoveSyllabusModule = (moduleId: string) => {
+    setSyllabus((prev) => prev.filter((m) => m.id !== moduleId));
+  };
+  const handleSyllabusModuleTitle = (moduleId: string, title: string) => {
+    setSyllabus((prev) => prev.map((m) => (m.id === moduleId ? { ...m, title } : m)));
+  };
+  const handleAddSyllabusLesson = (moduleId: string) => {
+    setSyllabus((prev) =>
+      prev.map((m) =>
+        m.id === moduleId
+          ? { ...m, lessons: [...m.lessons, { id: `les-${Date.now()}`, title: '', description: '' }] }
+          : m
+      )
+    );
+  };
+  const handleRemoveSyllabusLesson = (moduleId: string, lessonId: string) => {
+    setSyllabus((prev) =>
+      prev.map((m) => (m.id === moduleId ? { ...m, lessons: m.lessons.filter((l) => l.id !== lessonId) } : m))
+    );
+  };
+  const handleSyllabusLessonTitle = (moduleId: string, lessonId: string, title: string) => {
+    setSyllabus((prev) =>
+      prev.map((m) =>
+        m.id === moduleId ? { ...m, lessons: m.lessons.map((l) => (l.id === lessonId ? { ...l, title } : l)) } : m
+      )
+    );
+  };
+  const handleSyllabusLessonDescription = (moduleId: string, lessonId: string, description: string) => {
+    setSyllabus((prev) =>
+      prev.map((m) =>
+        m.id === moduleId ? { ...m, lessons: m.lessons.map((l) => (l.id === lessonId ? { ...l, description } : l)) } : m
+      )
+    );
   };
 
   const classMaterialInputRef = useRef<HTMLInputElement>(null);
@@ -243,8 +299,20 @@ const CreateClassPage = () => {
           toast.error('Price cannot be negative');
           return;
         }
-        if (priceNum > 0 && priceNum < 10) {
-          toast.error('Paid classes must be at least $10');
+      if (priceNum > 0 && priceNum < 10) {
+        toast.error('Paid classes must be at least $10');
+        return;
+      }
+      }
+
+      if (type === 'onsite' && venueId && venueDetails?.businessHours) {
+        const startDate = new Date(startTime);
+        const endDate = frequency === 'custom' && endTimeOnly && startTime
+          ? (() => { const d = new Date(startTime); const [h, m] = endTimeOnly.split(':').map(Number); d.setHours(h, m ?? 0, 0, 0); return d; })()
+          : endTime ? new Date(endTime) : undefined;
+        const venueCheck = checkVenueHours(venueDetails.businessHours, startDate, endDate);
+        if (!venueCheck.valid) {
+          toast.error(venueCheck.message);
           return;
         }
       }
@@ -264,11 +332,17 @@ const CreateClassPage = () => {
         customPlatformName: (type === 'online' || type === 'hybrid') && meetingPlatform === 'custom' ? customPlatformName : undefined,
         physicalLocation: type === 'hybrid' ? physicalLocation : undefined,
         startTime: new Date(`${startTime}`).toISOString(),
-        endTime: endTime ? new Date(`${endTime}`).toISOString() : undefined,
+        endTime: (() => {
+          if (frequency === 'custom' && endTimeOnly && startTime) {
+            const d = new Date(startTime); const [h, m] = endTimeOnly.split(':').map(Number); d.setHours(h, m ?? 0, 0, 0); return d.toISOString();
+          }
+          return endTime ? new Date(`${endTime}`).toISOString() : undefined;
+        })(),
         maxStudents: maxStudents ? parseInt(maxStudents) : undefined,
         price: priceNum !== undefined && !isNaN(priceNum) ? priceNum : undefined,
         schedule: schedule || undefined,
         lessons: lessons.map((l) => ({ day: l.day, time: l.time, title: l.title })),
+        syllabus: syllabus.length > 0 ? syllabus.map((m) => ({ title: m.title, lessons: m.lessons.map((l) => ({ title: l.title, description: l.description || undefined })) })) : undefined,
       };
 
       const hasMaterials = image || classMaterials.length > 0 || lessons.some((l) => l.materials.length > 0);
@@ -491,11 +565,16 @@ const CreateClassPage = () => {
                     Meeting Link *
                   </label>
                   <Input
-                    placeholder={meetingPlatform === 'custom' ? "e.g., https://discord.gg/..." : "e.g., https://zoom.us/j/123456789"}
+                    placeholder={meetingPlatform ? (MEETING_PLATFORM_CONFIG[meetingPlatform]?.placeholder ?? 'Paste your meeting link') : 'Select a platform first'}
                     value={meetingLink}
                     onChange={(e) => setMeetingLink(e.target.value)}
                     className="h-12 rounded-xl"
                   />
+                  {meetingPlatform && MEETING_PLATFORM_CONFIG[meetingPlatform]?.hint && (
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      {MEETING_PLATFORM_CONFIG[meetingPlatform].hint}
+                    </p>
+                  )}
                 </div>
               </>
             )}
@@ -520,20 +599,41 @@ const CreateClassPage = () => {
                   Venue *
                 </label>
                 <div className="space-y-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-12 rounded-xl justify-start gap-2"
-                    onClick={() => navigate('/select-venue?returnTo=create-class')}
-                  >
-                    <MapPin className="w-5 h-5 text-muted-foreground" />
-                    {venueId
-                      ? (selectedVenueDisplay?.name ?? venues.find((v) => v.id === venueId)?.name ?? 'Venue selected')
-                      : 'Browse venues near me'}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 h-12 rounded-xl justify-start gap-2"
+                      onClick={() => navigate('/select-venue?returnTo=create-class')}
+                    >
+                      <MapPin className="w-5 h-5 text-muted-foreground" />
+                      {venueId
+                        ? (selectedVenueDisplay?.name ?? venues.find((v) => v.id === venueId)?.name ?? 'Venue selected')
+                        : 'Browse venues near me'}
+                    </Button>
+                    {venueId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-12 w-12 rounded-xl shrink-0"
+                        onClick={() => navigate(`/venue/${venueId}`)}
+                        title="View venue details"
+                      >
+                        <MapPin className="w-5 h-5" />
+                      </Button>
+                    )}
+                  </div>
                   {venueId && (
                     <p className="text-xs text-muted-foreground">
-                      {selectedVenueDisplay?.name ?? venues.find((v) => v.id === venueId)?.name} selected. Tap above to change.
+                      {selectedVenueDisplay?.name ?? venues.find((v) => v.id === venueId)?.name} selected.{' '}
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/venue/${venueId}`)}
+                        className="text-primary hover:underline"
+                      >
+                        View venue details
+                      </button>
                     </p>
                   )}
                 </div>
@@ -628,6 +728,86 @@ const CreateClassPage = () => {
               )}
             </div>
 
+            {/* Course syllabus (optional) */}
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
+                <ListOrdered className="w-4 h-4" /> Course syllabus (optional)
+              </label>
+              <p className="text-xs text-muted-foreground mb-3">Add modules and lessons so students see what they will learn.</p>
+              <div className="space-y-4">
+                {syllabus.map((module) => (
+                  <div key={module.id} className="p-4 rounded-xl border border-border bg-card space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Module title (e.g. Week 1: Introduction)"
+                        value={module.title}
+                        onChange={(e) => handleSyllabusModuleTitle(module.id, e.target.value)}
+                        className="flex-1 h-10 rounded-lg"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="shrink-0 text-destructive hover:text-destructive"
+                        onClick={() => handleRemoveSyllabusModule(module.id)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="pl-2 border-l-2 border-muted space-y-2">
+                      {module.lessons.map((lesson) => (
+                        <div key={lesson.id} className="space-y-1">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Lesson title"
+                              value={lesson.title}
+                              onChange={(e) => handleSyllabusLessonTitle(module.id, lesson.id, e.target.value)}
+                              className="flex-1 h-9 rounded-lg text-sm"
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="shrink-0 h-9 w-9 p-0"
+                              onClick={() => handleRemoveSyllabusLesson(module.id, lesson.id)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Textarea
+                            placeholder="Short description (optional)"
+                            value={lesson.description}
+                            onChange={(e) => handleSyllabusLessonDescription(module.id, lesson.id, e.target.value)}
+                            className="min-h-[60px] text-sm rounded-lg resize-none"
+                            rows={2}
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="w-full border-dashed"
+                        onClick={() => handleAddSyllabusLesson(module.id)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add lesson
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full rounded-xl border-dashed gap-2"
+                  onClick={handleAddSyllabusModule}
+                >
+                  <Plus className="w-4 h-4" />
+                  Add module
+                </Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-1">
@@ -642,20 +822,29 @@ const CreateClassPage = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-1">
-                  <Clock className="w-4 h-4" /> End Time
+                  <Clock className="w-4 h-4" /> End {frequency === 'custom' ? 'time (same day)' : 'Date/Time'}
                 </label>
-                <Input
-                  type="datetime-local"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="h-12 rounded-xl"
-                />
+                {frequency === 'custom' ? (
+                  <Input
+                    type="time"
+                    value={endTimeOnly}
+                    onChange={(e) => setEndTimeOnly(e.target.value)}
+                    className="h-12 rounded-xl"
+                  />
+                ) : (
+                  <Input
+                    type="datetime-local"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="h-12 rounded-xl"
+                  />
+                )}
               </div>
             </div>
 
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">
-                Frequency
+                Schedule
               </label>
               <div className="flex gap-2 mb-3">
                 <Button
@@ -665,22 +854,11 @@ const CreateClassPage = () => {
                     setFrequency('once');
                     setSelectedDays([]);
                     setLessons([]);
+                    setEndTimeOnly('');
                   }}
                   className="flex-1"
                 >
-                  Once
-                </Button>
-                <Button
-                  type="button"
-                  variant={frequency === 'weekly' ? 'default' : 'outline'}
-                  onClick={() => {
-                    setFrequency('weekly');
-                    setSelectedDays([]);
-                    setLessons([]);
-                  }}
-                  className="flex-1"
-                >
-                  Weekly
+                  One time
                 </Button>
                 <Button
                   type="button"
@@ -688,20 +866,22 @@ const CreateClassPage = () => {
                   onClick={() => setFrequency('custom')}
                   className="flex-1"
                 >
-                  Custom Days
+                  Custom days
                 </Button>
               </div>
               {frequency === 'custom' && (
                 <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">Select one day, then add lessons one by one.</p>
                   <div className="grid grid-cols-2 gap-2 p-3 border rounded-lg bg-muted/50">
                     {weekDays.map((day) => (
                       <div key={day.value} className="flex items-center space-x-2">
                         <input
-                          type="checkbox"
+                          type="radio"
+                          name="custom-day"
                           id={`day-${day.value}`}
                           checked={selectedDays.includes(day.value)}
-                          onChange={() => toggleDay(day.value)}
-                          className="w-4 h-4 rounded border-border"
+                          onChange={() => selectDay(day.value)}
+                          className="w-4 h-4 border-border"
                         />
                         <label
                           htmlFor={`day-${day.value}`}
@@ -724,14 +904,14 @@ const CreateClassPage = () => {
                           disabled={!startTime}
                         >
                           <Plus className="w-4 h-4 mr-1" />
-                          Add Lessons
+                          Add Lesson
                         </Button>
                       </div>
                       {lessons.length === 0 ? (
                         <div className="p-4 rounded-lg border border-dashed border-border bg-muted/30 text-center">
                           <AlertCircle className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground mb-1">No lessons added yet</p>
-                          <p className="text-xs text-muted-foreground">Click "Add Lessons" to create lessons for selected days</p>
+                          <p className="text-xs text-muted-foreground mb-1">No lessons yet</p>
+                          <p className="text-xs text-muted-foreground">Click &quot;Add Lesson&quot; to add a lesson for {weekDays.find(w => w.value === selectedDays[0])?.label}</p>
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -927,7 +1107,7 @@ const CreateClassPage = () => {
         <div className="sticky bottom-0 glass safe-bottom p-4 border-t border-border">
           <Button
             onClick={handleSubmit}
-            disabled={!title || !description || !skill || !startTime || loading || (type === 'onsite' && !venueId) || ((type === 'online' || type === 'hybrid') && (!meetingPlatform || !meetingLink)) || (type === 'hybrid' && !physicalLocation.trim()) || (meetingPlatform === 'custom' && !customPlatformName.trim())}
+            disabled={!title || !description || !skill || !startTime || loading || (type === 'onsite' && !venueId) || ((type === 'online' || type === 'hybrid') && (!meetingPlatform || !meetingLink)) || (type === 'hybrid' && !physicalLocation.trim()) || (meetingPlatform === 'custom' && !customPlatformName.trim()) || (frequency === 'custom' && (selectedDays.length === 0 || lessons.length === 0))}
             className="w-full h-12 rounded-xl bg-gradient-primary"
           >
             {loading ? 'Creating...' : 'Create Class'}

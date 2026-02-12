@@ -240,7 +240,7 @@ export default function ClassDetailPage() {
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
   const [editDuration, setEditDuration] = useState('');
-  const [editFrequency, setEditFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('weekly');
+  const [editFrequency, setEditFrequency] = useState<'once' | 'custom'>('once');
   const [editSelectedDays, setEditSelectedDays] = useState<string[]>([]);
   const [editDescription, setEditDescription] = useState('');
   
@@ -262,9 +262,22 @@ export default function ClassDetailPage() {
     );
   };
   
+  // Parse frequency string: "Monday, Wednesday" -> custom with days; else once
+  const parseFrequencyForEdit = (freq: string): { mode: 'once' | 'custom'; days: string[] } => {
+    const oneTimeValues = ['once', 'one time', 'weekly', 'daily', 'monthly'];
+    if (!freq || oneTimeValues.includes(freq.toLowerCase().trim())) {
+      return { mode: 'once', days: [] };
+    }
+    const parts = freq.split(',').map(s => s.trim().toLowerCase());
+    const dayValues = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const valid = parts.filter(p => dayValues.includes(p));
+    return valid.length > 0 ? { mode: 'custom', days: valid } : { mode: 'once', days: [] };
+  };
+
   // Initialize edit form when dialog opens
   const handleEditClick = () => {
     if (classData) {
+      const { mode, days } = parseFrequencyForEdit(classData.frequency);
       setEditTitle(classData.title);
       setEditType(classData.type);
       setEditPrice(classData.price.toString());
@@ -273,7 +286,8 @@ export default function ClassDetailPage() {
       setEditDate(classData.date);
       setEditTime(classData.time);
       setEditDuration(classData.duration);
-      setEditFrequency(classData.frequency as 'daily' | 'weekly' | 'monthly');
+      setEditFrequency(mode);
+      setEditSelectedDays(days);
       setEditDescription(classData.description);
       setIsEditDialogOpen(true);
     }
@@ -291,7 +305,7 @@ export default function ClassDetailPage() {
     
     const frequencyDisplay = editFrequency === 'custom' && editSelectedDays.length > 0
       ? editSelectedDays.map(d => weekDays.find(w => w.value === d)?.label).join(', ')
-      : editFrequency;
+      : 'One time';
     
     const updatedClass = {
       ...classData!,
@@ -568,41 +582,19 @@ export default function ClassDetailPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Frequency</Label>
+                  <Label>Schedule</Label>
                   <div className="space-y-3">
                     <div className="flex gap-2">
                       <Button
-                        variant={editFrequency === 'daily' ? 'default' : 'outline'}
+                        variant={editFrequency === 'once' ? 'default' : 'outline'}
                         onClick={() => {
-                          setEditFrequency('daily');
+                          setEditFrequency('once');
                           setEditSelectedDays([]);
                         }}
                         size="sm"
                         type="button"
                       >
-                        Daily
-                      </Button>
-                      <Button
-                        variant={editFrequency === 'weekly' ? 'default' : 'outline'}
-                        onClick={() => {
-                          setEditFrequency('weekly');
-                          setEditSelectedDays([]);
-                        }}
-                        size="sm"
-                        type="button"
-                      >
-                        Weekly
-                      </Button>
-                      <Button
-                        variant={editFrequency === 'monthly' ? 'default' : 'outline'}
-                        onClick={() => {
-                          setEditFrequency('monthly');
-                          setEditSelectedDays([]);
-                        }}
-                        size="sm"
-                        type="button"
-                      >
-                        Monthly
+                        One time
                       </Button>
                       <Button
                         variant={editFrequency === 'custom' ? 'default' : 'outline'}
@@ -610,7 +602,7 @@ export default function ClassDetailPage() {
                         size="sm"
                         type="button"
                       >
-                        Custom Days
+                        Custom days
                       </Button>
                     </div>
                     {editFrequency === 'custom' && (

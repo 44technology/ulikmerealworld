@@ -17,6 +17,7 @@ export interface Venue {
   phone?: string;
   capacity?: number;
   amenities: string[];
+  businessHours?: string;
   _count?: {
     meetups: number;
   };

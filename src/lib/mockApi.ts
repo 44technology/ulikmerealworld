@@ -341,6 +341,7 @@ const initDummyData = () => {
   // Initialize venues if empty
   const venues = getStorage(VENUE_STORAGE_KEY, []);
   if (venues.length === 0) {
+    const defaultBusinessHours = 'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-18:00; Sun: Closed';
     const dummyVenues = [
       {
         id: 'venue-1',
@@ -354,6 +355,7 @@ const initDummyData = () => {
         reviewCount: 342,
         priceRange: '$$',
         image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400',
+        businessHours: defaultBusinessHours,
       },
       {
         id: 'venue-2',
@@ -367,6 +369,7 @@ const initDummyData = () => {
         reviewCount: 512,
         priceRange: '$$$$',
         image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
+        businessHours: defaultBusinessHours,
       },
     ];
     setStorage(VENUE_STORAGE_KEY, dummyVenues);

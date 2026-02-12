@@ -8,7 +8,6 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
 import { Plus, GraduationCap, MapPin, Calendar, Clock, Users, DollarSign, Monitor, Building, Video, Crown, Lock, TrendingUp, X, AlertCircle } from 'lucide-react';
-import { Checkbox } from '../../components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
 import { toast } from 'sonner';
@@ -47,7 +46,7 @@ export default function ClassesPage() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState('');
-  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('weekly');
+  const [frequency, setFrequency] = useState<'once' | 'custom'>('once');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [isPremium, setIsPremium] = useState(false);
@@ -65,43 +64,29 @@ export default function ClassesPage() {
     { value: 'sunday', label: 'Sunday' },
   ];
   
-  const toggleDay = (day: string) => {
-    setSelectedDays(prev => 
-      prev.includes(day) 
-        ? prev.filter(d => d !== day)
-        : [...prev, day]
-    );
+  /** Custom days: only one day at a time; select day then add lessons one by one. */
+  const selectDay = (day: string) => {
+    setSelectedDays([day]);
   };
 
   const handleAddLesson = () => {
     if (frequency !== 'custom' || selectedDays.length === 0) {
-      toast.error('Please select custom days first');
+      toast.error('Please select a day first');
       return;
     }
     if (!time || !duration) {
       toast.error('Please set time and duration first');
       return;
     }
-    
-    // Add a lesson for each selected day that doesn't have a lesson yet
-    const daysWithoutLessons = selectedDays.filter(day => 
-      !lessons.some(lesson => lesson.day === day)
-    );
-    
-    if (daysWithoutLessons.length === 0) {
-      toast.info('All selected days already have lessons');
-      return;
-    }
-    
-    const newLessons = daysWithoutLessons.map(day => ({
-      id: `lesson-${Date.now()}-${day}`,
+    const day = selectedDays[0];
+    const newLesson = {
+      id: `lesson-${Date.now()}-${day}-${lessons.length}`,
       day,
       time,
-      title: `${weekDays.find(w => w.value === day)?.label} - ${title}`,
-    }));
-    
-    setLessons([...lessons, ...newLessons]);
-    toast.success(`${newLessons.length} lesson(s) added`);
+      title: `${weekDays.find(w => w.value === day)?.label} - ${title}${lessons.filter(l => l.day === day).length > 0 ? ` (${lessons.filter(l => l.day === day).length + 1})` : ''}`,
+    };
+    setLessons([...lessons, newLesson]);
+    toast.success('Lesson added');
   };
 
   const handleRemoveLesson = (lessonId: string) => {
@@ -152,7 +137,7 @@ export default function ClassesPage() {
     
     const frequencyDisplay = frequency === 'custom' && selectedDays.length > 0
       ? selectedDays.map(d => weekDays.find(w => w.value === d)?.label).join(', ')
-      : frequency;
+      : 'One time';
     
     const classPrice = price ? parseFloat(price) : 0;
     const isFree = classPrice === 0;
@@ -193,7 +178,7 @@ export default function ClassesPage() {
     setDate('');
     setTime('');
     setDuration('');
-    setFrequency('weekly');
+    setFrequency('once');
     setSelectedDays([]);
     setDescription('');
     setCategory('');
@@ -432,44 +417,20 @@ export default function ClassesPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Frequency</Label>
+                  <Label>Schedule</Label>
                   <div className="space-y-3">
                     <div className="flex gap-2">
                       <Button
-                        variant={frequency === 'daily' ? 'default' : 'outline'}
+                        variant={frequency === 'once' ? 'default' : 'outline'}
                         onClick={() => {
-                          setFrequency('daily');
+                          setFrequency('once');
                           setSelectedDays([]);
                           setLessons([]);
                         }}
                         size="sm"
                         type="button"
                       >
-                        Daily
-                      </Button>
-                      <Button
-                        variant={frequency === 'weekly' ? 'default' : 'outline'}
-                        onClick={() => {
-                          setFrequency('weekly');
-                          setSelectedDays([]);
-                          setLessons([]);
-                        }}
-                        size="sm"
-                        type="button"
-                      >
-                        Weekly
-                      </Button>
-                      <Button
-                        variant={frequency === 'monthly' ? 'default' : 'outline'}
-                        onClick={() => {
-                          setFrequency('monthly');
-                          setSelectedDays([]);
-                          setLessons([]);
-                        }}
-                        size="sm"
-                        type="button"
-                      >
-                        Monthly
+                        One time
                       </Button>
                       <Button
                         variant={frequency === 'custom' ? 'default' : 'outline'}
@@ -480,30 +441,33 @@ export default function ClassesPage() {
                         size="sm"
                         type="button"
                       >
-                        Custom Days
+                        Custom days
                       </Button>
                     </div>
                     {frequency === 'custom' && (
-                      <div className="grid grid-cols-2 gap-2 p-3 border rounded-lg bg-muted/50">
-                        {weekDays.map((day) => (
-                          <div key={day.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`day-${day.value}`}
-                              checked={selectedDays.includes(day.value)}
-                              onCheckedChange={() => toggleDay(day.value)}
-                            />
-                            <label
-                              htmlFor={`day-${day.value}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                            >
-                              {day.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {frequency === 'custom' && selectedDays.length === 0 && (
-                      <p className="text-xs text-muted-foreground">Please select at least one day</p>
+                      <>
+                        <p className="text-xs text-muted-foreground">Select one day, then add lessons one by one.</p>
+                        <div className="grid grid-cols-2 gap-2 p-3 border rounded-lg bg-muted/50">
+                          {weekDays.map((day) => (
+                            <div key={day.value} className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                name="custom-day"
+                                id={`day-${day.value}`}
+                                checked={selectedDays.includes(day.value)}
+                                onChange={() => selectDay(day.value)}
+                                className="h-4 w-4 border-border"
+                              />
+                              <label
+                                htmlFor={`day-${day.value}`}
+                                className="text-sm font-medium leading-none cursor-pointer"
+                              >
+                                {day.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </>
                     )}
                     {frequency === 'custom' && selectedDays.length > 0 && (
                       <div className="mt-3 space-y-3">
@@ -517,14 +481,14 @@ export default function ClassesPage() {
                             disabled={!time || !duration}
                           >
                             <Plus className="w-4 h-4 mr-1" />
-                            Add Lessons
+                            Add Lesson
                           </Button>
                         </div>
                         {lessons.length === 0 ? (
                           <div className="p-4 rounded-lg border border-dashed border-border bg-muted/30 text-center">
                             <AlertCircle className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-xs text-muted-foreground mb-1">No lessons added yet</p>
-                            <p className="text-xs text-muted-foreground">Click "Add Lessons" to create lessons for selected days</p>
+                            <p className="text-xs text-muted-foreground mb-1">No lessons yet</p>
+                            <p className="text-xs text-muted-foreground">Click &quot;Add Lesson&quot; to add a lesson for {weekDays.find(w => w.value === selectedDays[0])?.label}</p>
                           </div>
                         ) : (
                           <div className="space-y-2">
