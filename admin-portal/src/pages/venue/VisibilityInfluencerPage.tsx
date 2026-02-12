@@ -20,6 +20,7 @@ type AdCampaign = {
   type: AdType;
   content: string;
   media?: string;
+  link?: string;
   budget: number;
   spent: number;
   targetAudience: string;
@@ -88,25 +89,20 @@ export default function VisibilityInfluencerPage() {
   const [adType, setAdType] = useState<AdType>('reel');
   const [adTitle, setAdTitle] = useState('');
   const [adContent, setAdContent] = useState('');
-  const [adBudget, setAdBudget] = useState('');
+  const [adLink, setAdLink] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
 
   const handleCreateAd = () => {
-    if (!adTitle.trim() || !adContent.trim() || !adBudget || !targetAudience) {
+    if (!adTitle.trim() || !adContent.trim() || !targetAudience) {
       toast.error('Please fill all required fields');
       return;
     }
 
-    if (!selectedFile && adType === 'reel') {
-      toast.error('Please upload a video for reel ads');
-      return;
-    }
-
-    if (!selectedFile && adType === 'story') {
-      toast.error('Please upload an image for story ads');
+    if (!selectedFile) {
+      toast.error('Please upload media');
       return;
     }
 
@@ -120,7 +116,8 @@ export default function VisibilityInfluencerPage() {
       type: adType,
       content: adContent,
       media: selectedFile ? URL.createObjectURL(selectedFile) : undefined,
-      budget: parseFloat(adBudget),
+      link: adLink.trim() || undefined,
+      budget: 0,
       spent: 0,
       targetAudience,
       status: scheduledFor ? 'scheduled' : 'draft',
@@ -137,7 +134,7 @@ export default function VisibilityInfluencerPage() {
     // Reset form
     setAdTitle('');
     setAdContent('');
-    setAdBudget('');
+    setAdLink('');
     setTargetAudience('');
     setSelectedFile(null);
     setScheduledDate('');
@@ -152,6 +149,15 @@ export default function VisibilityInfluencerPage() {
       c.id === id ? { ...c, status: 'active' as AdStatus } : c
     ));
     toast.success('Ad published successfully!');
+  };
+
+  const handleCampaignLinkClick = (campaign: AdCampaign) => {
+    if (campaign.link) {
+      setCampaigns(prev => prev.map(c => 
+        c.id === campaign.id ? { ...c, clicks: c.clicks + 1 } : c
+      ));
+      window.open(campaign.link, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const getStatusColor = (status: AdStatus) => {
@@ -189,33 +195,9 @@ export default function VisibilityInfluencerPage() {
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Ad Campaign</DialogTitle>
-              <DialogDescription>Create sponsored content for reels or stories</DialogDescription>
+              <DialogDescription>Create sponsored content</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Ad Type</Label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={adType === 'reel' ? 'default' : 'outline'}
-                    onClick={() => setAdType('reel')}
-                    className="flex-1"
-                    type="button"
-                  >
-                    <Film className="w-4 h-4 mr-2" />
-                    Reel
-                  </Button>
-                  <Button
-                    variant={adType === 'story' ? 'default' : 'outline'}
-                    onClick={() => setAdType('story')}
-                    className="flex-1"
-                    type="button"
-                  >
-                    <Image className="w-4 h-4 mr-2" />
-                    Story
-                  </Button>
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <Label>Campaign Title</Label>
                 <Input
@@ -234,19 +216,17 @@ export default function VisibilityInfluencerPage() {
                   rows={4}
                 />
                 <p className="text-xs text-muted-foreground">
-                  {adType === 'reel' 
-                    ? 'Tip: Keep it engaging and include a clear call-to-action'
-                    : 'Tip: Stories are best for time-sensitive promotions'}
+                  Tip: Keep it engaging and include a clear call-to-action
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label>Media ({adType === 'reel' ? 'Video' : 'Image'})</Label>
+                <Label>Media (Video)</Label>
                 <div className="border-2 border-dashed rounded-lg p-6 text-center">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                   <Input
                     type="file"
-                    accept={adType === 'reel' ? 'video/*' : 'image/*'}
+                    accept="video/*,image/*"
                     onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                     className="max-w-xs mx-auto"
                   />
@@ -254,27 +234,24 @@ export default function VisibilityInfluencerPage() {
                     <p className="text-xs text-muted-foreground mt-2">{selectedFile.name}</p>
                   )}
                   <p className="text-xs text-muted-foreground mt-2">
-                    {adType === 'reel' 
-                      ? 'Upload a video (max 60 seconds recommended)'
-                      : 'Upload an image (1080x1920 recommended for stories)'}
+                    Upload a video or image
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Budget ($)</Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 500"
-                    value={adBudget}
-                    onChange={(e) => setAdBudget(e.target.value)}
-                    min="0"
-                  />
-                  <p className="text-xs text-muted-foreground">Total campaign budget</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Target Audience</Label>
+              <div className="space-y-2">
+                <Label>Link (URL)</Label>
+                <Input
+                  type="url"
+                  placeholder="e.g., https://example.com/promo"
+                  value={adLink}
+                  onChange={(e) => setAdLink(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Clicks on this link will be counted</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Target Audience</Label>
                   <Select value={targetAudience} onValueChange={setTargetAudience}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select audience" />
@@ -287,7 +264,6 @@ export default function VisibilityInfluencerPage() {
                       <SelectItem value="All Ages, General">All Ages, General</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
               </div>
 
               <div className="space-y-3 p-4 rounded-lg bg-muted/50 border border-border">
@@ -415,6 +391,21 @@ export default function VisibilityInfluencerPage() {
                       <Target className="w-3 h-3" />
                       <span>{campaign.targetAudience}</span>
                     </div>
+                    {campaign.link && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground truncate flex-1" title={campaign.link}>
+                          {campaign.link}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0 text-xs"
+                          onClick={() => handleCampaignLinkClick(campaign)}
+                        >
+                          Open URL
+                        </Button>
+                      </div>
+                    )}
                     {campaign.scheduledFor && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Calendar className="w-3 h-3" />

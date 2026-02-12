@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -6,6 +7,8 @@ import { Badge } from '../../components/ui/badge';
 import { Search, Send, User, MessageCircle, Phone, Video, MoreVertical, CheckCircle2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
+
+const getApiBase = () => (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') || window.location.origin;
 
 // Mock chat data - in production, fetch from API
 const mockChats = [
@@ -64,13 +67,34 @@ const mockMessages: Record<string, Array<{
 };
 
 export default function ChatPage() {
+  const [searchParams] = useSearchParams();
+  const meetupId = searchParams.get('meetupId');
+  const userIdFromQuery = searchParams.get('userId');
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sendingUpdateRequest, setSendingUpdateRequest] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selectedChatData = selectedChat ? mockChats.find(c => c.id === selectedChat) : null;
   const messages = selectedChat ? (mockMessages[selectedChat] || []) : [];
+
+  const handleRequestUpdate = async () => {
+    if (!meetupId) return;
+    setSendingUpdateRequest(true);
+    try {
+      const base = getApiBase();
+      const url = `${base}/api/meetups/${meetupId}/venue-request-update`;
+      const res = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Failed to send');
+      const data = await res.json().catch(() => ({}));
+      toast.success(data.message || 'Update request sent. The user can now edit the activity.');
+    } catch (e: any) {
+      toast.error(e.message || 'Could not send update request. Ensure the app API is reachable.');
+    } finally {
+      setSendingUpdateRequest(false);
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -95,6 +119,22 @@ export default function ChatPage() {
         <h1 className="text-3xl font-bold text-foreground">Chat</h1>
         <p className="text-muted-foreground mt-2">Communicate with your customers directly</p>
       </div>
+
+      {meetupId && (
+        <div className="mt-4 p-4 rounded-lg border border-primary/30 bg-primary/5 flex items-center justify-between gap-4">
+          <p className="text-sm text-foreground">
+            {userIdFromQuery ? 'Conversation about a pending activity. Send an update request so the user can edit it.' : 'Pending activity in context.'}
+          </p>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleRequestUpdate}
+            disabled={sendingUpdateRequest}
+          >
+            {sendingUpdateRequest ? 'Sending...' : 'Request update from user'}
+          </Button>
+        </div>
+      )}
 
       <div className="flex-1 grid grid-cols-3 gap-4 mt-6 min-h-0">
         {/* Chat List */}

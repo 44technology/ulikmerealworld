@@ -850,6 +850,26 @@ const initDummyData = () => {
         createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
         views: 0,
       },
+      {
+        id: 'story-venue-1',
+        image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800',
+        userId: '',
+        venueId: 'venue-1',
+        venue: { id: 'venue-1', name: 'Panther Coffee' },
+        expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+        views: 0,
+      },
+      {
+        id: 'story-venue-2',
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
+        userId: '',
+        venueId: 'venue-2',
+        venue: { id: 'venue-2', name: 'Zuma Miami' },
+        expiresAt: new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        views: 0,
+      },
     ];
     setStorage(STORY_STORAGE_KEY, dummyStories);
   }
@@ -1436,6 +1456,19 @@ export const mockApiRequest = async <T = any>(
       return { success: true, data: pending } as T;
     }
 
+    // PUT /meetups/:id/venue-request-update - venue sends update request so user can edit (venue portal chat)
+    if (method === 'PUT' && pathname.includes('/venue-request-update')) {
+      const parts = pathname.split('/');
+      const meetupIndex = parts.indexOf('meetups');
+      const id = meetupIndex >= 0 && parts[meetupIndex + 1] ? parts[meetupIndex + 1] : null;
+      if (!id) throw new Error('Meetup ID required');
+      const index = meetups.findIndex((m: any) => m.id === id);
+      if (index === -1) throw new Error('Meetup not found');
+      meetups[index] = { ...meetups[index], venueUpdateRequestSent: true, updatedAt: new Date().toISOString() };
+      setStorage(MEETUP_STORAGE_KEY, meetups);
+      return { success: true, data: meetups[index], message: 'Update request sent. User can now edit the activity.' } as T;
+    }
+
     if (method === 'POST') {
       if (!currentUserId) throw new Error('Unauthorized');
       const hasVenue = !!body.venueId;
@@ -1444,6 +1477,7 @@ export const mockApiRequest = async <T = any>(
         ...body,
         status: hasVenue ? 'PENDING_APPROVAL' : 'UPCOMING',
         venueApprovalStatus: hasVenue ? 'pending' : null,
+        venueUpdateRequestSent: false,
         creator: {
           id: 'current-user',
           firstName: 'Current',
@@ -1469,7 +1503,18 @@ export const mockApiRequest = async <T = any>(
       const meetupId = pathname.split('/').pop();
       const index = meetups.findIndex((m: any) => m.id === meetupId);
       if (index === -1) throw new Error('Meetup not found');
-      meetups[index] = { ...meetups[index], ...body, updatedAt: new Date().toISOString() };
+      const prev = meetups[index];
+      const wasRejected = prev.venueApprovalStatus === 'rejected';
+      const newVenueId = body.venueId;
+      const updates: any = { ...body, updatedAt: new Date().toISOString() };
+      if (wasRejected && newVenueId) {
+        updates.venueApprovalStatus = 'pending';
+        updates.venueUpdateRequestSent = false;
+        const venues = getStorage(VENUE_STORAGE_KEY, []);
+        const venue = venues.find((v: any) => v.id === newVenueId);
+        if (venue) updates.venue = { id: venue.id, name: venue.name, address: venue.address, city: venue.city };
+      }
+      meetups[index] = { ...prev, ...updates };
       setStorage(MEETUP_STORAGE_KEY, meetups);
       return {
         success: true,

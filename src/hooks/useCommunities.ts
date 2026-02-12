@@ -221,3 +221,12 @@ export function hasUserRequestedCommunity(userId: string | undefined, communityI
   const list = getCommunityJoinRequests(communityId);
   return list.some((r) => r.userId === userId);
 }
+
+/** Community IDs where the user has a pending join request (not yet approved) */
+export function getCommunityIdsWithPendingRequest(userId: string | undefined): string[] {
+  if (!userId) return [];
+  const all = getStoredJoinRequests();
+  return Object.keys(all).filter((communityId) =>
+    (all[communityId] ?? []).some((r) => r.userId === userId)
+  );
+}

@@ -13,6 +13,7 @@ import { useClasses } from '@/hooks/useClasses';
 import { useCommunities } from '@/hooks/useCommunities';
 import { useAuth } from '@/contexts/AuthContext';
 import { SPONSOR_STORIES } from '@/constants/sponsorAds';
+import { getFavouriteVenueIds } from '@/lib/favouriteVenues';
 import VenueCard from '@/components/cards/VenueCard';
 import UserAvatar from '@/components/ui/UserAvatar';
 import CreateStoryModal from '@/components/CreateStoryModal';
@@ -137,15 +138,15 @@ const HomePage = () => {
     },
   ];
 
-  // Combine API stories with mock stories
+  // Combine API stories with mock stories; show user stories + favourite venue stories (when user hearts a venue, their stories appear here)
   const allStories = useMemo(() => {
     const apiStories = storiesData || [];
-    // Filter out user's own stories from API
     const otherStories = apiStories.filter((s: any) => s.user?.id !== user?.id);
-    // Combine with mock stories, avoiding duplicates
     const mockStoryIds = new Set(mockStories.map(s => s.id));
     const uniqueMockStories = mockStories.filter(s => !apiStories.some((as: any) => as.id === s.id));
-    return [...otherStories, ...uniqueMockStories];
+    const combined = [...otherStories, ...uniqueMockStories];
+    const favIds = getFavouriteVenueIds();
+    return combined.filter((s: any) => !s.venueId || favIds.includes(s.venueId));
   }, [storiesData, user?.id]);
 
   // Stories with sponsor ads interspersed (when not ad-free)
@@ -524,7 +525,13 @@ const HomePage = () => {
                   </motion.div>
                 );
               }
-              const userName = story.user?.displayName || `${story.user?.firstName || ''} ${story.user?.lastName || ''}`.trim() || 'User';
+              const isVenueStory = !!story.venue;
+              const displayName = isVenueStory
+                ? (story.venue?.name || 'Venue')
+                : (story.user?.displayName || `${story.user?.firstName || ''} ${story.user?.lastName || ''}`.trim() || 'User');
+              const avatarSrc = isVenueStory
+                ? (story.venue?.image || story.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=150')
+                : (story.user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150');
               const hasStory = story.expiresAt && new Date(story.expiresAt) > new Date();
               return (
                 <motion.div
@@ -536,13 +543,13 @@ const HomePage = () => {
                   <div className={`p-0.5 rounded-full ${hasStory ? 'bg-gradient-to-br from-primary to-secondary' : 'bg-muted'}`}>
                     <div className="p-0.5 bg-background rounded-full">
                       <UserAvatar 
-                        src={story.user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'} 
-                        alt={userName} 
+                        src={avatarSrc} 
+                        alt={displayName} 
                         size="lg" 
                       />
                     </div>
                   </div>
-                  <span className="text-xs text-muted-foreground max-w-[60px] truncate">{userName}</span>
+                  <span className="text-xs text-muted-foreground max-w-[60px] truncate">{displayName}</span>
                 </motion.div>
               );
             })}

@@ -8,7 +8,7 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
-import { Plus, Calendar, MapPin, Users, Ticket, CheckCircle2, XCircle, Clock, DollarSign, User } from 'lucide-react';
+import { Plus, Calendar, MapPin, Users, Ticket, CheckCircle2, XCircle, Clock, DollarSign, User, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -381,6 +381,16 @@ export default function VibesPage() {
                       <div className="flex gap-2 pt-3 border-t border-border">
                         <Button
                           variant="outline"
+                          size="sm"
+                          className="shrink-0"
+                          onClick={() => navigate(`/chat?userId=${encodeURIComponent(activity.creator.id)}&meetupId=${encodeURIComponent(activity.id)}`)}
+                          title="Chat with creator"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          Chat
+                        </Button>
+                        <Button
+                          variant="outline"
                           className="flex-1 border-green-500 text-green-600 hover:bg-green-50"
                           onClick={() => openApprovalDialog(activity, 'approve')}
                         >
@@ -477,6 +487,20 @@ export default function VibesPage() {
                 ? 'Review the activity and set the final price'
                 : 'Provide a reason for rejection'}
             </DialogDescription>
+            {selectedActivity && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2 w-fit"
+                onClick={() => {
+                  setShowApprovalDialog(false);
+                  navigate(`/chat?userId=${encodeURIComponent(selectedActivity.creator.id)}&meetupId=${encodeURIComponent(selectedActivity.id)}`);
+                }}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Chat with creator
+              </Button>
+            )}
           </DialogHeader>
 
           {selectedActivity && (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, Calendar, Heart, Share2, User, DollarSign, Lock, Globe, Tag, Sparkles, MessageCircle, Edit, Trash2, Save, X, Ticket, ChevronRight } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import UserAvatar from '@/components/ui/UserAvatar';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
 import { useMeetup, useJoinMeetup, useUpdateMeetup, useDeleteMeetup } from '@/hooks/useMeetups';
+import { useVenues } from '@/hooks/useVenues';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import { useCreateTicketForMeetup, useMyTickets } from '@/hooks/useTickets';
@@ -84,19 +85,34 @@ const MeetupDetailPage = () => {
     description: '',
     pricePerPerson: 0,
     maxAttendees: 10,
+    venueId: '',
   });
+  
+  const { data: venuesList = [] } = useVenues({});
+  const rejectedVenueId = (meetup as any)?.venueApprovalStatus === 'rejected' ? (meetup as any)?.venueId || (meetup as any)?.venue?.id : null;
+  const venuesForEdit = useMemo(() => {
+    if (!rejectedVenueId) return venuesList;
+    return venuesList.filter((v: { id: string }) => v.id !== rejectedVenueId);
+  }, [venuesList, rejectedVenueId]);
   
   // Check if user is the host
   const isHost = user && meetup && (meetup.creator?.id === user.id || meetup.host?.id === user.id);
+  const isPendingVenueApproval = (meetup as any)?.venueApprovalStatus === 'pending';
+  const isRejectedByVenue = (meetup as any)?.venueApprovalStatus === 'rejected';
+  const venueUpdateRequestSent = (meetup as any)?.venueUpdateRequestSent === true;
+  const canEditAsHost = isHost && (!isPendingVenueApproval || venueUpdateRequestSent);
 
-  // Initialize edit data when meetup loads
+  // Initialize edit data when meetup loads (when rejected, leave venueId empty so user must pick a different venue)
   useEffect(() => {
     if (meetup && !isEditing) {
+      const rejected = (meetup as any)?.venueApprovalStatus === 'rejected';
+      const vid = rejected ? '' : ((meetup as any)?.venueId || (meetup as any)?.venue?.id || '');
       setEditData({
         title: meetup.title || '',
         description: meetup.description || '',
         pricePerPerson: meetup.pricePerPerson || 0,
         maxAttendees: meetup.maxAttendees || 10,
+        venueId: vid,
       });
     }
   }, [meetup, isEditing]);
@@ -108,13 +124,15 @@ const MeetupDetailPage = () => {
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    // Reset edit data to original values
     if (meetup) {
+      const rejected = (meetup as any)?.venueApprovalStatus === 'rejected';
+      const vid = rejected ? '' : ((meetup as any)?.venueId || (meetup as any)?.venue?.id || '');
       setEditData({
         title: meetup.title || '',
         description: meetup.description || '',
         pricePerPerson: meetup.pricePerPerson || 0,
         maxAttendees: meetup.maxAttendees || 10,
+        venueId: vid,
       });
     }
   };
@@ -125,18 +143,19 @@ const MeetupDetailPage = () => {
       return;
     }
 
-    try {
+    const payload: { title: string; description?: string; pricePerPerson: number; maxAttendees: number; venueId?: string } = {
+        title: editData.title,
+        description: editData.description,
+        pricePerPerson: editData.pricePerPerson,
+        maxAttendees: editData.maxAttendees,
+      };
+      if (editData.venueId) payload.venueId = editData.venueId;
       await updateMeetup.mutateAsync({
         id,
-        data: {
-          title: editData.title,
-          description: editData.description,
-          pricePerPerson: editData.pricePerPerson,
-          maxAttendees: editData.maxAttendees,
-        },
+        data: payload,
       });
       setIsEditing(false);
-      toast.success('Meetup updated successfully!');
+      toast.success(isRejectedByVenue && payload.venueId ? 'Request sent to the new venue. Waiting for approval.' : 'Meetup updated successfully!');
     } catch (error: any) {
       toast.error(error.message || 'Failed to update meetup');
     }
@@ -275,20 +294,28 @@ const MeetupDetailPage = () => {
           <div className="flex gap-2 ml-auto">
             {isHost && (
               <>
-                <motion.button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="p-2 rounded-full bg-muted"
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Edit className="w-5 h-5 text-foreground" />
-                </motion.button>
-                <motion.button
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="p-2 rounded-full bg-muted"
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Trash2 className="w-5 h-5 text-destructive" />
-                </motion.button>
+                {canEditAsHost ? (
+                  <>
+                    <motion.button
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="p-2 rounded-full bg-muted"
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Edit className="w-5 h-5 text-foreground" />
+                    </motion.button>
+                    <motion.button
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="p-2 rounded-full bg-muted"
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Trash2 className="w-5 h-5 text-destructive" />
+                    </motion.button>
+                  </>
+                ) : (
+                  <span className="text-xs text-muted-foreground px-2 py-1 rounded bg-muted">
+                    Edit locked until venue requests an update via chat
+                  </span>
+                )}
               </>
             )}
             <motion.button
@@ -440,6 +467,24 @@ const MeetupDetailPage = () => {
                   />
                 </div>
               </div>
+              {isRejectedByVenue && (meetup as any)?.venueId && (
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Request at a different venue
+                  </label>
+                  <p className="text-xs text-muted-foreground mb-2">The previous venue declined. Choose another venue to send your request.</p>
+                  <select
+                    value={editData.venueId}
+                    onChange={(e) => setEditData({ ...editData, venueId: e.target.value })}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
+                  >
+                    <option value="">Select a venue...</option>
+                    {venuesForEdit.map((v: { id: string; name: string }) => (
+                      <option key={v.id} value={v.id}>{v.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="flex gap-3 pt-2">
                 <Button
                   variant="outline"
@@ -451,11 +496,11 @@ const MeetupDetailPage = () => {
                 </Button>
                 <Button
                   onClick={handleSaveEdit}
-                  disabled={updateMeetup.isPending || !editData.title.trim()}
+                  disabled={updateMeetup.isPending || !editData.title.trim() || (isRejectedByVenue && !editData.venueId)}
                   className="flex-1 bg-gradient-primary"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {updateMeetup.isPending ? 'Saving...' : 'Save Changes'}
+                  {updateMeetup.isPending ? 'Saving...' : isRejectedByVenue ? 'Send request to new venue' : 'Save Changes'}
                 </Button>
               </div>
             </div>
@@ -705,15 +750,17 @@ const MeetupDetailPage = () => {
                     >
                       Cancel
                     </Button>
-                    <Button
-                      onClick={handleSaveEdit}
-                      disabled={updateMeetup.isPending || !editData.title.trim()}
-                      className="flex-1 h-12 bg-gradient-primary"
-                    >
-                      {updateMeetup.isPending ? 'Saving...' : 'Save Changes'}
-                    </Button>
+                    {canEditAsHost && (
+                      <Button
+                        onClick={handleSaveEdit}
+                        disabled={updateMeetup.isPending || !editData.title.trim() || (isRejectedByVenue && !editData.venueId)}
+                        className="flex-1 h-12 bg-gradient-primary"
+                      >
+                        {updateMeetup.isPending ? 'Saving...' : isRejectedByVenue ? 'Send request to new venue' : 'Save Changes'}
+                      </Button>
+                    )}
                   </div>
-                ) : (
+                ) : canEditAsHost ? (
                   <>
                     <Button
                       onClick={handleStartEdit}
@@ -722,6 +769,27 @@ const MeetupDetailPage = () => {
                       <Edit className="w-5 h-5 mr-2" />
                       Edit {(meetup as any)?.type === 'event' ? 'Event' : 'Activity'}
                     </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 flex items-center justify-center gap-2"
+                      onClick={() => navigate(`/chat?meetupId=${id}`)}
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      Open Chat
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 flex items-center justify-center gap-2"
+                      onClick={() => navigate('/home')}
+                    >
+                      Back to Home
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center py-2">
+                      Editing is locked until the venue requests an update via chat.
+                    </p>
                     <Button
                       variant="outline"
                       className="w-full h-12 flex items-center justify-center gap-2"

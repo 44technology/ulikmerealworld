@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Users, MoreVertical, Check, ArrowLeft, Calendar } from 'lucide-react';
+import { Plus, Search, Users, MoreVertical, Check, ArrowLeft, Calendar, Clock, AlertCircle } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCommunities, getUserCommunityIds } from '@/hooks/useCommunities';
+import { useCommunities, getUserCommunityIds, hasUserRequestedCommunity, getCommunityIdsWithPendingRequest } from '@/hooks/useCommunities';
 
-type FilterTab = 'all' | 'joined';
+type FilterTab = 'all' | 'joined' | 'pending';
 
 export default function CommunitiesPage() {
   const navigate = useNavigate();
@@ -18,6 +18,10 @@ export default function CommunitiesPage() {
   const { data: communities = [], isLoading } = useCommunities();
 
   const myCommunityIds = useMemo(() => new Set(getUserCommunityIds(user?.id || 'current-user')), [user?.id]);
+  const pendingRequestCommunityIds = useMemo(
+    () => new Set(getCommunityIdsWithPendingRequest(user?.id)),
+    [user?.id]
+  );
 
   const filteredBySearch = useMemo(
     () =>
@@ -31,8 +35,9 @@ export default function CommunitiesPage() {
 
   const filteredCommunities = useMemo(() => {
     if (filterTab === 'joined') return filteredBySearch.filter(c => myCommunityIds.has(c.id));
+    if (filterTab === 'pending') return filteredBySearch.filter(c => pendingRequestCommunityIds.has(c.id));
     return filteredBySearch;
-  }, [filterTab, filteredBySearch, myCommunityIds]);
+  }, [filterTab, filteredBySearch, myCommunityIds, pendingRequestCommunityIds]);
 
   return (
     <AppLayout>
@@ -62,7 +67,11 @@ export default function CommunitiesPage() {
         </div>
         <div className="px-4 pb-2">
           <p className="text-sm text-muted-foreground">
-            {filterTab === 'joined' ? `${filteredCommunities.length} joined` : `${filteredCommunities.length} communities`}
+            {filterTab === 'joined'
+              ? `${filteredCommunities.length} joined`
+              : filterTab === 'pending'
+                ? `${filteredCommunities.length} pending approval`
+                : `${filteredCommunities.length} communities`}
           </p>
         </div>
         {/* Search */}
@@ -78,7 +87,7 @@ export default function CommunitiesPage() {
             />
           </div>
         </div>
-        {/* Tabs - All | Joined (mutual) */}
+        {/* Tabs - All | Joined | Pending (approval) */}
         <div className="px-4 pb-3">
           <div className="flex gap-1 p-1 bg-muted/60 rounded-xl">
             <button
@@ -97,6 +106,19 @@ export default function CommunitiesPage() {
             >
               Joined
             </button>
+            <button
+              onClick={() => setFilterTab('pending')}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${
+                filterTab === 'pending' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'
+              }`}
+            >
+              Pending
+              {pendingRequestCommunityIds.size > 0 && (
+                <span className={`min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-xs ${filterTab === 'pending' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'}`}>
+                  {pendingRequestCommunityIds.size}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -113,7 +135,11 @@ export default function CommunitiesPage() {
             </div>
             <p className="text-muted-foreground font-medium mb-1">No communities</p>
             <p className="text-sm text-muted-foreground mb-4">
-              {searchQuery || filterTab === 'joined' ? 'Try changing filter or search' : 'Create your first community'}
+              {filterTab === 'pending'
+                ? 'You have no pending join requests. Request to join a community to see it here.'
+                : searchQuery || filterTab === 'joined'
+                  ? 'Try changing filter or search'
+                  : 'Create your first community'}
             </p>
             {!searchQuery && filterTab === 'all' && (
               <Button onClick={() => navigate('/create-community')} className="bg-primary text-primary-foreground">
@@ -126,6 +152,7 @@ export default function CommunitiesPage() {
           <div className="grid grid-cols-2 gap-3">
             {filteredCommunities.map((community, index) => {
               const isJoined = myCommunityIds.has(community.id);
+              const isPending = !isJoined && hasUserRequestedCommunity(user?.id, community.id);
               const imgSrc = community.image || 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400';
               return (
                 <motion.div
@@ -150,10 +177,15 @@ export default function CommunitiesPage() {
                       </p>
                     </div>
                   </motion.button>
-                  {/* Sağ üst köşe işareti: Joined / Mutual */}
                   {isJoined && (
                     <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-primary shadow flex items-center justify-center">
                       <Check className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                  )}
+                  {isPending && (
+                    <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-amber-500/90 text-white text-xs font-medium flex items-center gap-1 shadow">
+                      <Clock className="w-3.5 h-3.5" />
+                      Pending
                     </div>
                   )}
                 </motion.div>

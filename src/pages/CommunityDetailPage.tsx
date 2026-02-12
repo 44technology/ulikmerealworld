@@ -416,10 +416,15 @@ export default function CommunityDetailPage() {
             </Button>
           )}
           {!community.isMember && joinRequestPending && (
-            <Button variant="secondary" className="flex-1" disabled>
-              <AlertCircle className="w-4 h-4 mr-2" />
-              Request Pending
-            </Button>
+            <div className="flex-1 space-y-2">
+              <Button variant="secondary" className="w-full" disabled>
+                <AlertCircle className="w-4 h-4 mr-2" />
+                Request Pending
+              </Button>
+              <p className="text-xs text-muted-foreground text-center px-2">
+                The community owner will review your request. You can check status under Communities → Pending.
+              </p>
+            </div>
           )}
         </div>
 

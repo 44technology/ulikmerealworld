@@ -284,19 +284,30 @@ const ChatPage = () => {
     ? chatData.members?.find((m: any) => m.user.id !== user?.id)?.user 
     : null;
   
-  // Mentionable users: current chat members (for group/direct) or community members
+  // Mentionable users for @mentions: vibe members, class members, community members, or direct/group chat members
   const mentionableUsers = useMemo(() => {
+    const toUser = (u: any) => ({
+      id: u?.id,
+      displayName: u?.displayName || [u?.firstName, u?.lastName].filter(Boolean).join(' ') || 'User',
+      avatar: u?.avatar,
+    });
     if (chatData?.members && chatData.members.length > 0) {
       return chatData.members
         .filter((m: any) => m.user?.id !== user?.id)
-        .map((m: any) => ({
-          id: m.user?.id,
-          displayName: m.user?.displayName || [m.user?.firstName, m.user?.lastName].filter(Boolean).join(' ') || 'User',
-          avatar: m.user?.avatar,
-        }));
+        .map((m: any) => toUser(m.user));
+    }
+    if (isVibeChat && currentChat?.meetup?.members?.length > 0) {
+      return currentChat.meetup.members
+        .filter((m: any) => m.user?.id !== user?.id)
+        .map((m: any) => toUser(m.user));
+    }
+    if (isClassChat && currentChat?.class?.enrollments?.length > 0) {
+      return currentChat.class.enrollments
+        .filter((e: any) => e.user?.id !== user?.id)
+        .map((e: any) => toUser(e.user));
     }
     return COMMUNITY_MEMBERS;
-  }, [chatData?.members, user?.id]);
+  }, [chatData?.members, user?.id, isVibeChat, isClassChat, currentChat?.meetup?.members, currentChat?.class?.enrollments]);
 
   const filteredMentionUsers = useMemo(() => {
     if (!mentionFilter.trim()) return mentionableUsers;
@@ -1683,45 +1694,6 @@ const ChatPage = () => {
                 ) : (
                   <p className="text-sm text-muted-foreground py-2">Join communities from the Communities page</p>
                 )}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-primary" />
-                Chat with community members
-              </h3>
-              <p className="text-xs text-muted-foreground mb-3">Start a conversation with someone from your communities (e.g. @Ali, @Elissa)</p>
-              <div className="space-y-2">
-                {COMMUNITY_MEMBERS.map((member) => (
-                  <motion.div
-                    key={member.id}
-                    className="flex items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border"
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <UserAvatar src={member.avatar} alt={member.displayName} size="sm" />
-                      <span className="font-medium text-foreground truncate">{member.displayName}</span>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0"
-                      disabled={createDirectChat.isPending}
-                      onClick={async () => {
-                        try {
-                          const chat = await createDirectChat.mutateAsync(member.id);
-                          if (chat?.id) {
-                            setSelectedChat(chat.id);
-                          }
-                        } catch (err: any) {
-                          toast.error(err.message || 'Could not start chat');
-                        }
-                      }}
-                    >
-                      Message
-                    </Button>
-                  </motion.div>
-                ))}
               </div>
             </div>
           </TabsContent>

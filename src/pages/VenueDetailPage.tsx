@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Star, Clock, DollarSign, Heart, Share2, Shield, UtensilsCrossed, Sparkles, Camera, X, Tag, Percent, Calendar, Box, Eye, RotateCcw, GraduationCap, Users, ChevronRight } from 'lucide-react';
@@ -14,6 +14,7 @@ import {
 import { useVenue } from '@/hooks/useVenues';
 import { useClasses } from '@/hooks/useClasses';
 import { useMeetups } from '@/hooks/useMeetups';
+import { getFavouriteVenueIds, isFavouriteVenue, toggleFavouriteVenue } from '@/lib/favouriteVenues';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import ClassCard from '@/components/cards/ClassCard';
@@ -142,7 +143,12 @@ const VenueDetailPage = () => {
   const [selectedARItem, setSelectedARItem] = useState<string | null>(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState<typeof sampleMenuItems[0] | null>(null);
   const [viewMode, setViewMode] = useState<'2d' | '3d' | 'ar'>('2d');
+  const [favourite, setFavourite] = useState(false);
   const { data: venue, isLoading, error } = useVenue(id || '');
+
+  useEffect(() => {
+    if (id) setFavourite(isFavouriteVenue(id));
+  }, [id]);
   
   // Fetch classes and meetups for this venue
   const { data: venueClasses, isLoading: classesLoading } = useClasses(undefined, undefined, 'UPCOMING', id);
@@ -241,8 +247,15 @@ const VenueDetailPage = () => {
             <motion.button
               className="p-2 rounded-full bg-muted"
               whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                if (!id) return;
+                const nowFav = toggleFavouriteVenue(id);
+                setFavourite(nowFav);
+                toast.success(nowFav ? 'Venue added to favourites. Their stories will appear in your story ring.' : 'Venue removed from favourites.');
+              }}
+              aria-label={favourite ? 'Remove from favourites' : 'Add to favourites'}
             >
-              <Heart className="w-5 h-5 text-foreground" />
+              <Heart className={`w-5 h-5 ${favourite ? 'fill-red-500 text-red-500' : 'text-foreground'}`} />
             </motion.button>
           </div>
         </div>

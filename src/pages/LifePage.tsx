@@ -15,6 +15,58 @@ import { Input } from '@/components/ui/input';
 import { Send, ExternalLink } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+// All venue reels — shown in Life feed (all venues' reels)
+const venueReels = [
+  {
+    id: 'venue-reel-1',
+    type: 'venue',
+    adType: 'reel' as const,
+    user: null,
+    venue: { name: 'Panther Coffee', avatar: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=150' },
+    content: 'Fresh roasted beans every morning ☕',
+    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800',
+    likes: 0,
+    comments: 0,
+    time: 'Venue',
+  },
+  {
+    id: 'venue-reel-2',
+    type: 'venue',
+    adType: 'reel' as const,
+    user: null,
+    venue: { name: 'Zuma Miami', avatar: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=150' },
+    content: 'Experience authentic Japanese cuisine 🍣',
+    image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800',
+    likes: 0,
+    comments: 0,
+    time: 'Venue',
+  },
+  {
+    id: 'venue-reel-3',
+    type: 'venue',
+    adType: 'reel' as const,
+    user: null,
+    venue: { name: 'Flamingo Park Tennis', avatar: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=150' },
+    content: 'Courts are open! Book your session 🎾',
+    image: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=800',
+    likes: 0,
+    comments: 0,
+    time: 'Venue',
+  },
+  {
+    id: 'venue-reel-4',
+    type: 'venue',
+    adType: 'reel' as const,
+    user: null,
+    venue: { name: 'Wynwood Walls', avatar: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=150' },
+    content: 'New murals this week 🎨',
+    image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800',
+    likes: 0,
+    comments: 0,
+    time: 'Venue',
+  },
+];
+
 // Sponsor reels data (ads) - Vertical video format
 const sponsorReels = [
   {
@@ -252,7 +304,7 @@ const LifePage = () => {
     });
   }, [backendPosts, user?.interests]);
 
-  // Filter posts based on active tab and insert sponsor reels and posts every 3-5 posts (skip if user is ad-free)
+  // Filter posts based on active tab; Explore shows all venue reels + all posts (user + venue). Friends shows only connections' posts.
   const allPosts = useMemo(() => {
     let filteredPosts: any[] = [];
     
@@ -261,7 +313,8 @@ const LifePage = () => {
         p.user && connectionIds.has(p.user.id)
       );
     } else {
-      filteredPosts = allBackendPosts;
+      // Explore: all venues' reels first, then all posts (user + venue posts)
+      filteredPosts = [...venueReels, ...allBackendPosts];
     }
 
     if (user?.adFree) return filteredPosts;
