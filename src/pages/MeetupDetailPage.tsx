@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Clock, Users, Calendar, Heart, Share2, User, DollarSign, Lock, Globe, Tag, Sparkles, MessageCircle, Edit, Trash2, Save, X, Ticket, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, Calendar, Heart, Share2, User, DollarSign, Lock, Globe, Tag, Sparkles, MessageCircle, Edit, Trash2, Save, X, Ticket, ChevronRight, CreditCard, Check, Plus } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import { useCreateTicketForMeetup, useMyTickets } from '@/hooks/useTickets';
 import { usePaymentBreakdown } from '@/hooks/usePaymentBreakdown';
+import { useWallet } from '@/contexts/WalletContext';
+import { getVibeTypeLabel } from '@/lib/vibeLabels';
 import {
   Dialog,
   DialogContent,
@@ -76,11 +78,17 @@ const MeetupDetailPage = () => {
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCVC, setCardCVC] = useState('');
+  const [saveCardToWallet, setSaveCardToWallet] = useState(true);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'new' | string>('new');
+  const [savedCardCVC, setSavedCardCVC] = useState('');
+  const { cards: walletCards, addCard } = useWallet();
   const pricePerPerson = meetup?.pricePerPerson ?? 0;
   const isPaidMeetup = !meetup?.isFree && pricePerPerson > 0;
-  const { data: paymentBreakdown } = usePaymentBreakdown(
-    showPaymentDialog && !!id && isPaidMeetup ? { meetupId: id, grossAmount: pricePerPerson } : null
-  );
+  const paymentBreakdownOpts =
+    showPaymentDialog && !!id && isPaidMeetup && pricePerPerson > 0
+      ? { meetupId: id, grossAmount: pricePerPerson }
+      : null;
+  const { data: paymentBreakdown } = usePaymentBreakdown(paymentBreakdownOpts);
   const breakdown = paymentBreakdown ?? (isPaidMeetup && pricePerPerson > 0 ? {
     venueRent: 0,
     venueRentLabel: '$0 per 30 min',
@@ -90,7 +98,15 @@ const MeetupDetailPage = () => {
     grossAmount: pricePerPerson,
     payoutAmount: pricePerPerson - Math.round(pricePerPerson * 0.04 * 100) / 100 - Math.round(pricePerPerson * 0.03 * 100) / 100,
   } : null);
-  
+
+  // When payment dialog opens, default to first saved card if any
+  useEffect(() => {
+    if (showPaymentDialog) {
+      setSelectedPaymentMethod(walletCards.length > 0 ? walletCards[0].id : 'new');
+      setSavedCardCVC('');
+    }
+  }, [showPaymentDialog]);
+
   // Find ticket for this meetup if user has joined
   const userTicket = myTickets?.find(t => t.meetup?.id === id && t.status !== 'CANCELLED');
   const isJoined = justJoined || (user && meetup?.members?.some(m => 
@@ -163,7 +179,8 @@ const MeetupDetailPage = () => {
       return;
     }
 
-    const payload: { title: string; description?: string; pricePerPerson: number; maxAttendees: number; venueId?: string } = {
+    try {
+      const payload: { title: string; description?: string; pricePerPerson: number; maxAttendees: number; venueId?: string } = {
         title: editData.title,
         description: editData.description,
         pricePerPerson: editData.pricePerPerson,
@@ -247,6 +264,8 @@ const MeetupDetailPage = () => {
     }
     if (isPaidMeetup) {
       setShowPaymentDialog(true);
+      setSelectedPaymentMethod(walletCards.length > 0 ? walletCards[0].id : 'new');
+      setSavedCardCVC('');
       return;
     }
     await doJoin();
@@ -304,15 +323,43 @@ const MeetupDetailPage = () => {
     }
   };
 
+  const getCardType = (num: string): string => {
+    const n = num.replace(/\s/g, '');
+    if (/^4/.test(n)) return 'visa';
+    if (/^5[1-5]/.test(n)) return 'mastercard';
+    if (/^3[47]/.test(n)) return 'amex';
+    if (/^6(?:011|5)/.test(n)) return 'discover';
+    return 'card';
+  };
+
   const handlePayAndJoin = async () => {
-    if (!cardNumber.trim() || !cardExpiry.trim() || !cardCVC.trim()) {
-      toast.error('Please fill in all payment details');
-      return;
+    const useSavedCard = selectedPaymentMethod !== 'new' && walletCards.some((c) => c.id === selectedPaymentMethod);
+    if (useSavedCard) {
+      if (savedCardCVC.length < 3) {
+        toast.error('Please enter CVC for the selected card');
+        return;
+      }
+    } else {
+      if (!cardNumber.trim() || !cardExpiry.trim() || !cardCVC.trim()) {
+        toast.error('Please fill in all payment details');
+        return;
+      }
+      if (saveCardToWallet) {
+        const last4 = cardNumber.replace(/\s/g, '').slice(-4);
+        const [expiryMonth, expiryYear] = cardExpiry.split('/');
+        addCard({
+          last4,
+          brand: getCardType(cardNumber),
+          expiryMonth: expiryMonth || '',
+          expiryYear: expiryYear || '',
+        });
+      }
     }
     setShowPaymentDialog(false);
     setCardNumber('');
     setCardExpiry('');
     setCardCVC('');
+    setSavedCardCVC('');
     await doJoin();
   };
 
@@ -329,7 +376,7 @@ const MeetupDetailPage = () => {
             <ArrowLeft className="w-6 h-6 text-foreground" />
           </motion.button>
           <h1 className="text-xl font-bold text-foreground">
-            {(meetup as any)?.type === 'event' ? 'Event' : 'Activity'} Details
+            {getVibeTypeLabel((meetup as any)?.type)} Details
           </h1>
           <div className="flex gap-2 ml-auto">
             {isHost && (
@@ -396,7 +443,7 @@ const MeetupDetailPage = () => {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${(meetup as any)?.type === 'event' ? 'bg-violet-500/90 text-white' : 'bg-primary/90 text-white'}`}>
                       {(meetup as any)?.type === 'event' && <Ticket className="w-3.5 h-3.5" />}
-                      {(meetup as any)?.type === 'event' ? 'Event' : 'Activity'}
+                      {getVibeTypeLabel((meetup as any)?.type)}
                     </span>
                     {meetup.category && (
                       <span className="px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm text-card text-sm font-medium">
@@ -807,7 +854,7 @@ const MeetupDetailPage = () => {
                       className="w-full h-12 bg-gradient-primary"
                     >
                       <Edit className="w-5 h-5 mr-2" />
-                      Edit {(meetup as any)?.type === 'event' ? 'Event' : 'Activity'}
+                      Edit {getVibeTypeLabel((meetup as any)?.type)}
                     </Button>
                     <Button
                       variant="outline"
@@ -862,7 +909,7 @@ const MeetupDetailPage = () => {
                     onClick={handleJoin}
                     className="flex-1 h-12 bg-gradient-primary"
                   >
-                    {isPaidMeetup ? `Join — $${pricePerPerson}` : `Join ${(meetup as any)?.type === 'event' ? 'Event' : 'Activity'}`}
+                    {isPaidMeetup ? `Join vibe — $${pricePerPerson}` : 'Join vibe'}
                   </Button>
                 </div>
                 
@@ -889,50 +936,129 @@ const MeetupDetailPage = () => {
           <DialogHeader>
             <DialogTitle>Complete Payment</DialogTitle>
             <DialogDescription>
-              Pay ${pricePerPerson} per person to join this {(meetup as any)?.type === 'event' ? 'event' : 'activity'}
+              Pay ${pricePerPerson} per person to join this vibe
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-3">
+            {walletCards.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Payment method</p>
+                <div className="space-y-2">
+                  {walletCards.map((card) => (
+                    <label
+                      key={card.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                        selectedPaymentMethod === card.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={selectedPaymentMethod === card.id}
+                        onChange={() => setSelectedPaymentMethod(card.id)}
+                        className="sr-only"
+                      />
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <CreditCard className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground capitalize">{card.brand}</p>
+                        <p className="text-sm text-muted-foreground font-mono">•••• {card.last4}</p>
+                      </div>
+                      {selectedPaymentMethod === card.id && <Check className="w-5 h-5 text-primary shrink-0" />}
+                    </label>
+                  ))}
+                  <label
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                      selectedPaymentMethod === 'new' ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      checked={selectedPaymentMethod === 'new'}
+                      onChange={() => setSelectedPaymentMethod('new')}
+                      className="sr-only"
+                    />
+                    <Plus className="w-5 h-5 text-muted-foreground shrink-0" />
+                    <span className="font-medium text-foreground">New card</span>
+                    {selectedPaymentMethod === 'new' && <Check className="w-5 h-5 text-primary shrink-0 ml-auto" />}
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {selectedPaymentMethod !== 'new' && walletCards.some((c) => c.id === selectedPaymentMethod) && (
               <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Card Number</label>
+                <label className="text-sm font-medium text-foreground mb-1 block">CVC</label>
                 <input
                   type="text"
-                  placeholder="1234 5678 9012 3456"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())}
-                  maxLength={19}
+                  placeholder="123"
+                  value={savedCardCVC}
+                  onChange={(e) => setSavedCardCVC(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  maxLength={4}
                   className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+            )}
+
+            {(selectedPaymentMethod === 'new' || walletCards.length === 0) && (
+              <div className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1 block">Expiry</label>
+                  <label className="text-sm font-medium text-foreground mb-1 block">Card Number</label>
                   <input
                     type="text"
-                    placeholder="MM/YY"
-                    value={cardExpiry}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/\D/g, '');
-                      setCardExpiry(v.length <= 2 ? v : v.slice(0, 2) + '/' + v.slice(2, 4));
-                    }}
-                    maxLength={5}
+                    placeholder="1234 5678 9012 3456"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())}
+                    maxLength={19}
                     className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-1 block">CVC</label>
-                  <input
-                    type="text"
-                    placeholder="123"
-                    value={cardCVC}
-                    onChange={(e) => setCardCVC(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                    maxLength={3}
-                    className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1 block">Expiry</label>
+                    <input
+                      type="text"
+                      placeholder="MM/YY"
+                      value={cardExpiry}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, '');
+                        setCardExpiry(v.length <= 2 ? v : v.slice(0, 2) + '/' + v.slice(2, 4));
+                      }}
+                      maxLength={5}
+                      className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1 block">CVC</label>
+                    <input
+                      type="text"
+                      placeholder="123"
+                      value={cardCVC}
+                      onChange={(e) => setCardCVC(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                      maxLength={3}
+                      className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {(selectedPaymentMethod === 'new' || walletCards.length === 0) && (
+              <label className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={saveCardToWallet}
+                  onChange={(e) => setSaveCardToWallet(e.target.checked)}
+                  className="rounded border-border"
+                />
+                <span className="text-sm text-foreground">
+                  Save this card to my wallet for future payments
+                </span>
+              </label>
+            )}
+
             {breakdown && (
               <div className="space-y-2 rounded-xl bg-muted/50 p-3 text-sm">
                 <div className="flex items-center justify-between text-muted-foreground">
@@ -957,7 +1083,12 @@ const MeetupDetailPage = () => {
             <Button
               className="flex-1 bg-gradient-primary"
               onClick={handlePayAndJoin}
-              disabled={joinMeetup.isPending || !cardNumber || !cardExpiry || !cardCVC}
+              disabled={
+                joinMeetup.isPending ||
+                (selectedPaymentMethod !== 'new' && walletCards.some((c) => c.id === selectedPaymentMethod)
+                  ? savedCardCVC.length < 3
+                  : !cardNumber.trim() || !cardExpiry || !cardCVC)
+              }
             >
               {joinMeetup.isPending ? 'Processing...' : `Pay $${pricePerPerson}`}
             </Button>

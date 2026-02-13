@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { WalletProvider } from "@/contexts/WalletContext";
 import WelcomePage from "./pages/WelcomePage";
 import OnboardingPage from "./pages/OnboardingPage";
 import LoginPage from "./pages/LoginPage";
@@ -41,6 +42,7 @@ import CreateCommunityPage from "./pages/CreateCommunityPage";
 import CommunityDetailPage from "./pages/CommunityDetailPage";
 import SchedulePage from "./pages/SchedulePage";
 import SelectVenuePage from "./pages/SelectVenuePage";
+import WalletPage from "./pages/WalletPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +51,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <AuthProvider>
+        <WalletProvider>
         <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -74,6 +77,7 @@ const App = () => (
           <Route path="/my-classes" element={<MyClassesPage />} />
           <Route path="/social" element={<SocialFeedPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings/wallet" element={<WalletPage />} />
             <Route path="/meetup/:id" element={<MeetupDetailPage />} />
             <Route path="/venue/:id" element={<VenueDetailPage />} />
             <Route path="/user/:userId" element={<UserProfilePage />} />
@@ -99,6 +103,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+        </WalletProvider>
     </AuthProvider>
     </LanguageProvider>
   </QueryClientProvider>

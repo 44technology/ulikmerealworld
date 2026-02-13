@@ -14,6 +14,7 @@ import { useCommunities } from '@/hooks/useCommunities';
 import { useAuth } from '@/contexts/AuthContext';
 import { SPONSOR_STORIES } from '@/constants/sponsorAds';
 import { getFavouriteVenueIds } from '@/lib/favouriteVenues';
+import { getVibeTypeLabel } from '@/lib/vibeLabels';
 import VenueCard from '@/components/cards/VenueCard';
 import UserAvatar from '@/components/ui/UserAvatar';
 import CreateStoryModal from '@/components/CreateStoryModal';
@@ -715,7 +716,7 @@ const HomePage = () => {
                       )}
                       <div className="absolute top-1 right-1">
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${vibe.type === 'event' ? 'bg-violet-500/90 text-white' : 'bg-primary/90 text-white'}`}>
-                          {vibe.type === 'event' ? 'Event' : 'Activity'}
+                          {getVibeTypeLabel(vibe.type)}
                         </span>
                       </div>
                     </div>

@@ -240,56 +240,85 @@ export default function CreateCommunityPage() {
           )}
         </div>
 
-        {/* Privacy */}
+        {/* Privacy & visibility (who can see members and content, search engines) */}
         <div className="space-y-3">
-          <Label>Privacy</Label>
-          <div className="space-y-2">
-            <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-border cursor-pointer hover:bg-muted/50 transition-colors">
-              <input
-                type="radio"
-                name="isPublic"
-                value="true"
-                checked={formData.isPublic === true}
-                onChange={() => setFormData(prev => ({ ...prev, isPublic: true }))}
-                className="sr-only"
-              />
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                formData.isPublic ? 'border-primary' : 'border-border'
-              }`}>
-                {formData.isPublic && <div className="w-3 h-3 rounded-full bg-primary" />}
-              </div>
-              <div className="flex items-center gap-2 flex-1">
-                <Globe className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-foreground">Public</p>
-                  <p className="text-xs text-muted-foreground">Anyone can find and join</p>
+          <Label>Privacy & visibility</Label>
+          <p className="text-xs text-muted-foreground">
+            Choose who can see members and posts, and whether the community is visible to search engines.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label
+              className={`flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+                !formData.isPublic ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="isPublic"
+                  value="false"
+                  checked={formData.isPublic === false}
+                  onChange={() => setFormData(prev => ({ ...prev, isPublic: false }))}
+                  className="sr-only"
+                />
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                  !formData.isPublic ? 'border-primary' : 'border-border'
+                }`}>
+                  {!formData.isPublic && <div className="w-3 h-3 rounded-full bg-primary" />}
                 </div>
+                <Lock className="w-5 h-5 text-muted-foreground shrink-0" />
+                <span className="font-medium text-foreground">Private</span>
               </div>
+              <p className="text-xs text-muted-foreground mt-2 pl-8">
+                Only members can see who&apos;s in the group and what they post. Content is hidden from search engines.
+              </p>
             </label>
 
-            <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-border cursor-pointer hover:bg-muted/50 transition-colors">
-              <input
-                type="radio"
-                name="isPublic"
-                value="false"
-                checked={formData.isPublic === false}
-                onChange={() => setFormData(prev => ({ ...prev, isPublic: false }))}
-                className="sr-only"
-              />
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                !formData.isPublic ? 'border-primary' : 'border-border'
-              }`}>
-                {!formData.isPublic && <div className="w-3 h-3 rounded-full bg-primary" />}
-              </div>
-              <div className="flex items-center gap-2 flex-1">
-                <Lock className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-foreground">Private</p>
-                  <p className="text-xs text-muted-foreground">Only invited members can join</p>
+            <label
+              className={`flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+                formData.isPublic ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="isPublic"
+                  value="true"
+                  checked={formData.isPublic === true}
+                  onChange={() => setFormData(prev => ({ ...prev, isPublic: true }))}
+                  className="sr-only"
+                />
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                  formData.isPublic ? 'border-primary' : 'border-border'
+                }`}>
+                  {formData.isPublic && <div className="w-3 h-3 rounded-full bg-primary" />}
                 </div>
+                <Globe className="w-5 h-5 text-muted-foreground shrink-0" />
+                <span className="font-medium text-foreground">Public</span>
               </div>
+              <p className="text-xs text-muted-foreground mt-2 pl-8">
+                Anyone can see who&apos;s in the group and what they post. Content is discoverable by search engines.
+              </p>
             </label>
           </div>
+        </div>
+
+        {/* Support contact */}
+        <div className="p-4 rounded-xl bg-muted/50 border border-border">
+          <p className="text-sm text-muted-foreground">
+            Support email:{' '}
+            <a
+              href={`mailto:${import.meta.env.VITE_SUPPORT_EMAIL || 'support@ulikme.com'}`}
+              className="font-medium text-primary hover:underline"
+            >
+              {import.meta.env.VITE_SUPPORT_EMAIL || 'support@ulikme.com'}
+            </a>
+            {' '}
+            <span className="text-muted-foreground/80">(change in settings)</span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Contact this address for help with your community or account.
+          </p>
         </div>
 
         <Button

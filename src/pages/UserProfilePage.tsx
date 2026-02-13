@@ -331,48 +331,60 @@ const UserProfilePage = () => {
         <div className="px-4 space-y-4 mt-5">
           {/* Action Buttons */}
           {!isOwnProfile && (
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1 h-12"
-                onClick={handleMessage}
-                disabled={!isConnected || createDirectChat.isPending}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" /> 
-                {createDirectChat.isPending ? 'Opening...' : 'Message'}
-              </Button>
-              {isConnected ? (
+            <div className="space-y-2">
+              <div className="flex gap-3">
                 <Button
-                  className="flex-1 h-12 bg-muted text-foreground"
-                  disabled
+                  variant="outline"
+                  className="flex-1 h-12"
+                  onClick={handleMessage}
+                  disabled={!isConnected || createDirectChat.isPending}
                 >
-                  <Check className="w-4 h-4 mr-2" /> Connected
+                  <MessageCircle className="w-4 h-4 mr-2" /> 
+                  {createDirectChat.isPending ? 'Opening...' : 'Message'}
                 </Button>
-              ) : isPendingFromMe ? (
-                <Button
-                  className="flex-1 h-12 bg-muted text-foreground"
-                  disabled
-                >
-                  <UserPlus className="w-4 h-4 mr-2" /> Pending
-                </Button>
-              ) : isPendingFromThem ? (
-                <Button
-                  className="flex-1 h-12 bg-gradient-primary"
-                  onClick={handleConnect}
-                  disabled={updateMatch.isPending}
-                >
-                  <Check className="w-4 h-4 mr-2" /> 
-                  {updateMatch.isPending ? 'Accepting...' : 'Accept Request'}
-                </Button>
-              ) : (
-                <Button
-                  className="flex-1 h-12 bg-gradient-primary"
-                  onClick={handleConnect}
-                  disabled={createMatch.isPending}
-                >
-                  <UserPlus className="w-4 h-4 mr-2" /> 
-                  {createMatch.isPending ? 'Sending...' : 'Connect'}
-                </Button>
+                {isConnected ? (
+                  <Button
+                    className="flex-1 h-12 bg-muted text-foreground"
+                    disabled
+                  >
+                    <Check className="w-4 h-4 mr-2" /> Connected
+                  </Button>
+                ) : isPendingFromMe ? (
+                  <Button
+                    className="flex-1 h-12 bg-muted text-foreground"
+                    disabled
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" /> Request sent
+                  </Button>
+                ) : isPendingFromThem ? (
+                  <Button
+                    className="flex-1 h-12 bg-gradient-primary"
+                    onClick={handleConnect}
+                    disabled={updateMatch.isPending}
+                  >
+                    <Check className="w-4 h-4 mr-2" /> 
+                    {updateMatch.isPending ? 'Accepting...' : 'Accept request'}
+                  </Button>
+                ) : (
+                  <Button
+                    className="flex-1 h-12 bg-gradient-primary"
+                    onClick={handleConnect}
+                    disabled={createMatch.isPending}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" /> 
+                    {createMatch.isPending ? 'Sending...' : 'Send connection request'}
+                  </Button>
+                )}
+              </div>
+              {/* Approval flow explanation */}
+              {!isConnected && (
+                <p className="text-xs text-muted-foreground text-center px-1">
+                  {isPendingFromThem
+                    ? 'They want to connect. Accept to add them to your connections.'
+                    : isPendingFromMe
+                    ? 'Waiting for them to accept. They’ll see it in Connections → Approve.'
+                    : 'They’ll get a request and must accept before you’re connected.'}
+                </p>
               )}
             </div>
           )}

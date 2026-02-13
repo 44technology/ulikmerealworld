@@ -15,6 +15,7 @@ import { useVenue } from '@/hooks/useVenues';
 import { useClasses } from '@/hooks/useClasses';
 import { useMeetups } from '@/hooks/useMeetups';
 import { getFavouriteVenueIds, isFavouriteVenue, toggleFavouriteVenue } from '@/lib/favouriteVenues';
+import { getVibeTypeLabel } from '@/lib/vibeLabels';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import ClassCard from '@/components/cards/ClassCard';
@@ -386,7 +387,7 @@ const VenueDetailPage = () => {
                               ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400'
                               : 'bg-secondary/10 text-secondary'
                           }`}>
-                            {event.type === 'class' ? 'Class' : event.type === 'event' ? 'Event' : 'Activity'}
+                            {event.type === 'class' ? 'Class' : getVibeTypeLabel(event.type)}
                           </span>
                           {(event.price !== undefined && event.price !== null) || event.pricePerPerson != null ? (
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${

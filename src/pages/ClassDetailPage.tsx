@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, MapPin, Clock, DollarSign, Users, Calendar, Phone, Globe, CreditCard, AlertCircle, Info, Star, CheckCircle2, X, Monitor, CheckCircle, Sparkles, MessageCircle, ChevronRight, FileText, ListChecks, PlayCircle, TrendingUp, ShoppingBag, Download, Gift, Package, Send, Plus, Ticket, QrCode } from 'lucide-react';
+import { ArrowLeft, BookOpen, MapPin, Clock, DollarSign, Users, Calendar, Phone, Globe, CreditCard, AlertCircle, Info, Star, CheckCircle2, X, Monitor, CheckCircle, Sparkles, MessageCircle, ChevronRight, FileText, ListChecks, PlayCircle, TrendingUp, ShoppingBag, Download, Gift, Package, Send, Plus, Ticket, QrCode, Check } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { useClass, useEnrollInClass, useCancelEnrollment } from '@/hooks/useClasses';
 import { useCreateTicketForClass, useMyTickets } from '@/hooks/useTickets';
 import { usePaymentBreakdown } from '@/hooks/usePaymentBreakdown';
+import { useWallet } from '@/contexts/WalletContext';
 import { useMentor } from '@/hooks/useMentors';
 import { useAuth } from '@/contexts/AuthContext';
 import { getClassLessonProgress, setLessonCompleted as persistLessonCompleted } from '@/lib/classLessonProgress';
@@ -58,6 +59,10 @@ const ClassDetailPage = () => {
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCVC, setCardCVC] = useState('');
+  const [saveCardToWallet, setSaveCardToWallet] = useState(true);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'new' | string>('new');
+  const [savedCardCVC, setSavedCardCVC] = useState('');
+  const { cards: walletCards, addCard } = useWallet();
   const [paymentInvoice, setPaymentInvoice] = useState<{
     invoiceNumber: string;
     amount: number;
@@ -67,9 +72,11 @@ const ClassDetailPage = () => {
   } | null>(null);
 
   const grossAmount = classItem?.price ?? 0;
-  const { data: paymentBreakdown } = usePaymentBreakdown(
-    showPaymentDialog && !isMentorClass && !!id ? { classId: id, grossAmount } : null
-  );
+  const paymentBreakdownOpts =
+    showPaymentDialog && !isMentorClass && !!id && grossAmount > 0
+      ? { classId: id, grossAmount }
+      : null;
+  const { data: paymentBreakdown } = usePaymentBreakdown(paymentBreakdownOpts);
   const breakdown = paymentBreakdown ?? (grossAmount > 0 ? {
     venueRent: 0,
     venueRentLabel: '$0 per 30 min',
@@ -79,7 +86,15 @@ const ClassDetailPage = () => {
     grossAmount,
     payoutAmount: grossAmount - Math.round(grossAmount * 0.04 * 100) / 100 - Math.round(grossAmount * 0.03 * 100) / 100,
   } : null);
-  
+
+  // When payment dialog opens, default to first saved card if any
+  useEffect(() => {
+    if (showPaymentDialog) {
+      setSelectedPaymentMethod(walletCards.length > 0 ? walletCards[0].id : 'new');
+      setSavedCardCVC('');
+    }
+  }, [showPaymentDialog]);
+
   // Detect card type from card number
   const getCardType = (number: string): string => {
     const cleaned = number.replace(/\s/g, '');
@@ -127,6 +142,9 @@ const ClassDetailPage = () => {
     // If class has a price, show payment dialog
     if (classItem?.price && classItem.price > 0) {
       setShowPaymentDialog(true);
+      // Default to first saved card if any
+      setSelectedPaymentMethod(walletCards.length > 0 ? walletCards[0].id : 'new');
+      setSavedCardCVC('');
       return;
     }
 
@@ -160,9 +178,17 @@ const ClassDetailPage = () => {
   };
 
   const handlePayment = async () => {
-    if (!cardNumber || !cardExpiry || !cardCVC) {
-      toast.error('Please fill in all payment details');
-      return;
+    const useSavedCard = selectedPaymentMethod !== 'new' && walletCards.some((c) => c.id === selectedPaymentMethod);
+    if (useSavedCard) {
+      if (!savedCardCVC.trim() || savedCardCVC.length < 3) {
+        toast.error('Enter CVC for your card');
+        return;
+      }
+    } else {
+      if (!cardNumber || !cardExpiry || !cardCVC) {
+        toast.error('Please fill in all payment details');
+        return;
+      }
     }
 
     try {
@@ -185,10 +211,28 @@ const ClassDetailPage = () => {
         paymentMethod: 'Card',
         cardLast4: cardNumber.slice(-4).replace(/\s/g, ''),
       };
-      setPaymentInvoice(invoiceData);
-      
+      const last4ForInvoice = useSavedCard
+        ? (walletCards.find((c) => c.id === selectedPaymentMethod)?.last4 ?? '')
+        : cardNumber.replace(/\s/g, '').slice(-4);
+      setPaymentInvoice({
+        ...invoiceData,
+        cardLast4: last4ForInvoice,
+      });
+
+      if (!useSavedCard && saveCardToWallet) {
+        const last4 = cardNumber.replace(/\s/g, '').slice(-4);
+        const [expiryMonth, expiryYear] = cardExpiry.split('/');
+        addCard({
+          last4,
+          brand: cardType || 'card',
+          expiryMonth: expiryMonth || '',
+          expiryYear: expiryYear || '',
+        });
+      }
+
       setShowPaymentDialog(false);
-      // Reset form
+      setSelectedPaymentMethod('new');
+      setSavedCardCVC('');
       setCardNumber('');
       setCardExpiry('');
       setCardCVC('');
@@ -944,6 +988,11 @@ const ClassDetailPage = () => {
                   <CheckCircle2 className="w-5 h-5 mr-2" />
                   {isPaid ? 'Enrolled (Paid)' : 'Enrolled'}
                 </Button>
+                {isPaid && (
+                  <p className="text-xs text-center text-muted-foreground px-2">
+                    You can cancel your enrollment within 24 hours for a full refund.
+                  </p>
+                )}
                 {canCancelWithRefund && (
                   <div className="w-full p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-2">
                     <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -1021,7 +1070,73 @@ const ClassDetailPage = () => {
             </DialogHeader>
             
             <div className="space-y-4 py-4">
-              <div className="space-y-3">
+              {/* Saved cards from wallet */}
+              {walletCards.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Payment method</p>
+                  <div className="space-y-2">
+                    {walletCards.map((card) => (
+                      <label
+                        key={card.id}
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                          selectedPaymentMethod === card.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          checked={selectedPaymentMethod === card.id}
+                          onChange={() => setSelectedPaymentMethod(card.id)}
+                          className="sr-only"
+                        />
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <CreditCard className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground capitalize">{card.brand}</p>
+                          <p className="text-sm text-muted-foreground font-mono">•••• {card.last4}</p>
+                        </div>
+                        {selectedPaymentMethod === card.id && <Check className="w-5 h-5 text-primary shrink-0" />}
+                      </label>
+                    ))}
+                    <label
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                        selectedPaymentMethod === 'new' ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={selectedPaymentMethod === 'new'}
+                        onChange={() => setSelectedPaymentMethod('new')}
+                        className="sr-only"
+                      />
+                      <Plus className="w-5 h-5 text-muted-foreground shrink-0" />
+                      <span className="font-medium text-foreground">New card</span>
+                      {selectedPaymentMethod === 'new' && <Check className="w-5 h-5 text-primary shrink-0 ml-auto" />}
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* CVC when saved card selected */}
+              {selectedPaymentMethod !== 'new' && walletCards.some((c) => c.id === selectedPaymentMethod) && (
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">CVC</label>
+                  <input
+                    type="text"
+                    placeholder="123"
+                    value={savedCardCVC}
+                    onChange={(e) => setSavedCardCVC(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    maxLength={4}
+                    className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              )}
+
+              {/* New card form */}
+              {(selectedPaymentMethod === 'new' || walletCards.length === 0) && (
+                <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Card Number</label>
                     <input
@@ -1032,31 +1147,11 @@ const ClassDetailPage = () => {
                       maxLength={19}
                       className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
-                    {/* Card Type Logos */}
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xs text-muted-foreground">Accepted cards:</span>
-                      <div className="flex items-center gap-1.5">
-                        <div className={`px-2 py-1 rounded text-xs font-semibold transition-all ${
-                          cardType === 'visa' ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'
-                        }`}>
-                          Visa
-                        </div>
-                        <div className={`px-2 py-1 rounded text-xs font-semibold transition-all ${
-                          cardType === 'mastercard' ? 'bg-red-600 text-white' : 'bg-muted text-muted-foreground'
-                        }`}>
-                          Mastercard
-                        </div>
-                        <div className={`px-2 py-1 rounded text-xs font-semibold transition-all ${
-                          cardType === 'amex' ? 'bg-blue-500 text-white' : 'bg-muted text-muted-foreground'
-                        }`}>
-                          Amex
-                        </div>
-                        <div className={`px-2 py-1 rounded text-xs font-semibold transition-all ${
-                          cardType === 'discover' ? 'bg-orange-600 text-white' : 'bg-muted text-muted-foreground'
-                        }`}>
-                          Discover
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <span className="text-xs text-muted-foreground">Visa</span>
+                      <span className="text-xs text-muted-foreground">Mastercard</span>
+                      <span className="text-xs text-muted-foreground">Amex</span>
+                      <span className="text-xs text-muted-foreground">Discover</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -1068,11 +1163,8 @@ const ClassDetailPage = () => {
                         value={cardExpiry}
                         onChange={(e) => {
                           const value = e.target.value.replace(/\D/g, '');
-                          if (value.length <= 2) {
-                            setCardExpiry(value);
-                          } else {
-                            setCardExpiry(value.slice(0, 2) + '/' + value.slice(2, 4));
-                          }
+                          if (value.length <= 2) setCardExpiry(value);
+                          else setCardExpiry(value.slice(0, 2) + '/' + value.slice(2, 4));
                         }}
                         maxLength={5}
                         className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -1091,6 +1183,22 @@ const ClassDetailPage = () => {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Save card to wallet - only when using new card */}
+              {(selectedPaymentMethod === 'new' || walletCards.length === 0) && (
+                <label className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={saveCardToWallet}
+                    onChange={(e) => setSaveCardToWallet(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <span className="text-sm text-foreground">
+                    Save this card to my wallet for future payments
+                  </span>
+                </label>
+              )}
 
               {/* Revenue split breakdown */}
               {breakdown && (
@@ -1128,7 +1236,12 @@ const ClassDetailPage = () => {
               </Button>
               <Button
                 onClick={handlePayment}
-                disabled={enrollInClass.isPending || !cardNumber || !cardExpiry || !cardCVC}
+                disabled={
+                  enrollInClass.isPending ||
+                  (selectedPaymentMethod !== 'new' && walletCards.some((c) => c.id === selectedPaymentMethod)
+                    ? savedCardCVC.length < 3
+                    : !cardNumber.trim() || !cardExpiry || !cardCVC)
+                }
                 className="flex-1 bg-gradient-primary"
               >
                 {enrollInClass.isPending ? 'Processing...' : `Pay $${classItem?.price}`}

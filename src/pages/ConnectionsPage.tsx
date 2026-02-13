@@ -84,8 +84,8 @@ const ConnectionsPage = () => {
         <div className="px-4 pb-2">
           <p className="text-sm text-muted-foreground">
             {activeTab === 'connections' && `${filteredConnections.length} connections`}
-            {activeTab === 'pending' && `${filteredPending.length} pending`}
-            {activeTab === 'requests' && `${filteredRequests.length} requests`}
+            {activeTab === 'pending' && `${filteredPending.length} sent — waiting for approval`}
+            {activeTab === 'requests' && (filteredRequests.length > 0 ? 'Accept or reject connection requests' : 'No requests')}
           </p>
         </div>
         {/* Search */}
@@ -126,7 +126,7 @@ const ConnectionsPage = () => {
                 activeTab === 'requests' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'
               }`}
             >
-              Requests
+              Approve
               {receivedRequests.length > 0 && (
                 <span className="absolute top-1 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
                   {receivedRequests.length}
@@ -242,13 +242,19 @@ const ConnectionsPage = () => {
 
         {activeTab === 'requests' && (
           <>
+            {filteredRequests.length > 0 && (
+              <p className="text-sm text-muted-foreground mb-2">
+                These people want to connect with you. Accept to add them to your connections.
+              </p>
+            )}
             <p className="text-sm text-muted-foreground">
-              {filteredRequests.length} connection requests
+              {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''}
             </p>
             
             {filteredRequests.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">No connection requests</p>
+                <p className="text-xs text-muted-foreground mt-1">When someone sends you a request, it will appear here for you to approve.</p>
               </div>
             ) : (
               filteredRequests.map((match, index) => {

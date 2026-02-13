@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Clock, Users, Heart, Ticket } from 'lucide-react';
 import UserAvatar from '../ui/UserAvatar';
 import { Button } from '../ui/button';
+import { getVibeTypeLabel } from '@/lib/vibeLabels';
 
 interface MeetupCardProps {
   id: string;
@@ -67,7 +68,7 @@ const MeetupCard = ({
   showJoinButton = false,
 }: MeetupCardProps) => {
   const isEvent = type === 'event';
-  const typeLabel = isEvent ? 'Event' : 'Activity';
+  const typeLabel = getVibeTypeLabel(type);
   const isPaid = pricePerPerson != null && pricePerPerson > 0 && !isFree;
   // Normalize data - support both mock data and backend data
   const hostData = host || (creator ? {

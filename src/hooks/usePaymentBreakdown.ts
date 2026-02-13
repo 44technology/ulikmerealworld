@@ -12,17 +12,19 @@ export interface PaymentBreakdown {
 }
 
 export function usePaymentBreakdown(opts: { classId?: string; meetupId?: string; grossAmount: number } | null) {
+  const enabled = Boolean(opts && opts.grossAmount > 0 && (opts.classId || opts.meetupId));
   return useQuery({
-    queryKey: ['paymentBreakdown', opts?.classId, opts?.meetupId, opts?.grossAmount],
+    queryKey: ['paymentBreakdown', opts === null ? 'off' : opts.classId, opts === null ? 'off' : opts.meetupId, opts === null ? 0 : opts.grossAmount],
     queryFn: async (): Promise<PaymentBreakdown> => {
+      const o = opts!;
       const params = new URLSearchParams();
-      if (opts!.grossAmount > 0) params.set('grossAmount', String(opts!.grossAmount));
-      if (opts!.classId) params.set('classId', opts!.classId);
-      if (opts!.meetupId) params.set('meetupId', opts!.meetupId);
+      params.set('grossAmount', String(o.grossAmount));
+      if (o.classId) params.set('classId', o.classId);
+      if (o.meetupId) params.set('meetupId', o.meetupId);
       const url = `${API_ENDPOINTS.PAYMENTS.BREAKDOWN}?${params.toString()}`;
       const res = await apiRequest<{ success: boolean; data: PaymentBreakdown }>(url);
       return res.data;
     },
-    enabled: !!opts && opts.grossAmount > 0 && (!!opts.classId || !!opts.meetupId),
+    enabled,
   });
 }

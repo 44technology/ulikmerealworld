@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Bell, Shield, HelpCircle, LogOut, Trash2, User, Mail, Phone, Globe, Calendar, Megaphone, DollarSign, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Bell, Shield, HelpCircle, LogOut, Trash2, User, Mail, Phone, Globe, Calendar, Megaphone, DollarSign, CheckCircle2, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -79,6 +79,7 @@ const SettingsPage = () => {
       title: t('account'),
       items: [
         { icon: User, label: t('editProfile'), onClick: () => navigate('/profile') },
+        { icon: Wallet, label: 'Wallet', onClick: () => navigate('/settings/wallet') },
         { icon: Mail, label: t('emailSettings'), onClick: () => toast.info('Coming soon') },
         { icon: Phone, label: t('phoneNumber'), onClick: () => toast.info('Coming soon') },
         { icon: Globe, label: t('language'), onClick: () => setShowLanguageDialog(true) },

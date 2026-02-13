@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper, UserPlus, Check, X } from 'lucide-react';
+import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper, UserPlus, Check, X, Share2, Link2, Copy } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -131,10 +131,41 @@ export default function CommunityDetailPage() {
   const [postComments, setPostComments] = useState<PostComment[]>([]);
   const [newCommentText, setNewCommentText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'members' | 'classes' | 'vibes'>('posts');
   const [pendingJoinRequests, setPendingJoinRequests] = useState<JoinRequest[]>(() =>
     id ? getCommunityJoinRequests(id) : []
   );
+
+  const communityShareLink = id ? `${typeof window !== 'undefined' ? window.location.origin : ''}/community/${id}` : '';
+
+  const handleCopyGroupLink = async () => {
+    if (!communityShareLink) return;
+    try {
+      await navigator.clipboard.writeText(communityShareLink);
+      toast.success('Group link copied to clipboard');
+    } catch {
+      toast.error('Could not copy link');
+    }
+  };
+
+  const handleShareApp = async () => {
+    if (!community?.name || !communityShareLink) return;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({
+          title: community.name,
+          text: community.description ? `${community.name}: ${community.description.slice(0, 100)}...` : `Join ${community.name} on Ulikme`,
+          url: communityShareLink,
+        });
+        toast.success('Shared');
+      } else {
+        await handleCopyGroupLink();
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') toast.error('Could not share');
+    }
+  };
 
   const communityFromList = useMemo(() => (id ? communitiesList.find((c: any) => c.id === id) : null), [id, communitiesList]);
   const [community, setCommunity] = useState<Community | null>(null);
@@ -359,17 +390,69 @@ export default function CommunityDetailPage() {
             <ArrowLeft className="w-6 h-6 text-foreground" />
           </motion.button>
           <h1 className="text-xl font-bold text-foreground flex-1 truncate">{community.name}</h1>
-          {community.isOwner && (
+          <div className="flex items-center gap-1">
             <motion.button
-              onClick={() => navigate(`/community/${id}/settings`)}
+              onClick={() => setShowShareDialog(true)}
               className="p-2"
               whileTap={{ scale: 0.9 }}
+              title="Share your group link"
             >
-              <Settings className="w-6 h-6 text-foreground" />
+              <Share2 className="w-6 h-6 text-foreground" />
             </motion.button>
-          )}
+            {community.isOwner && (
+              <motion.button
+                onClick={() => navigate(`/community/${id}/settings`)}
+                className="p-2"
+                whileTap={{ scale: 0.9 }}
+              >
+                <Settings className="w-6 h-6 text-foreground" />
+              </motion.button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Share your group link dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="w-5 h-5 text-primary" />
+              Share your group link
+            </DialogTitle>
+            <DialogDescription>
+              Share this community with others. They can open the link in the app to view and join.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-muted border border-border">
+              <Link2 className="w-5 h-5 text-muted-foreground shrink-0" />
+              <span className="text-sm text-foreground truncate font-mono">{communityShareLink}</span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={handleCopyGroupLink}
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copy link
+              </Button>
+              {typeof navigator !== 'undefined' && navigator.share && (
+                <Button
+                  type="button"
+                  className="flex-1 bg-gradient-primary text-primary-foreground"
+                  onClick={handleShareApp}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="pb-6">
         {/* Community Header */}
@@ -402,6 +485,20 @@ export default function CommunityDetailPage() {
             <p className="text-muted-foreground">{community.description}</p>
           </div>
         )}
+
+        {/* Share your group link - visible to everyone viewing the community */}
+        <div className="px-4 pt-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground -ml-2"
+            onClick={() => setShowShareDialog(true)}
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            Share your group link
+          </Button>
+        </div>
 
         {/* Actions - Join / Request to join */}
         <div className="px-4 pt-4 flex gap-2">
