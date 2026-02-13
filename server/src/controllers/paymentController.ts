@@ -2,10 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/database.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { 
-  calculatePaymentBreakdown, 
+  getPaymentBreakdown,
   generatePaymentNumber, 
   generatePayoutNumber,
-  PaymentCalculation 
 } from '../services/paymentService.js';
 import { AuthRequest } from '../middleware/auth.js';
 
@@ -43,26 +42,38 @@ export const createPayment = async (
       throw new AppError('Either classId or meetupId is required', 400);
     }
 
-    // Calculate payment breakdown
-    const breakdown = calculatePaymentBreakdown(grossAmount);
+    // Calculate payment breakdown (venue rent $0 for now, Ulikme % from settings)
+    const breakdown = await getPaymentBreakdown(prisma, {
+      grossAmount: Number(grossAmount),
+      classId: classId || undefined,
+      meetupId: meetupId || undefined,
+    });
 
-    // Determine recipient (venue or instructor)
+    // Determine recipient (venue or instructor/creator)
     let recipientType: 'venue' | 'instructor' = 'instructor';
     let recipientId: string = '';
 
     if (classId) {
       const classItem = await prisma.class.findUnique({
         where: { id: classId },
-        include: { venue: true },
+        include: { venue: true, community: true },
       });
 
       if (!classItem) {
         throw new AppError('Class not found', 404);
       }
 
-      // For classes, recipient is the venue (venue gets the payout)
-      recipientType = 'venue';
-      recipientId = classItem.venueId;
+      if (classItem.venueId) {
+        recipientType = 'venue';
+        recipientId = classItem.venueId;
+      } else if (classItem.community?.creatorId) {
+        recipientType = 'instructor';
+        recipientId = classItem.community.creatorId;
+      } else {
+        recipientType = 'instructor';
+        const firstEnrollment = await prisma.classEnrollment.findFirst({ where: { classId }, select: { userId: true } });
+        recipientId = firstEnrollment?.userId || '';
+      }
     } else if (meetupId) {
       const meetup = await prisma.meetup.findUnique({
         where: { id: meetupId },
@@ -135,6 +146,43 @@ export const createPayment = async (
           amount: breakdown.payoutAmount,
           status: payout.status,
         },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get payment breakdown for display (before payment).
+ * GET /api/payments/breakdown?classId= & grossAmount=  or  ?meetupId= & grossAmount=
+ */
+export const getPaymentBreakdownHandler = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { classId, meetupId, grossAmount: grossParam } = req.query;
+    const grossAmount = grossParam ? Number(grossParam) : 0;
+    if (!grossAmount || grossAmount <= 0) {
+      throw new AppError('grossAmount (positive number) is required', 400);
+    }
+    const breakdown = await getPaymentBreakdown(prisma, {
+      grossAmount,
+      classId: classId as string | undefined,
+      meetupId: meetupId as string | undefined,
+    });
+    res.json({
+      success: true,
+      data: {
+        grossAmount: breakdown.grossAmount,
+        venueRent: breakdown.venueRent,
+        venueRentLabel: breakdown.venueRentLabel,
+        ulikmeCommissionPercent: breakdown.ulikmeCommissionPercent,
+        ulikmeCommission: breakdown.ulikmeCommission,
+        stripeFee: breakdown.stripeFee,
+        payoutAmount: breakdown.payoutAmount,
       },
     });
   } catch (error) {

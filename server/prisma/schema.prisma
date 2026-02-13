@@ -104,23 +104,24 @@ model User {
 }
 
 model Venue {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  address     String
-  city        String
-  state       String?
-  country     String
-  zipCode     String?
-  latitude    Float
-  longitude   Float
-  image       String?
-  website     String?
-  phone       String?
-  capacity    Int?
-  amenities   String[] // Array of amenities
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(uuid())
+  name             String
+  description      String?
+  address          String
+  city             String
+  state            String?
+  country          String
+  zipCode          String?
+  latitude         Float
+  longitude        Float
+  image            String?
+  website          String?
+  phone            String?
+  capacity         Int?
+  amenities        String[] // Array of amenities
+  pricePerHalfHour Float?   @default(0) // USD per 30 min; 0 = venue free offer
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   // Relations
   meetups     Meetup[]
@@ -130,6 +131,15 @@ model Venue {
 
   @@index([latitude, longitude])
   @@map("venues")
+}
+
+model PlatformSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique // e.g. 'ulikme_commission_percent'
+  value     String   // e.g. '4'
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
 }
 
 model Meetup {
@@ -171,7 +181,6 @@ model Meetup {
   @@index([latitude, longitude])
   @@index([startTime])
   @@index([isPublic])
-  @@index([isBlindMeet])
   @@map("meetups")
 }
 

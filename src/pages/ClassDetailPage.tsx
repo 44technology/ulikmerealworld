@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from '@/components/ui/progress';
 import { useClass, useEnrollInClass, useCancelEnrollment } from '@/hooks/useClasses';
 import { useCreateTicketForClass, useMyTickets } from '@/hooks/useTickets';
+import { usePaymentBreakdown } from '@/hooks/usePaymentBreakdown';
 import { useMentor } from '@/hooks/useMentors';
 import { useAuth } from '@/contexts/AuthContext';
 import { getClassLessonProgress, setLessonCompleted as persistLessonCompleted } from '@/lib/classLessonProgress';
@@ -64,6 +65,20 @@ const ClassDetailPage = () => {
     paymentMethod: string;
     cardLast4?: string;
   } | null>(null);
+
+  const grossAmount = classItem?.price ?? 0;
+  const { data: paymentBreakdown } = usePaymentBreakdown(
+    showPaymentDialog && !isMentorClass && !!id ? { classId: id, grossAmount } : null
+  );
+  const breakdown = paymentBreakdown ?? (grossAmount > 0 ? {
+    venueRent: 0,
+    venueRentLabel: '$0 per 30 min',
+    ulikmeCommissionPercent: 4,
+    ulikmeCommission: Math.round(grossAmount * 0.04 * 100) / 100,
+    stripeFee: Math.round(grossAmount * 0.03 * 100) / 100,
+    grossAmount,
+    payoutAmount: grossAmount - Math.round(grossAmount * 0.04 * 100) / 100 - Math.round(grossAmount * 0.03 * 100) / 100,
+  } : null);
   
   // Detect card type from card number
   const getCardType = (number: string): string => {
@@ -1076,6 +1091,20 @@ const ClassDetailPage = () => {
                     </div>
                   </div>
                 </div>
+
+              {/* Revenue split breakdown */}
+              {breakdown && (
+                <div className="space-y-2 rounded-xl bg-muted/50 p-3 text-sm">
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span>Venue rent (30 min)</span>
+                    <span>{breakdown.venueRentLabel}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span>Ulikme commission ({breakdown.ulikmeCommissionPercent}%)</span>
+                    <span>−${breakdown.ulikmeCommission.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
 
               {/* Total */}
               <div className="flex items-center justify-between pt-3 border-t border-border">

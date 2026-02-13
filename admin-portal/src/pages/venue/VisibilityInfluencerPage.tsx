@@ -92,8 +92,6 @@ export default function VisibilityInfluencerPage() {
   const [adLink, setAdLink] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
 
   const handleCreateAd = () => {
     if (!adTitle.trim() || !adContent.trim() || !targetAudience) {
@@ -106,10 +104,6 @@ export default function VisibilityInfluencerPage() {
       return;
     }
 
-    const scheduledFor = scheduledDate && scheduledTime 
-      ? new Date(`${scheduledDate}T${scheduledTime}`).toISOString()
-      : undefined;
-
     const newCampaign: AdCampaign = {
       id: campaigns.length + 1,
       title: adTitle,
@@ -120,9 +114,8 @@ export default function VisibilityInfluencerPage() {
       budget: 0,
       spent: 0,
       targetAudience,
-      status: scheduledFor ? 'scheduled' : 'draft',
+      status: 'draft',
       createdAt: new Date().toISOString().split('T')[0],
-      scheduledFor,
       views: 0,
       likes: 0,
       shares: 0,
@@ -137,8 +130,6 @@ export default function VisibilityInfluencerPage() {
     setAdLink('');
     setTargetAudience('');
     setSelectedFile(null);
-    setScheduledDate('');
-    setScheduledTime('');
     setIsCreateDialogOpen(false);
     
     toast.success('Ad campaign created successfully!');
@@ -264,46 +255,6 @@ export default function VisibilityInfluencerPage() {
                       <SelectItem value="All Ages, General">All Ages, General</SelectItem>
                     </SelectContent>
                   </Select>
-              </div>
-
-              <div className="space-y-3 p-4 rounded-lg bg-muted/50 border border-border">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Schedule Ad</Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (scheduledDate && scheduledTime) {
-                        setScheduledDate('');
-                        setScheduledTime('');
-                      }
-                    }}
-                    type="button"
-                  >
-                    {scheduledDate && scheduledTime ? 'Remove Schedule' : 'Add Schedule'}
-                  </Button>
-                </div>
-                {(scheduledDate || scheduledTime) && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-xs">Date</Label>
-                      <Input
-                        type="date"
-                        value={scheduledDate}
-                        onChange={(e) => setScheduledDate(e.target.value)}
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Time</Label>
-                      <Input
-                        type="time"
-                        value={scheduledTime}
-                        onChange={(e) => setScheduledTime(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="flex gap-2">

@@ -184,6 +184,7 @@ const CreateVibePage = () => {
           reviewCount: v._count?.meetups || 0,
           category: v.description || 'Venue',
           venueType,
+          pricePerHalfHour: (v as { pricePerHalfHour?: number }).pricePerHalfHour ?? 0,
         };
       })
     : suggestedVenues;
@@ -564,6 +565,11 @@ const CreateVibePage = () => {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-foreground">{venue}</p>
                           <p className="text-sm text-muted-foreground">{venueAddress}</p>
+                          <p className="text-xs mt-1 text-muted-foreground">
+                            {(venueDetailData?.pricePerHalfHour ?? (allVenues.find((v: any) => v.id === selectedVenueId)?.pricePerHalfHour ?? 0)) > 0
+                              ? `$${Number(venueDetailData?.pricePerHalfHour ?? allVenues.find((v: any) => v.id === selectedVenueId)?.pricePerHalfHour ?? 0).toFixed(2)} per 30 min`
+                              : '$0 per 30 min'}
+                          </p>
                         </div>
                         <Info className="w-5 h-5 text-muted-foreground shrink-0" />
                       </div>
@@ -613,6 +619,11 @@ const CreateVibePage = () => {
                           <div className="flex-1">
                             <p className="font-medium text-foreground">{place.name}</p>
                             <p className="text-sm text-muted-foreground">{place.address}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(place.pricePerHalfHour ?? 0) > 0
+                                ? `$${Number(place.pricePerHalfHour).toFixed(2)} per 30 min`
+                                : '$0 per 30 min'}
+                            </p>
                             {place.rating && (
                               <div className="flex items-center gap-1 mt-1">
                                 <Star className="w-3 h-3 fill-secondary text-secondary" />

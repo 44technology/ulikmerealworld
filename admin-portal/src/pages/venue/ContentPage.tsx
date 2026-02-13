@@ -116,8 +116,6 @@ export default function ContentPage() {
   const [contentType, setContentType] = useState<'post' | 'story' | 'reel'>('post');
   const [content, setContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
   const [saveAsDraft, setSaveAsDraft] = useState(false);
   
   // Comments dialog state
@@ -132,9 +130,7 @@ export default function ContentPage() {
       return;
     }
     
-    const scheduledFor = scheduledDate && scheduledTime 
-      ? new Date(`${scheduledDate}T${scheduledTime}`).toISOString()
-      : null;
+    const scheduledFor = null;
     
     const newPost = {
       id: posts.length + 1,
@@ -148,14 +144,12 @@ export default function ContentPage() {
       likes: 0,
       comments: 0,
       shares: 0,
-      status: saveAsDraft ? 'draft' : (scheduledFor ? 'scheduled' : 'published') as 'published' | 'scheduled' | 'draft',
+      status: saveAsDraft ? 'draft' : 'published',
       commentList: [],
     };
     setPosts([newPost, ...posts]);
     setContent('');
     setSelectedFile(null);
-    setScheduledDate('');
-    setScheduledTime('');
     setSaveAsDraft(false);
     setIsDialogOpen(false);
     
@@ -164,7 +158,7 @@ export default function ContentPage() {
       story: 'Story',
       reel: 'Reel'
     };
-    const statusLabel = saveAsDraft ? 'saved as draft' : scheduledFor ? 'scheduled' : 'published';
+    const statusLabel = saveAsDraft ? 'saved as draft' : 'published';
     toast.success(`${contentTypeLabels[contentType]} ${statusLabel} successfully!`);
   };
 
@@ -271,46 +265,6 @@ export default function ContentPage() {
                 </div>
               </div>
 
-              <div className="space-y-3 p-4 rounded-lg bg-muted/50 border border-border">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Schedule Post</Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (scheduledDate && scheduledTime) {
-                        setScheduledDate('');
-                        setScheduledTime('');
-                      }
-                    }}
-                    type="button"
-                  >
-                    {scheduledDate && scheduledTime ? 'Remove Schedule' : 'Add Schedule'}
-                  </Button>
-                </div>
-                {(scheduledDate || scheduledTime) && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-xs">Date</Label>
-                      <Input
-                        type="date"
-                        value={scheduledDate}
-                        onChange={(e) => setScheduledDate(e.target.value)}
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Time</Label>
-                      <Input
-                        type="time"
-                        value={scheduledTime}
-                        onChange={(e) => setScheduledTime(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -336,8 +290,6 @@ export default function ContentPage() {
                 <Button onClick={handleSubmit} className="flex-1">
                   {saveAsDraft 
                     ? 'Save Draft' 
-                    : scheduledDate && scheduledTime
-                    ? 'Schedule'
                     : `Publish ${contentType === 'post' ? 'Post' : contentType === 'story' ? 'Story' : 'Reel'}`}
                 </Button>
               </div>

@@ -18,6 +18,8 @@ export interface Venue {
   capacity?: number;
   amenities: string[];
   businessHours?: string;
+  /** USD per 30 min; 0 = venue free offer */
+  pricePerHalfHour?: number;
   _count?: {
     meetups: number;
   };

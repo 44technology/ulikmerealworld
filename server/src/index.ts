@@ -19,6 +19,8 @@ import storyRoutes from './routes/storyRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import platformSettingsRoutes from './routes/platformSettingsRoutes.js';
 
 dotenv.config();
 
@@ -177,6 +179,8 @@ app.use('/api/stories', storyRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/settings/platform', platformSettingsRoutes);
 
 // 404 handler
 app.use((req, res) => {

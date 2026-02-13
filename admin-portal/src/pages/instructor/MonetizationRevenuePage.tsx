@@ -1,13 +1,70 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
-import { PieChart, Percent, DollarSign, Users } from 'lucide-react';
+import { PieChart, Percent, DollarSign, Users, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../../contexts/AuthContext';
+
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 export default function MonetizationRevenuePage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+
+  const [platformCommission, setPlatformCommission] = useState<number>(4);
+  const [platformCommissionEdit, setPlatformCommissionEdit] = useState<string>('4');
+  const [platformSettingsLoading, setPlatformSettingsLoading] = useState(false);
+  const [platformSettingsSaving, setPlatformSettingsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchPlatformSettings = async () => {
+      setPlatformSettingsLoading(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/settings/platform`);
+        const json = await res.json();
+        if (json.success && json.data?.ulikmeCommissionPercent != null) {
+          const val = Number(json.data.ulikmeCommissionPercent);
+          setPlatformCommission(val);
+          setPlatformCommissionEdit(String(val));
+        }
+      } catch {
+        // keep default 4
+      } finally {
+        setPlatformSettingsLoading(false);
+      }
+    };
+    fetchPlatformSettings();
+  }, [isAdmin]);
+
+  const handleSavePlatformCommission = async () => {
+    const num = Number(platformCommissionEdit);
+    if (isNaN(num) || num < 0 || num > 100) {
+      toast.error('Enter a number between 0 and 100');
+      return;
+    }
+    setPlatformSettingsSaving(true);
+    try {
+      const token = localStorage.getItem('portal_token');
+      const res = await fetch(`${API_BASE}/api/settings/platform`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ulikmeCommissionPercent: num }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Failed to save');
+      setPlatformCommission(num);
+      toast.success('Ulikme commission % saved');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to save');
+    } finally {
+      setPlatformSettingsSaving(false);
+    }
+  };
+
   const [splits, setSplits] = useState([
     { id: 1, partner: 'Ulikme Platform', percentage: 4, amount: 20, isPlatform: true },
     { id: 2, partner: 'Instructor', percentage: 96, amount: 480 },
@@ -41,10 +98,49 @@ export default function MonetizationRevenuePage() {
 
   const totalPercentage = splits.reduce((sum, s) => sum + s.percentage, 0);
   const totalRevenue = 500; // Mock total revenue
-  const platformFee = splits.find(s => s.isPlatform)?.percentage || 3; // Platform fee percentage
+  const platformFee = isAdmin ? platformCommission : (splits.find(s => s.isPlatform)?.percentage ?? 4);
 
   return (
     <div className="p-6 space-y-6">
+      {/* Admin: Ulikme management commission % */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings2 className="w-5 h-5" />
+              Platform revenue (Ulikme management)
+            </CardTitle>
+            <CardDescription>
+              Commission taken by Ulikme on activity/class/event revenue. Users see this when creating activities with a venue.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {platformSettingsLoading ? (
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            ) : (
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="ulikme-commission">Commission (%)</Label>
+                  <Input
+                    id="ulikme-commission"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.5}
+                    value={platformCommissionEdit}
+                    onChange={(e) => setPlatformCommissionEdit(e.target.value)}
+                    className="w-24"
+                  />
+                </div>
+                <Button onClick={handleSavePlatformCommission} disabled={platformSettingsSaving}>
+                  {platformSettingsSaving ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <h1 className="text-3xl font-bold text-foreground">Revenue Split</h1>
         <p className="text-muted-foreground mt-2">

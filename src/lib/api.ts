@@ -98,6 +98,12 @@ export const API_ENDPOINTS = {
     ENROLL: (id: string) => `${API_BASE_URL}/classes/${id}/enroll`,
     CANCEL_ENROLLMENT: (id: string) => `${API_BASE_URL}/classes/${id}/enroll`,
   },
+  // Payments (breakdown for payment screen, create payment)
+  PAYMENTS: {
+    BREAKDOWN: `${API_BASE_URL}/payments/breakdown`,
+    LIST: `${API_BASE_URL}/payments`,
+    CREATE: `${API_BASE_URL}/payments`,
+  },
   // Tickets
   TICKETS: {
     LIST: `${API_BASE_URL}/tickets`,

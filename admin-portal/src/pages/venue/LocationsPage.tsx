@@ -7,7 +7,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
-import { Plus, MapPin, Building2, Image as ImageIcon, X, Upload, Globe, Phone, Users, Edit, Trash2 } from 'lucide-react';
+import { Plus, MapPin, Building2, Image as ImageIcon, X, Upload, Globe, Phone, Users, Edit, Trash2, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Venue {
@@ -24,6 +24,7 @@ interface Venue {
   phone?: string;
   capacity?: number;
   amenities: string[];
+  pricePerHalfHour?: number;
 }
 
 const commonAmenities = [
@@ -61,6 +62,7 @@ export default function LocationsPage() {
     website: '',
     phone: '',
     capacity: '',
+    pricePerHalfHour: '',
   });
 
   // TODO: Fetch venues from API
@@ -126,7 +128,8 @@ export default function LocationsPage() {
       formDataToSend.append('phone', formData.phone);
       formDataToSend.append('capacity', formData.capacity);
       formDataToSend.append('amenities', JSON.stringify(selectedAmenities));
-      
+      formDataToSend.append('pricePerHalfHour', formData.pricePerHalfHour === '' ? '0' : formData.pricePerHalfHour);
+
       if (selectedImage) {
         formDataToSend.append('image', selectedImage);
       }
@@ -162,6 +165,7 @@ export default function LocationsPage() {
         website: '',
         phone: '',
         capacity: '',
+        pricePerHalfHour: '',
       });
       setSelectedAmenities([]);
       setSelectedImage(null);
@@ -458,6 +462,25 @@ export default function LocationsPage() {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pricePerHalfHour">Price per 30 min (USD)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="pricePerHalfHour"
+                      name="pricePerHalfHour"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0 = Venue free offer"
+                      value={formData.pricePerHalfHour}
+                      onChange={handleChange}
+                      className="pl-10"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Set to 0 to show &quot;Venue free offer&quot; when users select this location.</p>
+                </div>
               </div>
 
               {/* Amenities */}
@@ -539,6 +562,15 @@ export default function LocationsPage() {
                     <p className="text-sm text-muted-foreground line-clamp-2">{venue.description}</p>
                   )}
                   
+                  {(venue.pricePerHalfHour ?? 0) > 0 ? (
+                    <p className="text-sm text-foreground">
+                      <DollarSign className="w-4 h-4 inline mr-1" />
+                      ${Number(venue.pricePerHalfHour).toFixed(2)} / 30 min
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Venue free offer</p>
+                  )}
+
                   <div className="flex flex-wrap gap-1">
                     {venue.amenities.slice(0, 3).map((amenity) => (
                       <Badge key={amenity} variant="outline" className="text-xs">

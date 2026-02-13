@@ -25,6 +25,7 @@ export const createVenue = async (
       phone,
       capacity,
       amenities,
+      pricePerHalfHour,
     } = req.body;
 
     let imageUrl = null;
@@ -48,6 +49,7 @@ export const createVenue = async (
         phone,
         capacity,
         amenities: amenities || [],
+        pricePerHalfHour: pricePerHalfHour != null ? Number(pricePerHalfHour) : 0,
       },
     });
 
@@ -122,6 +124,7 @@ export const updateVenue = async (
       phone,
       capacity,
       amenities,
+      pricePerHalfHour,
     } = req.body;
 
     let imageUrl = venue.image;
@@ -146,6 +149,7 @@ export const updateVenue = async (
         ...(phone !== undefined && { phone }),
         ...(capacity !== undefined && { capacity }),
         ...(amenities && { amenities }),
+        ...(pricePerHalfHour !== undefined && { pricePerHalfHour: Number(pricePerHalfHour) }),
       },
     });
 

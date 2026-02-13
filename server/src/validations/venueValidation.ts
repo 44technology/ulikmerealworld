@@ -14,6 +14,7 @@ export const createVenueSchema = z.object({
   phone: z.string().optional(),
   capacity: z.number().int().positive().optional(),
   amenities: z.array(z.string()).optional(),
+  pricePerHalfHour: z.union([z.number().min(0), z.string().transform((v) => (v === '' ? 0 : Number(v)))]).optional(),
 });
 
 export const updateVenueSchema = z.object({
@@ -30,6 +31,7 @@ export const updateVenueSchema = z.object({
   phone: z.string().optional(),
   capacity: z.number().int().positive().optional(),
   amenities: z.array(z.string()).optional(),
+  pricePerHalfHour: z.union([z.number().min(0), z.string().transform((v) => (v === '' ? 0 : Number(v)))]).optional(),
 });
 
 export const nearbyVenuesSchema = z.object({

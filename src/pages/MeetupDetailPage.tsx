@@ -13,6 +13,7 @@ import { useVenues } from '@/hooks/useVenues';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import { useCreateTicketForMeetup, useMyTickets } from '@/hooks/useTickets';
+import { usePaymentBreakdown } from '@/hooks/usePaymentBreakdown';
 import {
   Dialog,
   DialogContent,
@@ -69,13 +70,32 @@ const MeetupDetailPage = () => {
   const { trackJoin } = usePersonalization();
   const { data: myTickets } = useMyTickets();
   const [showTicketDialog, setShowTicketDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [justJoined, setJustJoined] = useState(false);
   const [createdTicket, setCreatedTicket] = useState<any>(null);
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCVC, setCardCVC] = useState('');
+  const pricePerPerson = meetup?.pricePerPerson ?? 0;
+  const isPaidMeetup = !meetup?.isFree && pricePerPerson > 0;
+  const { data: paymentBreakdown } = usePaymentBreakdown(
+    showPaymentDialog && !!id && isPaidMeetup ? { meetupId: id, grossAmount: pricePerPerson } : null
+  );
+  const breakdown = paymentBreakdown ?? (isPaidMeetup && pricePerPerson > 0 ? {
+    venueRent: 0,
+    venueRentLabel: '$0 per 30 min',
+    ulikmeCommissionPercent: 4,
+    ulikmeCommission: Math.round(pricePerPerson * 0.04 * 100) / 100,
+    stripeFee: Math.round(pricePerPerson * 0.03 * 100) / 100,
+    grossAmount: pricePerPerson,
+    payoutAmount: pricePerPerson - Math.round(pricePerPerson * 0.04 * 100) / 100 - Math.round(pricePerPerson * 0.03 * 100) / 100,
+  } : null);
   
   // Find ticket for this meetup if user has joined
   const userTicket = myTickets?.find(t => t.meetup?.id === id && t.status !== 'CANCELLED');
-  const isJoined = user && meetup?.members?.some(m => 
+  const isJoined = justJoined || (user && meetup?.members?.some(m => 
     (typeof m.user === 'object' ? m.user?.id : m.userId) === user.id
-  ) || false;
+  )) || false;
   
   // Edit states
   const [isEditing, setIsEditing] = useState(false);
@@ -225,7 +245,15 @@ const MeetupDetailPage = () => {
       toast.error('Meetup not found');
       return;
     }
+    if (isPaidMeetup) {
+      setShowPaymentDialog(true);
+      return;
+    }
+    await doJoin();
+  };
 
+  const doJoin = async () => {
+    if (!meetup || !id) return;
     try {
       const result = await joinMeetup.mutateAsync({ meetupId: id, status: 'going' });
       
@@ -274,6 +302,18 @@ const MeetupDetailPage = () => {
     } catch (error: any) {
       toast.error(error.message || 'Failed to join vibe');
     }
+  };
+
+  const handlePayAndJoin = async () => {
+    if (!cardNumber.trim() || !cardExpiry.trim() || !cardCVC.trim()) {
+      toast.error('Please fill in all payment details');
+      return;
+    }
+    setShowPaymentDialog(false);
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCVC('');
+    await doJoin();
   };
 
   return (
@@ -822,7 +862,7 @@ const MeetupDetailPage = () => {
                     onClick={handleJoin}
                     className="flex-1 h-12 bg-gradient-primary"
                   >
-                    Join {(meetup as any)?.type === 'event' ? 'Event' : 'Activity'}
+                    {isPaidMeetup ? `Join — $${pricePerPerson}` : `Join ${(meetup as any)?.type === 'event' ? 'Event' : 'Activity'}`}
                   </Button>
                 </div>
                 
@@ -842,6 +882,88 @@ const MeetupDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Payment Dialog (paid meetups) */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="max-w-md mx-4 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogDescription>
+              Pay ${pricePerPerson} per person to join this {(meetup as any)?.type === 'event' ? 'event' : 'activity'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1 block">Card Number</label>
+                <input
+                  type="text"
+                  placeholder="1234 5678 9012 3456"
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())}
+                  maxLength={19}
+                  className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">Expiry</label>
+                  <input
+                    type="text"
+                    placeholder="MM/YY"
+                    value={cardExpiry}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, '');
+                      setCardExpiry(v.length <= 2 ? v : v.slice(0, 2) + '/' + v.slice(2, 4));
+                    }}
+                    maxLength={5}
+                    className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">CVC</label>
+                  <input
+                    type="text"
+                    placeholder="123"
+                    value={cardCVC}
+                    onChange={(e) => setCardCVC(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                    maxLength={3}
+                    className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+            </div>
+            {breakdown && (
+              <div className="space-y-2 rounded-xl bg-muted/50 p-3 text-sm">
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <span>Venue rent (30 min)</span>
+                  <span>{breakdown.venueRentLabel}</span>
+                </div>
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <span>Ulikme commission ({breakdown.ulikmeCommissionPercent}%)</span>
+                  <span>−${breakdown.ulikmeCommission.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-3 border-t border-border">
+              <span className="font-semibold text-foreground">Total</span>
+              <span className="text-2xl font-bold text-primary">${pricePerPerson}</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setShowPaymentDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 bg-gradient-primary"
+              onClick={handlePayAndJoin}
+              disabled={joinMeetup.isPending || !cardNumber || !cardExpiry || !cardCVC}
+            >
+              {joinMeetup.isPending ? 'Processing...' : `Pay $${pricePerPerson}`}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

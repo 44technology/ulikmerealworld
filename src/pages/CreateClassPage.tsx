@@ -641,6 +641,11 @@ const CreateClassPage = () => {
                       >
                         View venue details
                       </button>
+                      <span className="block mt-1">
+                        {(venueDetails?.pricePerHalfHour ?? venues.find((v) => v.id === venueId)?.pricePerHalfHour ?? 0) > 0
+                          ? `$${Number(venueDetails?.pricePerHalfHour ?? venues.find((v) => v.id === venueId)?.pricePerHalfHour ?? 0).toFixed(2)} per 30 min`
+                          : '$0 per 30 min'}
+                      </span>
                     </p>
                   )}
                 </div>
