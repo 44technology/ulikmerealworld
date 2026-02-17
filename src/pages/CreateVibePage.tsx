@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { 
   X, ChevronRight, MapPin, Calendar, Clock, Users, 
   Coffee, UtensilsCrossed, Dumbbell, Film, Heart, 
   Palette, PartyPopper, Briefcase, Sparkles, Camera,
   Globe, Lock, DollarSign, Search, Info, Star, Phone, ExternalLink,
-  Shield, Share2, CheckCircle2, ArrowRight, Ticket, Users2, Gift, Navigation
+  Shield, Share2, CheckCircle2, ArrowRight, Ticket, Users2, Gift, Navigation, Check
 } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 
 const categoryOptions = [
@@ -97,14 +98,11 @@ const sampleMenuItems = [
   },
 ];
 
-type Step = 'category' | 'details' | 'location' | 'datetime' | 'settings';
-
 const CreateVibePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const communityIdFromQuery = searchParams.get('communityId') || '';
-  const [step, setStep] = useState<Step>('category');
   const [category, setCategory] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -126,6 +124,11 @@ const CreateVibePage = () => {
   const [communityId, setCommunityId] = useState(communityIdFromQuery);
   const [recommendedType, setRecommendedType] = useState<'activity' | 'event' | null>(null);
   const [recommendedMaxAttendees, setRecommendedMaxAttendees] = useState<number>(0);
+  const [skillLevel, setSkillLevel] = useState<string>('');
+  const [showFeeTypePicker, setShowFeeTypePicker] = useState(false);
+  const [showSkillPicker, setShowSkillPicker] = useState(false);
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (communityIdFromQuery) setCommunityId(communityIdFromQuery);
@@ -201,18 +204,6 @@ const CreateVibePage = () => {
       })
     : allVenues;
 
-  const steps: Step[] = ['category', 'details', 'location', 'datetime', 'settings'];
-  const currentStepIndex = steps.indexOf(step);
-
-  const handleNext = async () => {
-    if (currentStepIndex < steps.length - 1) {
-      setStep(steps[currentStepIndex + 1]);
-    } else {
-      // Submit vibe
-      await handleCreateVibe();
-    }
-  };
-  
   const handleCreateVibe = async () => {
     try {
       if (!title || !title.trim()) {
@@ -362,27 +353,14 @@ const CreateVibePage = () => {
                        displayVenue?.category?.toLowerCase().includes('food') ||
                        displayVenue?.name?.toLowerCase().includes('restaurant');
 
-  const handleBack = () => {
-    if (currentStepIndex > 0) {
-      setStep(steps[currentStepIndex - 1]);
-    } else {
-      navigate('/home');
-    }
-  };
+  const handleBack = () => navigate('/home');
 
-  const canProceed = () => {
-    switch (step) {
-      case 'category': return !!category;
-      case 'details': return !!title.trim();
-      case 'location': return !!venue.trim();
-      case 'datetime': return !!date && !!time;
-      case 'settings': {
-        const groupSizeValid = groupSize !== 'custom' || (groupSize === 'custom' && !!customGroupSize && parseInt(customGroupSize) > 0);
-        const pricingValid = pricing === 'free' || (pricing === 'paid' && !!pricePerPerson);
-        return groupSizeValid && pricingValid;
-      }
-      default: return false;
-    }
+  const canSubmit = () => {
+    if (!title.trim()) return false;
+    if (!date || !time) return false;
+    const groupSizeValid = groupSize !== 'custom' || (!!customGroupSize && parseInt(customGroupSize) > 0);
+    const pricingValid = pricing === 'free' || (pricing === 'paid' && !!pricePerPerson);
+    return groupSizeValid && pricingValid;
   };
 
   const selectedCategoryData = categoryOptions.find(c => c.id === category);
@@ -392,661 +370,347 @@ const CreateVibePage = () => {
     v.address.toLowerCase().includes(searchVenue.toLowerCase())
   );
 
+  const skillLevelOptions = ['Beginner', 'Intermediate', 'Advanced', 'Any'];
+
+  const formatDisplayDate = (d: string) => {
+    if (!d) return null;
+    const x = new Date(d + 'T12:00:00');
+    return isNaN(x.getTime()) ? null : x.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+  const formatDisplayTime = (t: string) => {
+    if (!t) return null;
+    const [h, m] = t.split(':');
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h12 = hour % 12 || 12;
+    return `${h12}:${m || '00'} ${ampm}`;
+  };
+
   return (
     <AppLayout hideNav>
-      <div className="min-h-screen flex flex-col">
-        {/* Header */}
-        <div className="sticky top-0 z-40 glass safe-top">
+      <div className="min-h-screen flex flex-col bg-background">
+        {/* Header - back, title, checkmark submit */}
+        <div className="sticky top-0 z-40 glass safe-top border-b border-border/50">
           <div className="flex items-center justify-between px-4 py-3">
             <motion.button
               onClick={handleBack}
-              className="p-2 -ml-2"
+              className="p-2 -ml-2 rounded-lg hover:bg-muted/80"
               whileTap={{ scale: 0.9 }}
             >
               <X className="w-6 h-6 text-foreground" />
             </motion.button>
-            <h1 className="font-bold text-foreground">Create Vibe</h1>
-            <div className="w-10" />
+            <h1 className="font-bold text-foreground text-lg">Create Vibe</h1>
+            <motion.button
+              onClick={() => canSubmit() && handleCreateVibe()}
+              disabled={!canSubmit() || createMeetup.isPending}
+              className="p-2 rounded-lg disabled:opacity-40 hover:bg-muted/80"
+              whileTap={{ scale: 0.9 }}
+            >
+              <Check className="w-6 h-6 text-primary" />
+            </motion.button>
           </div>
-          
-          {/* Progress bar */}
-          <div className="px-4 pb-3">
-            <div className="h-1 bg-muted rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-primary"
-                initial={{ width: 0 }}
-                animate={{ width: `${((currentStepIndex + 1) / steps.length) * 100}%` }}
-                transition={{ duration: 0.3 }}
+        </div>
+
+        {/* Single-page scrollable form */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 pb-32">
+          {/* Cover photo */}
+          <motion.button
+            type="button"
+            className="w-full aspect-[4/3] max-h-48 rounded-2xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center gap-2 mb-6"
+            whileTap={{ scale: 0.98 }}
+          >
+            <Camera className="w-10 h-10 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Add cover photo</span>
+          </motion.button>
+
+          {/* Activity Name */}
+          <div className="space-y-2 mb-4">
+            <Input
+              placeholder="Activity Name"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="h-12 rounded-xl text-base"
+            />
+          </div>
+
+          {/* Activity Description */}
+          <div className="mb-6">
+            <Textarea
+              placeholder="Tell everyone about your activity..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="rounded-xl min-h-[100px] resize-none text-base"
+            />
+          </div>
+
+          {/* Row items: Date, Time, Fee Type, Location */}
+          <div className="space-y-2 mb-6">
+            <label className="text-sm font-medium text-muted-foreground px-1">Details</label>
+            <div className="rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border">
+              {/* Date */}
+              <button
+                type="button"
+                onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
+                className="flex items-center gap-3 px-4 py-3.5 w-full hover:bg-muted/50 transition-colors text-left"
+              >
+                <span className="text-xl" role="img" aria-hidden>📅</span>
+                <span className="flex-1 text-foreground">{formatDisplayDate(date) || 'Date'}</span>
+                <span className="text-sm text-muted-foreground">{date ? '' : 'Select Date'}</span>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="absolute opacity-0 pointer-events-none w-0 h-0"
+                aria-hidden
+              />
+              {/* Time */}
+              <button
+                type="button"
+                onClick={() => timeInputRef.current?.showPicker?.() ?? timeInputRef.current?.click()}
+                className="flex items-center gap-3 px-4 py-3.5 w-full hover:bg-muted/50 transition-colors text-left"
+              >
+                <span className="text-xl" role="img" aria-hidden>⏰</span>
+                <span className="flex-1 text-foreground">{formatDisplayTime(time) || 'Time'}</span>
+                <span className="text-sm text-muted-foreground">{time ? '' : 'Select Time'}</span>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <input
+                ref={timeInputRef}
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="absolute opacity-0 pointer-events-none w-0 h-0"
+                aria-hidden
+              />
+              {/* Fee Type */}
+              <button
+                type="button"
+                onClick={() => setShowFeeTypePicker(true)}
+                className="flex items-center gap-3 px-4 py-3.5 w-full hover:bg-muted/50 transition-colors text-left"
+              >
+                <span className="text-xl" role="img" aria-hidden>$</span>
+                <span className="flex-1 text-foreground">{pricing === 'free' ? 'Free' : 'Paid'}</span>
+                <span className="text-sm text-muted-foreground">Fee Type</span>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </button>
+              {/* Location */}
+              <button
+                type="button"
+                onClick={() => navigate('/select-venue?returnTo=create-vibe')}
+                className="flex items-center gap-3 px-4 py-3.5 w-full hover:bg-muted/50 transition-colors text-left"
+              >
+                <span className="text-xl" role="img" aria-hidden>📍</span>
+                <span className="flex-1 text-foreground truncate">{venue || venueAddress || 'Location'}</span>
+                <span className="text-sm text-muted-foreground shrink-0">{venue ? '' : 'Add Location'}</span>
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              </button>
+            </div>
+            {venue && selectedVenueId && (
+              <div className="mt-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                <div className="flex items-start gap-2">
+                  <Shield className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <p className="text-xs text-blue-700">This activity will be sent to the venue for approval. You'll be notified once they respond.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Participant Limit, Joining Fee, Skill Level */}
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center justify-between gap-4">
+              <label className="text-sm font-medium text-foreground">Participant Limit</label>
+              <Input
+                type="number"
+                placeholder="e.g., 10"
+                min={1}
+                value={groupSize === 'custom' ? customGroupSize : String(groupSizeOptions.find(o => o.id === groupSize)?.value ?? '')}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setCustomGroupSize(v);
+                  if (v) setGroupSize('custom');
+                }}
+                className="h-10 w-24 rounded-xl text-right"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 px-4 py-6">
-          <AnimatePresence mode="wait">
-            {step === 'category' && (
-              <motion.div
-                key="category"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground">What kind of vibe?</h2>
-                  <p className="text-muted-foreground mt-1">Choose a category for your vibe</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  {categoryOptions.map((cat) => {
-                    const isSelected = category === cat.id;
-                    return (
-                      <motion.button
-                        key={cat.id}
-                        onClick={() => setCategory(cat.id)}
-                        className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
-                          isSelected 
-                            ? 'border-primary bg-primary/10' 
-                            : 'border-border bg-card'
-                        }`}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <span className="text-3xl">{cat.emoji}</span>
-                        <span className="font-medium text-foreground">{cat.label}</span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-
-            {step === 'details' && (
-              <motion.div
-                key="details"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground">Tell us more</h2>
-                  <p className="text-muted-foreground mt-1">Give your vibe a catchy title</p>
-                </div>
-
-                {/* Cover photo placeholder */}
-                <motion.button 
-                  className="w-full h-32 rounded-2xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center gap-2"
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Camera className="w-8 h-8 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Add cover photo</span>
-                </motion.button>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
-                      Vibe Title
-                    </label>
-                    <Input
-                      placeholder={`e.g., "Saturday morning ${selectedCategoryData?.label.toLowerCase() || 'hangout'}"`}
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="h-12 rounded-xl"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
-                      Description (optional)
-                    </label>
-                    <Textarea
-                      placeholder="Tell people what to expect..."
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="rounded-xl min-h-[100px]"
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 'location' && (
-              <motion.div
-                key="location"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground">Where to meet?</h2>
-                  <p className="text-muted-foreground mt-1">Choose a location for your vibe</p>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-14 rounded-2xl gap-2 border-2 border-dashed"
-                  onClick={() => navigate('/select-venue?returnTo=create-vibe')}
-                >
-                  <Navigation className="w-5 h-5 text-muted-foreground" />
-                  Browse venues by distance
-                </Button>
-                
+            {pricing === 'paid' && (
+              <div className="flex items-center justify-between gap-4">
+                <label className="text-sm font-medium text-foreground">Joining Fee (If Paid)</label>
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                   <Input
-                    placeholder="Search for a venue..."
-                    value={searchVenue}
-                    onChange={(e) => setSearchVenue(e.target.value)}
-                    className="h-14 pl-12 rounded-2xl"
-                  />
-                </div>
-
-                {/* Selected venue */}
-                {venue && (
-                  <div className="space-y-3">
-                    <motion.button
-                      type="button"
-                      onClick={() => {
-                        const place = allVenues.find((v: any) => v.id === selectedVenueId);
-                        if (place) handleVenueDetailClick(place);
-                        else if (venueDetailData) {
-                          setSelectedVenueDetail(venueDetailData);
-                          setShowVenueDetail(true);
-                        }
-                      }}
-                      className="w-full text-left p-4 rounded-xl bg-primary/10 border-2 border-primary cursor-pointer hover:bg-primary/15 transition-colors"
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <MapPin className="w-5 h-5 text-primary shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground">{venue}</p>
-                          <p className="text-sm text-muted-foreground">{venueAddress}</p>
-                          <p className="text-xs mt-1 text-muted-foreground">
-                            {(venueDetailData?.pricePerHalfHour ?? (allVenues.find((v: any) => v.id === selectedVenueId)?.pricePerHalfHour ?? 0)) > 0
-                              ? `$${Number(venueDetailData?.pricePerHalfHour ?? allVenues.find((v: any) => v.id === selectedVenueId)?.pricePerHalfHour ?? 0).toFixed(2)} per 30 min`
-                              : '$0 per 30 min'}
-                          </p>
-                        </div>
-                        <Info className="w-5 h-5 text-muted-foreground shrink-0" />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">Tap to view venue details</p>
-                    </motion.button>
-                    {/* Venue approval notice */}
-                    {selectedVenueId && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="p-4 rounded-xl bg-blue-500/10 border-2 border-blue-500/20"
-                      >
-                        <div className="flex items-start gap-3">
-                          <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-blue-700 mb-1">
-                              Venue Approval Required
-                            </p>
-                            <p className="text-xs text-blue-600 leading-relaxed">
-                              This activity will be sent to <strong>{venue}</strong> for approval. 
-                              The venue may adjust the price before approving. You'll be notified once they respond.
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-                )}
-
-                {/* Venue suggestions */}
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-muted-foreground">Popular near you</p>
-                  {venuesLoading ? (
-                    <div className="text-center py-4">
-                      <p className="text-sm text-muted-foreground">Loading venues...</p>
-                    </div>
-                  ) : filteredVenues.length > 0 ? (
-                    filteredVenues.map((place) => (
-                      <motion.div
-                        key={place.id || place.name}
-                        className={`w-full p-4 rounded-xl border-2 transition-all ${
-                          venue === place.name ? 'border-primary bg-primary/10' : 'border-border bg-card'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground">{place.name}</p>
-                            <p className="text-sm text-muted-foreground">{place.address}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {(place.pricePerHalfHour ?? 0) > 0
-                                ? `$${Number(place.pricePerHalfHour).toFixed(2)} per 30 min`
-                                : '$0 per 30 min'}
-                            </p>
-                            {place.rating && (
-                              <div className="flex items-center gap-1 mt-1">
-                                <Star className="w-3 h-3 fill-secondary text-secondary" />
-                                <span className="text-xs text-muted-foreground">{place.rating}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <motion.button
-                              onClick={() => handleVenueDetailClick(place)}
-                              className="p-2 rounded-lg hover:bg-muted transition-colors"
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <Info className="w-5 h-5 text-muted-foreground" />
-                            </motion.button>
-                            <motion.button
-                              onClick={() => handleVenueSelect(place)}
-                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                venue === place.name
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-foreground hover:bg-muted/80'
-                              }`}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              {venue === place.name ? 'Selected' : 'Select'}
-                            </motion.button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4">
-                      <p className="text-sm text-muted-foreground">No venues found</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Custom address */}
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Or enter custom address
-                  </label>
-                  <Input
-                    placeholder="Enter address manually..."
-                    value={venueAddress}
+                    type="number"
+                    placeholder="eg., 10"
+                    min={0}
+                    value={pricePerPerson}
                     onChange={(e) => {
-                      setVenueAddress(e.target.value);
-                      if (!venue) setVenue('Custom Location');
+                      const v = e.target.value;
+                      if (v === '' || v === '.') setPricePerPerson(v);
+                      else { const n = parseFloat(v); if (!isNaN(n) && n < 0) setPricePerPerson('0'); else setPricePerPerson(v); }
                     }}
-                    className="h-12 rounded-xl"
+                    className="h-10 w-24 rounded-xl pl-6 text-right"
                   />
                 </div>
-              </motion.div>
+              </div>
             )}
-
-            {step === 'datetime' && (
-              <motion.div
-                key="datetime"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+            <div className="flex items-center justify-between gap-4">
+              <label className="text-sm font-medium text-foreground">Required Skill Level</label>
+              <button
+                type="button"
+                onClick={() => setShowSkillPicker(true)}
+                className="px-4 py-2 rounded-xl bg-muted text-sm text-foreground hover:bg-muted/80"
               >
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground">When?</h2>
-                  <p className="text-muted-foreground mt-1">Pick a date and time</p>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-                      <Calendar className="w-4 h-4" /> Date
-                    </label>
-                    <Input
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="h-14 rounded-xl"
-                    />
+                {skillLevel || 'Select Skill'}
+              </button>
+            </div>
+          </div>
+
+          {/* Make Activity Public */}
+          <div className="flex items-center justify-between p-4 rounded-2xl border border-border bg-card mb-6">
+            <div>
+              <p className="font-medium text-foreground">Make Activity Public</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Anyone on FriendMe can see this.</p>
+            </div>
+            <Switch
+              checked={visibility === 'public'}
+              onCheckedChange={(checked) => setVisibility(checked ? 'public' : 'private')}
+            />
+          </div>
+
+          {/* Invite Friends */}
+          <div className="flex items-center justify-between p-4 rounded-2xl border border-border bg-card">
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-9 h-9 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium text-muted-foreground">
+                    ?
                   </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-                      <Clock className="w-4 h-4" /> Time
-                    </label>
-                    <Input
-                      type="time"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      className="h-14 rounded-xl"
-                    />
-                  </div>
+                ))}
+                <div className="w-9 h-9 rounded-full bg-muted/80 border-2 border-background flex items-center justify-center text-xs font-medium text-muted-foreground">
+                  +3
                 </div>
-              </motion.div>
-            )}
-
-            {step === 'settings' && (
-              <motion.div
-                key="settings"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient">
-                    Final touches
-                  </h2>
-                  <p className="text-muted-foreground text-sm">Customize your vibe experience</p>
-                </div>
-
-                <div className="space-y-8">
-                  {/* Group Size */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Users className="w-5 h-5 text-primary" />
-                      </div>
-                      <label className="text-base font-semibold text-foreground">Group Size</label>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {groupSizeOptions.map((option, index) => (
-                        <motion.button
-                          key={option.id}
-                          onClick={() => {
-                            setGroupSize(option.id);
-                            // Show recommendation modal when group size is selected
-                            if (option.id === 'custom') {
-                              // Will show modal when custom value is entered
-                              return;
-                            }
-                            const maxAttendees = option.value || 4;
-                            if (maxAttendees > 10) {
-                              setRecommendedType('event');
-                              setRecommendedMaxAttendees(maxAttendees);
-                              setShowTypeRecommendationModal(true);
-                            } else if (maxAttendees <= 10) {
-                              setRecommendedType('activity');
-                              setRecommendedMaxAttendees(maxAttendees);
-                              setShowTypeRecommendationModal(true);
-                            }
-                          }}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.15 + index * 0.05 }}
-                          className={`relative p-4 rounded-2xl border-2 text-center transition-all duration-300 ${
-                            groupSize === option.id 
-                              ? 'border-primary bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg shadow-primary/20' 
-                              : 'border-border/50 bg-card hover:border-primary/30 hover:bg-muted/50'
-                          }`}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          {groupSize === option.id && (
-                            <motion.div
-                              layoutId="groupSizeIndicator"
-                              className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary"
-                              initial={false}
-                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            />
-                          )}
-                          <div className="text-2xl mb-2">{option.icon}</div>
-                          <p className={`text-xs font-semibold ${
-                            groupSize === option.id ? 'text-primary' : 'text-foreground'
-                          }`}>
-                            {option.label}
-                          </p>
-                        </motion.button>
-                      ))}
-                    </div>
-                    {groupSize === 'custom' && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-4 space-y-2"
-                      >
-                        <label className="text-sm font-medium text-foreground block">
-                          Enter number of people
-                        </label>
-                        <Input
-                          type="number"
-                          placeholder="e.g., 15"
-                          value={customGroupSize}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setCustomGroupSize(value);
-                            const numValue = parseInt(value);
-                            if (!isNaN(numValue) && numValue > 0) {
-                              // If more than 10, recommend event mode
-                              if (numValue > 10) {
-                                setRecommendedType('event');
-                                setRecommendedMaxAttendees(numValue);
-                                setEventType('event'); // Auto-set to event
-                                setShowTypeRecommendationModal(true);
-                              } else if (numValue <= 10) {
-                                setRecommendedType('activity');
-                                setRecommendedMaxAttendees(numValue);
-                                setEventType('activity'); // Auto-set to activity
-                                // Only show modal if user wants to see it, or we can skip for <= 10
-                              }
-                            }
-                          }}
-                          className="h-12 rounded-xl border-2 border-border focus:border-primary"
-                          min="1"
-                          autoFocus
-                        />
-                        {customGroupSize && parseInt(customGroupSize) > 10 && (
-                          <p className="text-xs text-orange-600 flex items-center gap-1">
-                            <Info className="w-3 h-3" />
-                            Event mode will be recommended for {customGroupSize} people
-                          </p>
-                        )}
-                      </motion.div>
-                    )}
-                  </motion.div>
-
-                  {/* Visibility */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm">
-                        <Globe className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <label className="text-base font-bold text-foreground">Visibility</label>
-                        <p className="text-xs text-muted-foreground">Who can see your vibe?</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {visibilityOptions.map((option, index) => {
-                        const Icon = option.icon;
-                        return (
-                          <motion.button
-                            key={option.id}
-                            onClick={() => setVisibility(option.id)}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.25 + index * 0.05 }}
-                            className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
-                              visibility === option.id 
-                                ? 'border-primary bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg shadow-primary/20' 
-                                : 'border-border/50 bg-card hover:border-primary/30 hover:bg-muted/50'
-                            }`}
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            {visibility === option.id && (
-                              <motion.div
-                                layoutId="visibilityIndicator"
-                                className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary"
-                                initial={false}
-                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                              />
-                            )}
-                            <div className="flex flex-col items-center text-center space-y-2">
-                              <div className={`p-3 rounded-xl ${
-                                visibility === option.id 
-                                  ? 'bg-primary/20' 
-                                  : 'bg-muted'
-                              }`}>
-                                <Icon className={`w-6 h-6 ${
-                                  visibility === option.id 
-                                    ? 'text-primary' 
-                                    : 'text-muted-foreground'
-                                }`} />
-                              </div>
-                              <p className={`text-sm font-semibold ${
-                                visibility === option.id ? 'text-primary' : 'text-foreground'
-                              }`}>
-                                {option.label}
-                              </p>
-                              <p className="text-xs text-muted-foreground leading-tight">
-                                {option.description}
-                              </p>
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-
-                  {/* Pricing */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <DollarSign className="w-5 h-5 text-primary" />
-                      </div>
-                      <label className="text-base font-semibold text-foreground">Pricing</label>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {pricingOptions.map((option, index) => (
-                        <motion.button
-                          key={option.id}
-                          onClick={() => setPricing(option.id)}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.35 + index * 0.05 }}
-                          className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
-                            pricing === option.id 
-                              ? 'border-primary bg-gradient-to-br from-primary via-primary/90 to-primary/80 shadow-xl shadow-primary/30 scale-105' 
-                              : 'border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/40 hover:bg-muted/30'
-                          }`}
-                          whileHover={{ scale: pricing === option.id ? 1.05 : 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          {pricing === option.id && (
-                            <motion.div
-                              layoutId="pricingIndicator"
-                              className="absolute top-3 right-3 w-3 h-3 rounded-full bg-white shadow-lg"
-                              initial={false}
-                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            >
-                              <motion.div
-                                className="w-full h-full rounded-full bg-primary"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: 0.1 }}
-                              />
-                            </motion.div>
-                          )}
-                          <div className="text-center space-y-2">
-                            <p className={`text-base font-bold transition-colors ${
-                              pricing === option.id ? 'text-white' : 'text-foreground'
-                            }`}>
-                              {option.label}
-                            </p>
-                            <p className={`text-xs leading-tight transition-colors ${
-                              pricing === option.id ? 'text-white/80' : 'text-muted-foreground'
-                            }`}>
-                              {option.description}
-                            </p>
-                          </div>
-                        </motion.button>
-                      ))}
-                    </div>
-                    {pricing === 'paid' && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0, y: -10 }}
-                        animate={{ opacity: 1, height: 'auto', y: 0 }}
-                        exit={{ opacity: 0, height: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-4"
-                      >
-                        <div className="relative">
-                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input
-                            type="number"
-                            min={0}
-                            step={1}
-                            placeholder="Min $10 per person"
-                            value={pricePerPerson}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || v === '.') setPricePerPerson(v);
-                              else {
-                                const n = parseFloat(v);
-                                if (!isNaN(n) && n < 0) setPricePerPerson('0');
-                                else setPricePerPerson(v);
-                              }
-                            }}
-                            className="h-14 rounded-2xl pl-12 border-2 border-border/50 focus:border-primary bg-card"
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-2 ml-1">
-                          Free option above; paid vibes minimum $10 per person
-                        </p>
-                      </motion.div>
-                    )}
-                    <div className="mt-4">
-                      <label className="text-sm font-medium text-foreground mb-2 block">
-                        Link to Community (optional)
-                      </label>
-                      <select
-                        value={communityId}
-                        onChange={(e) => setCommunityId(e.target.value)}
-                        className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground"
-                      >
-                        <option value="">None</option>
-                        {communities.map((c) => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </motion.div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 glass safe-bottom">
-          <div className="px-4 py-4">
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed() || createMeetup.isPending}
-              className="w-full bg-gradient-primary h-14 text-lg font-semibold shadow-glow disabled:opacity-50"
-            >
-              {createMeetup.isPending 
-                ? 'Creating...' 
-                : step === 'settings' 
-                  ? 'Create Vibe' 
-                  : 'Continue'}
-              {!createMeetup.isPending && <ChevronRight className="ml-2" />}
+              </div>
+              <span className="text-sm font-medium text-foreground">Invite Friends</span>
+            </div>
+            <Button type="button" variant="outline" size="sm" className="rounded-xl gap-1.5">
+              <Users2 className="w-4 h-4" />
+              Invite Friends
             </Button>
           </div>
+
+          {/* Inline venue search when no venue selected - compact */}
+          {!venue && (
+            <div className="mt-6 space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search for a venue..."
+                  value={searchVenue}
+                  onChange={(e) => setSearchVenue(e.target.value)}
+                  className="h-11 pl-9 rounded-xl"
+                />
+              </div>
+              {venuesLoading ? (
+                <p className="text-sm text-muted-foreground">Loading venues...</p>
+              ) : filteredVenues.length > 0 ? (
+                <div className="space-y-2">
+                  {filteredVenues.slice(0, 3).map((place) => (
+                    <button
+                      key={place.id || place.name}
+                      type="button"
+                      onClick={() => handleVenueSelect(place)}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/50 text-left"
+                    >
+                      <MapPin className="w-4 h-4 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground text-sm truncate">{place.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{place.address}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          {/* Custom address */}
+          <div className="mt-4">
+            <label className="text-xs text-muted-foreground mb-1 block">Or enter custom address</label>
+            <Input
+              placeholder="Enter address..."
+              value={venueAddress}
+              onChange={(e) => {
+                setVenueAddress(e.target.value);
+                if (!venue) setVenue('Custom Location');
+              }}
+              className="h-11 rounded-xl"
+            />
+          </div>
+
+          {/* Community (optional) - collapsed */}
+          <div className="mt-6">
+            <label className="text-xs text-muted-foreground mb-1 block">Community (optional)</label>
+            <select
+              value={communityId}
+              onChange={(e) => setCommunityId(e.target.value)}
+              className="w-full h-11 px-3 rounded-xl bg-muted border-0 text-foreground text-sm"
+            >
+              <option value="">None</option>
+              {communities.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
+
+        {/* Fee Type Picker Dialog */}
+        <Dialog open={showFeeTypePicker} onOpenChange={setShowFeeTypePicker}>
+          <DialogContent className="max-w-sm rounded-2xl">
+            <DialogHeader>
+              <DialogTitle>Fee Type</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2">
+              {pricingOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => { setPricing(opt.id); setShowFeeTypePicker(false); }}
+                  className={`w-full p-4 rounded-xl text-left font-medium transition-colors ${
+                    pricing === opt.id ? 'bg-primary/15 border-2 border-primary text-primary' : 'bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  {opt.label} — {opt.description}
+                </button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Skill Level Picker Dialog */}
+        <Dialog open={showSkillPicker} onOpenChange={setShowSkillPicker}>
+          <DialogContent className="max-w-sm rounded-2xl">
+            <DialogHeader>
+              <DialogTitle>Required Skill Level</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2">
+              {skillLevelOptions.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => { setSkillLevel(opt); setShowSkillPicker(false); }}
+                  className={`w-full p-4 rounded-xl text-left font-medium transition-colors ${
+                    skillLevel === opt ? 'bg-primary/15 border-2 border-primary text-primary' : 'bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Venue Detail Dialog */}

@@ -1,4 +1,4 @@
-import { Users, Building2, Calendar, AlertCircle, Image, MessageCircle, MessageSquare, Megaphone, Sparkles, Percent, Camera, BookOpen, Video, Ticket, QrCode, TrendingUp, Star, MapPin, DollarSign, PieChart, Wallet, BarChart3, Bot, Shield, ArrowRight } from 'lucide-react';
+import { Users, Building2, Calendar, AlertCircle, Image, MessageCircle, MessageSquare, Megaphone, Sparkles, Percent, Camera, BookOpen, Video, Ticket, QrCode, TrendingUp, Star, MapPin, DollarSign, PieChart, Wallet, BarChart3, Shield, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Link } from 'react-router-dom';
@@ -144,15 +144,6 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">Posts, Stories, Reels</p>
               </div>
             </Link>
-            <Link to="/venue/qa" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <MessageCircle className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Q&A</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Answer questions</p>
-              </div>
-            </Link>
             <Link to="/venue/chat" className="group">
               <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
                 <div className="flex items-center gap-3 mb-2">
@@ -232,13 +223,6 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-3">
                   <Sparkles className="w-4 h-4 text-primary" />
                   <span className="text-sm font-medium">Manage Vibes</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground" />
-              </Link>
-              <Link to="/production/ai-assistant" className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3">
-                  <Bot className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">AI Content Assistant</span>
                 </div>
                 <ArrowRight className="w-4 h-4 text-muted-foreground" />
               </Link>

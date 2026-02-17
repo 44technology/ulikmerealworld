@@ -40,7 +40,6 @@ import InstructorSettingsPage from './pages/instructor/SettingsPage';
 
 // Production pages
 import ScheduleCapacityPage from './pages/instructor/ScheduleCapacityPage';
-import AIContentAssistantPage from './pages/instructor/AIContentAssistantPage';
 
 // Tickets pages
 import TicketsPricingPage from './pages/instructor/TicketsPricingPage';
@@ -108,7 +107,6 @@ function AppRoutes() {
               <Route path="/instructor/classes/:id" element={<InstructorClassDetailPage />} />
               
               {/* Production (Admin can access - manage user content, no create) */}
-              <Route path="/production/ai-assistant" element={<AIContentAssistantPage />} />
               <Route path="/production/schedule" element={<ScheduleCapacityPage />} />
               
               {/* Tickets (Admin can access) */}
