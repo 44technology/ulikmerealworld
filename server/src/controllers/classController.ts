@@ -26,13 +26,15 @@ export const createClass = async (
       longitude,
     } = req.body;
 
-    // Verify venue exists and user has permission (venue owner or admin)
-    const venue = await prisma.venue.findUnique({
-      where: { id: venueId },
-    });
-
-    if (!venue) {
-      throw new AppError('Venue not found', 404);
+    let venue: { latitude: number | null; longitude: number | null } | null = null;
+    if (venueId) {
+      venue = await prisma.venue.findUnique({
+        where: { id: venueId },
+        select: { latitude: true, longitude: true },
+      });
+      if (!venue) {
+        throw new AppError('Venue not found', 404);
+      }
     }
 
     let imageUrl = null;
@@ -52,9 +54,9 @@ export const createClass = async (
         maxStudents: maxStudents ? parseInt(maxStudents) : null,
         price: price ? parseFloat(price) : null,
         schedule: schedule || null,
-        venueId,
-        latitude: latitude || venue.latitude,
-        longitude: longitude || venue.longitude,
+        venueId: venueId || null,
+        latitude: latitude ?? venue?.latitude ?? null,
+        longitude: longitude ?? venue?.longitude ?? null,
       },
       include: {
         venue: {

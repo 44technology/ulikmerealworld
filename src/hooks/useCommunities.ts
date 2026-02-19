@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { API_ORIGIN } from '@/lib/api';
 
 export interface Community {
   id: string;
@@ -97,7 +96,7 @@ async function fetchCommunities(): Promise<Community[]> {
   const stored = getStoredCommunities().map(normalizeCommunity);
   try {
     const token = localStorage.getItem('authToken');
-    const res = await fetch(`${API_BASE}/api/communities`, {
+    const res = await fetch(`${API_ORIGIN}/api/communities`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!res.ok) return [...stored, ...MOCK_COMMUNITIES];

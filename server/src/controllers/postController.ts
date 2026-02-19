@@ -12,13 +12,15 @@ export const createPost = async (
   try {
     // Multer parses multipart/form-data, so body fields are already parsed
     // But we need to handle both JSON and FormData
-    let content, venueId, meetupId;
+    let content, venueId, meetupId, classId, communityId;
     
     if (req.body && typeof req.body === 'object') {
       // If body is already parsed (from multer or express.json)
       content = req.body.content;
       venueId = req.body.venueId;
       meetupId = req.body.meetupId;
+      classId = req.body.classId;
+      communityId = req.body.communityId;
     } else if (typeof req.body === 'string') {
       // If body is a string, try to parse it
       try {
@@ -26,9 +28,11 @@ export const createPost = async (
         content = parsed.content;
         venueId = parsed.venueId;
         meetupId = parsed.meetupId;
+        classId = parsed.classId;
+        communityId = parsed.communityId;
       } catch {
         // If parsing fails, use empty values
-        content = venueId = meetupId = undefined;
+        content = venueId = meetupId = classId = communityId = undefined;
       }
     }
 
@@ -67,6 +71,20 @@ export const createPost = async (
       }
     }
 
+    if (classId) {
+      const cls = await prisma.class.findUnique({ where: { id: classId } });
+      if (!cls) {
+        throw new AppError('Class not found', 404);
+      }
+    }
+
+    if (communityId) {
+      const community = await prisma.community.findUnique({ where: { id: communityId } });
+      if (!community) {
+        throw new AppError('Community not found', 404);
+      }
+    }
+
     const post = await prisma.post.create({
       data: {
         userId: req.userId,
@@ -74,6 +92,8 @@ export const createPost = async (
         image: imageUrl,
         venueId: venueId || null,
         meetupId: meetupId || null,
+        classId: classId || null,
+        communityId: communityId || null,
       },
       include: {
         user: {
@@ -87,6 +107,8 @@ export const createPost = async (
         },
         venue: true,
         meetup: true,
+        class: true,
+        community: true,
         _count: {
           select: {
             likes: true,

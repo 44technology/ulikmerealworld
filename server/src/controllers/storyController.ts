@@ -20,10 +20,25 @@ export const createStory = async (
     }
 
     // Parse body fields (from FormData)
-    let venueId, meetupId;
+    let venueId, meetupId, classId, communityId;
     if (req.body && typeof req.body === 'object') {
       venueId = req.body.venueId;
       meetupId = req.body.meetupId;
+      classId = req.body.classId;
+      communityId = req.body.communityId;
+    }
+
+    if (classId) {
+      const cls = await prisma.class.findUnique({ where: { id: classId } });
+      if (!cls) {
+        throw new AppError('Class not found', 404);
+      }
+    }
+    if (communityId) {
+      const community = await prisma.community.findUnique({ where: { id: communityId } });
+      if (!community) {
+        throw new AppError('Community not found', 404);
+      }
     }
 
     let imageUrl: string;
@@ -42,6 +57,8 @@ export const createStory = async (
         image: imageUrl,
         venueId: venueId || null,
         meetupId: meetupId || null,
+        classId: classId || null,
+        communityId: communityId || null,
         expiresAt,
       },
       include: {
@@ -56,6 +73,8 @@ export const createStory = async (
         },
         venue: true,
         meetup: true,
+        class: true,
+        community: true,
       },
     });
 

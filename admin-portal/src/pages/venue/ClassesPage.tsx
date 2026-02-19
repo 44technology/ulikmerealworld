@@ -59,7 +59,7 @@ export default function VenueClassesPage() {
                 <DollarSign className="w-4 h-4" />
                 <span>${cls.price}</span>
                 {cls.price > 0 && (
-                  <span className="text-xs text-muted-foreground">(+4% processing fee)</span>
+                  <span className="text-xs text-muted-foreground">(+5% processing fee)</span>
                 )}
               </CardDescription>
               {'isPopular' in cls && cls.isPopular && 'recentEnrollments' in cls && cls.recentEnrollments > 0 && (

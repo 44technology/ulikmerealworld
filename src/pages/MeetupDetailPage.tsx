@@ -92,11 +92,11 @@ const MeetupDetailPage = () => {
   const breakdown = paymentBreakdown ?? (isPaidMeetup && pricePerPerson > 0 ? {
     venueRent: 0,
     venueRentLabel: '$0 per 30 min',
-    ulikmeCommissionPercent: 4,
-    ulikmeCommission: Math.round(pricePerPerson * 0.04 * 100) / 100,
+    ulikmeCommissionPercent: 5,
+    ulikmeCommission: Math.round(pricePerPerson * 0.05 * 100) / 100,
     stripeFee: Math.round(pricePerPerson * 0.03 * 100) / 100,
     grossAmount: pricePerPerson,
-    payoutAmount: pricePerPerson - Math.round(pricePerPerson * 0.04 * 100) / 100 - Math.round(pricePerPerson * 0.03 * 100) / 100,
+    payoutAmount: pricePerPerson - Math.round(pricePerPerson * 0.05 * 100) / 100 - Math.round(pricePerPerson * 0.03 * 100) / 100,
   } : null);
 
   // When payment dialog opens, default to first saved card if any

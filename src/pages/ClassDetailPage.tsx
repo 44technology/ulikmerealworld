@@ -80,11 +80,11 @@ const ClassDetailPage = () => {
   const breakdown = paymentBreakdown ?? (grossAmount > 0 ? {
     venueRent: 0,
     venueRentLabel: '$0 per 30 min',
-    ulikmeCommissionPercent: 4,
-    ulikmeCommission: Math.round(grossAmount * 0.04 * 100) / 100,
+    ulikmeCommissionPercent: 5,
+    ulikmeCommission: Math.round(grossAmount * 0.05 * 100) / 100,
     stripeFee: Math.round(grossAmount * 0.03 * 100) / 100,
     grossAmount,
-    payoutAmount: grossAmount - Math.round(grossAmount * 0.04 * 100) / 100 - Math.round(grossAmount * 0.03 * 100) / 100,
+    payoutAmount: grossAmount - Math.round(grossAmount * 0.05 * 100) / 100 - Math.round(grossAmount * 0.03 * 100) / 100,
   } : null);
 
   // When payment dialog opens, default to first saved card if any

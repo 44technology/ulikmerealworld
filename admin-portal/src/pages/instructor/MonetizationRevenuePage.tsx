@@ -14,8 +14,8 @@ export default function MonetizationRevenuePage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
-  const [platformCommission, setPlatformCommission] = useState<number>(4);
-  const [platformCommissionEdit, setPlatformCommissionEdit] = useState<string>('4');
+  const [platformCommission, setPlatformCommission] = useState<number>(5);
+  const [platformCommissionEdit, setPlatformCommissionEdit] = useState<string>('5');
   const [platformSettingsLoading, setPlatformSettingsLoading] = useState(false);
   const [platformSettingsSaving, setPlatformSettingsSaving] = useState(false);
 
@@ -66,7 +66,7 @@ export default function MonetizationRevenuePage() {
   };
 
   const [splits, setSplits] = useState([
-    { id: 1, partner: 'Ulikme Platform', percentage: 4, amount: 20, isPlatform: true },
+    { id: 1, partner: 'Ulikme Platform', percentage: 5, amount: 20, isPlatform: true },
     { id: 2, partner: 'Instructor', percentage: 96, amount: 480 },
   ]);
 
@@ -98,7 +98,7 @@ export default function MonetizationRevenuePage() {
 
   const totalPercentage = splits.reduce((sum, s) => sum + s.percentage, 0);
   const totalRevenue = 500; // Mock total revenue
-  const platformFee = isAdmin ? platformCommission : (splits.find(s => s.isPlatform)?.percentage ?? 4);
+  const platformFee = isAdmin ? platformCommission : (splits.find(s => s.isPlatform)?.percentage ?? 5);
 
   return (
     <div className="p-6 space-y-6">
@@ -153,7 +153,7 @@ export default function MonetizationRevenuePage() {
               <span className="font-semibold">$100.00</span>
             </div>
             <div className="flex items-center justify-between pt-2 border-t">
-              <span className="text-muted-foreground">Processing fee (4%):</span>
+              <span className="text-muted-foreground">Processing fee (5%):</span>
               <span className="font-semibold text-orange-600">-$4.00</span>
             </div>
             <div className="flex items-center justify-between pt-2 border-t">
@@ -214,7 +214,7 @@ export default function MonetizationRevenuePage() {
               <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
                 <div>
                   <p className="font-medium text-foreground">Processing Fee</p>
-                  <p className="text-xs text-muted-foreground">4% of gross amount</p>
+                  <p className="text-xs text-muted-foreground">5% of gross amount</p>
                 </div>
                 <span className="font-semibold text-orange-600">-$4.00</span>
               </div>

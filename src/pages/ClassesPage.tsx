@@ -878,7 +878,7 @@ const ClassesPage = () => {
                       <span>${(classItem as any).price}</span>
                       {(classItem as any).price && (classItem as any).price > 0 && (
                         <span className="text-xs text-muted-foreground ml-1">
-                          (+4% processing fee)
+                          (+5% processing fee)
                         </span>
                       )}
                     </span>

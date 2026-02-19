@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Clock, DollarSign, Heart, Share2, Shield, UtensilsCrossed, Sparkles, Camera, X, Tag, Percent, Calendar, Box, Eye, RotateCcw, GraduationCap, Users, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Clock, DollarSign, Heart, Share2, Shield, UtensilsCrossed, X, Tag, Percent, Calendar, GraduationCap, Users, ChevronRight } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -28,7 +28,6 @@ const sampleMenuItems = [
     description: 'Fresh Atlantic salmon with lemon butter sauce',
     price: 28,
     image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400',
-    arModel: '/models/salmon.glb', // Placeholder for 3D/AR model
     ingredients: ['Salmon', 'Lemon', 'Butter', 'Herbs', 'Olive Oil'],
     calories: 420,
     category: 'Main Course',
@@ -39,7 +38,6 @@ const sampleMenuItems = [
     description: 'Crisp romaine lettuce with parmesan and croutons',
     price: 16,
     image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400',
-    arModel: '/models/caesar.glb',
     ingredients: ['Romaine Lettuce', 'Parmesan', 'Croutons', 'Caesar Dressing'],
     calories: 280,
     category: 'Salad',
@@ -50,7 +48,6 @@ const sampleMenuItems = [
     description: 'Warm chocolate cake with molten center',
     price: 12,
     image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400',
-    arModel: '/models/cake.glb',
     ingredients: ['Dark Chocolate', 'Butter', 'Eggs', 'Sugar', 'Flour'],
     calories: 450,
     category: 'Dessert',
@@ -141,9 +138,7 @@ const sampleCampaigns = [
 const VenueDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [selectedARItem, setSelectedARItem] = useState<string | null>(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState<typeof sampleMenuItems[0] | null>(null);
-  const [viewMode, setViewMode] = useState<'2d' | '3d' | 'ar'>('2d');
   const [favourite, setFavourite] = useState(false);
   const { data: venue, isLoading, error } = useVenue(id || '');
 
@@ -211,14 +206,8 @@ const VenueDetailPage = () => {
   const venueCategory = venue.description || 'Venue';
   const venueIsOpen = true; // Default (backend'de isOpen field'ı yok)
 
-  const handleViewAR = (itemId: string) => {
-    setSelectedARItem(itemId);
-    toast.info('AR view would open here. In production, this would use AR.js or similar.');
-  };
-
   const handleViewMenuItem = (item: typeof sampleMenuItems[0]) => {
     setSelectedMenuItem(item);
-    setViewMode('2d'); // Reset to 2D view when opening menu item
   };
 
   // Separate campaigns and free items
@@ -684,22 +673,10 @@ const VenueDetailPage = () => {
                                 )}
                               </div>
 
-                              {/* Calories & AR Button */}
+                              {/* Calories */}
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-muted-foreground">Calories:</span>
                                 <span className="text-xs font-medium text-foreground">{item.calories} kcal</span>
-                                <motion.button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewMenuItem(item);
-                                    setViewMode('ar');
-                                  }}
-                                  className="ml-auto px-2 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium flex items-center gap-1"
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  <Sparkles className="w-3 h-3" />
-                                  View in AR
-                                </motion.button>
                               </div>
                             </div>
                           </div>
@@ -793,7 +770,7 @@ const VenueDetailPage = () => {
         </div>
       </div>
 
-      {/* Menu Item Detail Modal with 3D/AR View */}
+      {/* Menu Item Detail Modal */}
       <AnimatePresence>
         {selectedMenuItem && (
           <Dialog open={!!selectedMenuItem} onOpenChange={() => setSelectedMenuItem(null)}>
@@ -811,216 +788,46 @@ const VenueDetailPage = () => {
               </DialogHeader>
 
               <div className="px-6 pb-6 space-y-4">
-                {/* View Mode Tabs */}
-                <div className="flex gap-2 border-b border-border">
-                  <button
-                    onClick={() => setViewMode('2d')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      viewMode === '2d'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Eye className="w-4 h-4 inline mr-2" />
-                    View
-                  </button>
-                  <button
-                    onClick={() => setViewMode('3d')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      viewMode === '3d'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Box className="w-4 h-4 inline mr-2" />
-                    3D Model
-                  </button>
-                  <button
-                    onClick={() => setViewMode('ar')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      viewMode === 'ar'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Camera className="w-4 h-4 inline mr-2" />
-                    AR View
-                  </button>
+                <div className="relative aspect-video rounded-xl overflow-hidden">
+                  <img
+                    src={selectedMenuItem.image}
+                    alt={selectedMenuItem.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
-                {/* Content Area */}
-                <AnimatePresence mode="wait">
-                  {viewMode === '2d' && (
-                    <motion.div
-                      key="2d"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="space-y-4"
-                    >
-                      {/* Image */}
-                      <div className="relative aspect-video rounded-xl overflow-hidden">
-                        <img
-                          src={selectedMenuItem.image}
-                          alt={selectedMenuItem.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">{selectedMenuItem.name}</h3>
+                      <p className="text-sm text-muted-foreground">{selectedMenuItem.category}</p>
+                    </div>
+                    <span className="text-2xl font-bold text-primary">${selectedMenuItem.price}</span>
+                  </div>
 
-                      {/* Details */}
-                      <div className="space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="text-xl font-bold text-foreground">{selectedMenuItem.name}</h3>
-                            <p className="text-sm text-muted-foreground">{selectedMenuItem.category}</p>
-                          </div>
-                          <span className="text-2xl font-bold text-primary">${selectedMenuItem.price}</span>
-                        </div>
+                  <p className="text-foreground">{selectedMenuItem.description}</p>
 
-                        <p className="text-foreground">{selectedMenuItem.description}</p>
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Ingredients</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedMenuItem.ingredients.map((ingredient, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 rounded-full bg-muted text-sm text-foreground"
+                        >
+                          {ingredient}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
 
-                        {/* Ingredients */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-foreground mb-2">Ingredients</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedMenuItem.ingredients.map((ingredient, idx) => (
-                              <span
-                                key={idx}
-                                className="px-3 py-1 rounded-full bg-muted text-sm text-foreground"
-                              >
-                                {ingredient}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Nutrition Info */}
-                        <div className="p-4 rounded-xl bg-muted">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">Calories</span>
-                            <span className="text-sm font-semibold text-foreground">{selectedMenuItem.calories} kcal</span>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {viewMode === '3d' && (
-                    <motion.div
-                      key="3d"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="space-y-4"
-                    >
-                      <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex flex-col items-center justify-center p-8 relative overflow-hidden">
-                        {/* 3D Model Placeholder */}
-                        <div className="relative w-full h-full flex items-center justify-center">
-                          <div className="absolute inset-0 opacity-10" style={{
-                            backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
-                            backgroundSize: '20px 20px'
-                          }} />
-                          <div className="relative z-10 text-center">
-                            <Box className="w-24 h-24 mx-auto mb-4 text-primary/50" />
-                            <p className="text-lg font-semibold text-foreground mb-2">3D Model View</p>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              {selectedMenuItem.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground px-4">
-                              In production, this would display an interactive 3D model using Three.js, react-three-fiber, or model-viewer.
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Controls */}
-                        <div className="absolute bottom-4 left-4 right-4 flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => toast.info('Rotate model - Use mouse/touch to interact')}
-                          >
-                            <RotateCcw className="w-4 h-4 mr-2" />
-                            Rotate
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => toast.info('Zoom in/out - Pinch or scroll')}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Zoom
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                        <p className="text-sm text-foreground">
-                          <strong>3D Model:</strong> {selectedMenuItem.arModel}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Interactive 3D model allows you to rotate, zoom, and explore the dish from all angles.
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {viewMode === 'ar' && (
-                    <motion.div
-                      key="ar"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="space-y-4"
-                    >
-                      <div className="aspect-square bg-black rounded-xl flex flex-col items-center justify-center p-8 relative overflow-hidden">
-                        {/* AR Camera View Placeholder */}
-                        <div className="relative w-full h-full flex items-center justify-center">
-                          <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30 opacity-20" />
-                          <div className="relative z-10 text-center">
-                            <Camera className="w-24 h-24 mx-auto mb-4 text-white/50" />
-                            <p className="text-lg font-semibold text-white mb-2">AR View</p>
-                            <p className="text-sm text-white/80 mb-4">
-                              {selectedMenuItem.name}
-                            </p>
-                            <p className="text-xs text-white/60 px-4 mb-4">
-                              Point your camera at a flat surface to place the 3D model in your environment.
-                            </p>
-                            <div className="flex flex-col gap-2">
-                              <Button
-                                className="bg-white text-black hover:bg-white/90"
-                                onClick={() => toast.info('AR view would activate camera. In production, this uses AR.js, WebXR, or 8th Wall.')}
-                              >
-                                <Camera className="w-4 h-4 mr-2" />
-                                Start AR Experience
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                        <p className="text-sm font-semibold text-foreground mb-2">AR Features:</p>
-                        <ul className="text-xs text-muted-foreground space-y-1">
-                          <li>• Place the dish in your real environment</li>
-                          <li>• View it from different angles</li>
-                          <li>• See accurate size and proportions</li>
-                          <li>• Share AR experience with friends</li>
-                        </ul>
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-muted">
-                        <p className="text-sm text-foreground mb-2">
-                          <strong>AR Model:</strong> {selectedMenuItem.arModel}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          In production, this would use WebXR API, AR.js, 8th Wall, or similar AR framework to overlay the 3D model onto your camera view.
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  <div className="p-4 rounded-xl bg-muted">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Calories</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedMenuItem.calories} kcal</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </DialogContent>
           </Dialog>

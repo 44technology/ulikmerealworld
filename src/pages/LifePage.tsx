@@ -234,8 +234,6 @@ const LifePage = () => {
   const [showComments, setShowComments] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
-  const [showCommonInterestsModal, setShowCommonInterestsModal] = useState(false);
-  const [commonInterestsModalPost, setCommonInterestsModalPost] = useState<{ name?: string; commonInterests: string[] } | null>(null);
   const [mediaModalPost, setMediaModalPost] = useState<any>(null);
 
   // Fetch posts from backend
@@ -281,6 +279,7 @@ const LifePage = () => {
             interests: postUserInterests,
           } : null,
           venue: p.venue ? {
+            id: p.venue.id,
             name: p.venue.name,
             avatar: p.venue.image || 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=150',
           } : null,
@@ -573,14 +572,11 @@ const LifePage = () => {
                     {post.commonInterests && post.commonInterests.length > 0 && (
                       <button
                         onClick={() => {
-                          setCommonInterestsModalPost({
-                            name: post.user?.name || post.venue?.name,
-                            commonInterests: post.commonInterests,
-                          });
-                          setShowCommonInterestsModal(true);
+                          if (post.user?.id) navigate(`/user/${post.user.id}`);
+                          else if (post.venue?.id) navigate(`/venue/${post.venue.id}`);
                         }}
                         className="flex items-center gap-1.5 hover:text-foreground"
-                        title="Common interests"
+                        title="View profile"
                       >
                         <span className="text-lg">⭐</span>
                         <span className="text-sm">{post.commonInterests.length}</span>
@@ -845,20 +841,17 @@ const LifePage = () => {
 
                 {/* Right: Actions */}
                 <div className="flex flex-col items-center gap-6">
-                  {/* Common Interest Indicator - Star: tap to open modal */}
+                  {/* Common Interest Indicator - Star: tap to go to profile */}
                   {currentPost.commonInterests && currentPost.commonInterests.length > 0 && (
                     <motion.button
                       type="button"
                       initial={{ scale: 0, rotate: -180 }}
                       animate={{ scale: 1, rotate: 0 }}
                       className="flex flex-col items-center gap-1 mb-2"
-                      title={`${currentPost.commonInterests.length} common interest${currentPost.commonInterests.length > 1 ? 's' : ''}`}
+                      title="View profile"
                       onClick={() => {
-                        setCommonInterestsModalPost({
-                          name: currentPost.user?.name || currentPost.venue?.name,
-                          commonInterests: currentPost.commonInterests,
-                        });
-                        setShowCommonInterestsModal(true);
+                        if (currentPost.user?.id) navigate(`/user/${currentPost.user.id}`);
+                        else if (currentPost.venue?.id) navigate(`/venue/${currentPost.venue.id}`);
                       }}
                       whileTap={{ scale: 0.9 }}
                     >
@@ -952,55 +945,6 @@ const LifePage = () => {
           ))}
         </div>
       </div>
-
-      {/* Common Interests Modal */}
-      <AnimatePresence>
-        {showCommonInterestsModal && commonInterestsModalPost && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-            onClick={() => setShowCommonInterestsModal(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-2xl bg-card border border-border shadow-xl overflow-hidden"
-            >
-              <div className="p-4 border-b border-border flex items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <span className="text-2xl">⭐</span>
-                    Common interests
-                  </h2>
-                  {commonInterestsModalPost.name && (
-                    <p className="text-sm text-muted-foreground mt-0.5">with {commonInterestsModalPost.name}</p>
-                  )}
-                </div>
-                <motion.button
-                  type="button"
-                  onClick={() => setShowCommonInterestsModal(false)}
-                  className="p-2 rounded-full hover:bg-muted text-foreground"
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <X className="w-5 h-5" />
-                </motion.button>
-              </div>
-              <div className="p-4 flex flex-wrap gap-2">
-                {commonInterestsModalPost.commonInterests.map((interest) => (
-                  <span
-                    key={interest}
-                    className="px-3 py-1.5 rounded-full bg-primary/15 text-primary font-medium text-sm border border-primary/30"
-                  >
-                    {interest}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Create Post Modal */}
       <CreatePostModal

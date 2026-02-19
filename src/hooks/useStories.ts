@@ -45,10 +45,12 @@ export const useCreateStory = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ image, venueId, meetupId }: { image: File; venueId?: string; meetupId?: string }) => {
+    mutationFn: async ({ image, venueId, meetupId, classId, communityId }: { image: File; venueId?: string; meetupId?: string; classId?: string; communityId?: string }) => {
       const additionalData: Record<string, any> = {};
       if (venueId) additionalData.venueId = venueId;
       if (meetupId) additionalData.meetupId = meetupId;
+      if (classId) additionalData.classId = classId;
+      if (communityId) additionalData.communityId = communityId;
 
       const response = await apiUpload<{ success: boolean; data: Story }>(
         API_ENDPOINTS.STORIES.CREATE,

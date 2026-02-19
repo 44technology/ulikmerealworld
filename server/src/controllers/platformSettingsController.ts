@@ -18,7 +18,7 @@ export const getPlatformSettings = async (
     const setting = await prisma.platformSetting.findUnique({
       where: { key: COMMISSION_KEY },
     });
-    const ulikmeCommissionPercent = setting ? Number(setting.value) : 4;
+    const ulikmeCommissionPercent = setting ? Number(setting.value) : 5;
     res.json({
       success: true,
       data: { ulikmeCommissionPercent },

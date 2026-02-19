@@ -24,7 +24,7 @@ import {
 import { useClasses } from '@/hooks/useClasses';
 import { useMeetups } from '@/hooks/useMeetups';
 import { usePosts, type Post as ApiPost } from '@/hooks/usePosts';
-import { getAuthToken } from '@/lib/api';
+import { getAuthToken, API_ORIGIN } from '@/lib/api';
 import UserAvatar from '@/components/ui/UserAvatar';
 
 interface Community {
@@ -245,7 +245,7 @@ export default function CommunityDetailPage() {
     setIsLoading(true);
     try {
       const token = getAuthToken();
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/request-class-creation`, {
+      const response = await fetch(`${API_ORIGIN}/api/users/request-class-creation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

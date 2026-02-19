@@ -8,6 +8,7 @@ import { useCreatePost } from '@/hooks/usePosts';
 import { useMeetups } from '@/hooks/useMeetups';
 import { useVenues } from '@/hooks/useVenues';
 import { useCommunities } from '@/hooks/useCommunities';
+import { useClasses } from '@/hooks/useClasses';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -26,11 +27,13 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
   const [selectedVenue, setSelectedVenue] = useState<string>('');
   const [selectedMeetup, setSelectedMeetup] = useState<string>('');
   const [selectedCommunityId, setSelectedCommunityId] = useState<string>('');
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: venues } = useVenues({});
   const { data: meetups } = useMeetups({});
   const { data: communities = [] } = useCommunities();
+  const { data: classes = [] } = useClasses();
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -62,6 +65,7 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
         venueId: selectedVenue || undefined,
         meetupId: selectedMeetup || undefined,
         communityId: selectedCommunityId || undefined,
+        classId: selectedClassId || undefined,
       });
       
       toast.success('Post created successfully!');
@@ -71,6 +75,7 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
       setSelectedVenue('');
       setSelectedMeetup('');
       setSelectedCommunityId('');
+      setSelectedClassId('');
       onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
@@ -181,6 +186,24 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
             onChange={handleImageSelect}
             className="hidden"
           />
+
+          {/* Optional: Link to Class */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <span className="w-1 h-4 bg-gradient-primary rounded-full"></span>
+              Link to Class (Optional)
+            </label>
+            <select
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-border text-foreground focus:outline-none focus:border-primary/50 transition-colors"
+            >
+              <option value="">None</option>
+              {classes.slice(0, 15).map((c: any) => (
+                <option key={c.id} value={c.id}>{c.title}</option>
+              ))}
+            </select>
+          </div>
 
           {/* Optional: Link to Venue */}
           <div className="space-y-2">

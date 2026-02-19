@@ -22,7 +22,7 @@ interface User {
   certifiedAreas?: string[];
   canCreateClasses?: boolean;
   classCreationRequestStatus?: 'pending' | 'approved' | 'rejected' | null;
-  /** User paid for ad-free experience ($19.99 one-time); when true, ads are not shown */
+  /** User paid for ad-free experience ($9.99 one-time); when true, ads are not shown */
   adFree?: boolean;
   /** Number of classes user has created (to know if we must ask followers+expertise) */
   createdClassesCount?: number;

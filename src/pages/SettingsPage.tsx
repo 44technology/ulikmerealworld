@@ -25,7 +25,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 
-const AD_FREE_PRICE = 19.99;
+const AD_FREE_PRICE = 9.99;
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -138,7 +138,7 @@ const SettingsPage = () => {
           </div>
         )}
 
-        {/* Ads Section: Show ads (free) or Ad-free (paid $19.99) */}
+        {/* Ads Section: Show ads (free) or Ad-free (paid $9.99 one-time) */}
         <div>
           <h3 className="text-sm font-semibold text-muted-foreground mb-2 px-2">{t('ads')}</h3>
           <div className="space-y-1">
@@ -301,7 +301,7 @@ const SettingsPage = () => {
           <div className="mt-4 p-4 rounded-xl bg-muted border border-border">
             <div className="flex items-center justify-between">
               <span className="font-medium text-foreground">{t('oneTimePayment')}</span>
-              <span className="text-xl font-bold text-primary">$19.99</span>
+              <span className="text-xl font-bold text-primary">${AD_FREE_PRICE.toFixed(2)}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-2">{t('noSubscription')}</p>
           </div>

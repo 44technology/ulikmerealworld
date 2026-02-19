@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useCreateStory } from '@/hooks/useStories';
 import { useMeetups } from '@/hooks/useMeetups';
 import { useVenues } from '@/hooks/useVenues';
+import { useClasses } from '@/hooks/useClasses';
+import { useCommunities } from '@/hooks/useCommunities';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -22,10 +24,14 @@ const CreateStoryModal = ({ open, onOpenChange, onSuccess }: CreateStoryModalPro
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedVenue, setSelectedVenue] = useState<string>('');
   const [selectedMeetup, setSelectedMeetup] = useState<string>('');
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: venues } = useVenues({});
   const { data: meetups } = useMeetups({});
+  const { data: classes = [] } = useClasses();
+  const { data: communities = [] } = useCommunities();
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,6 +61,8 @@ const CreateStoryModal = ({ open, onOpenChange, onSuccess }: CreateStoryModalPro
         image: selectedImage,
         venueId: selectedVenue || undefined,
         meetupId: selectedMeetup || undefined,
+        classId: selectedClassId || undefined,
+        communityId: selectedCommunityId || undefined,
       });
       
       toast.success('Story created successfully!');
@@ -62,6 +70,8 @@ const CreateStoryModal = ({ open, onOpenChange, onSuccess }: CreateStoryModalPro
       setImagePreview(null);
       setSelectedVenue('');
       setSelectedMeetup('');
+      setSelectedClassId('');
+      setSelectedCommunityId('');
       onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
@@ -156,6 +166,40 @@ const CreateStoryModal = ({ open, onOpenChange, onSuccess }: CreateStoryModalPro
                 <option key={meetup.id} value={meetup.id}>
                   {meetup.title}
                 </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Optional: Link to Class */}
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Link to Class (Optional)
+            </label>
+            <select
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="">None</option>
+              {classes.slice(0, 10).map((c: any) => (
+                <option key={c.id} value={c.id}>{c.title}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Optional: Link to Community */}
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Link to Community (Optional)
+            </label>
+            <select
+              value={selectedCommunityId}
+              onChange={(e) => setSelectedCommunityId(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="">None</option>
+              {communities.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
           </div>

@@ -33,6 +33,9 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL = getApiBaseUrl();
 
+/** Base URL without /api (e.g. http://localhost:5000) for fetch() calls that add /api/... */
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '') || 'http://localhost:5000';
+
 export const API_ENDPOINTS = {
   // Auth
   AUTH: {

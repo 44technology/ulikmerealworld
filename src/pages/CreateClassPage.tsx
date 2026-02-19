@@ -66,7 +66,6 @@ const CreateClassPage = () => {
   const communityIdFromQuery = searchParams.get('communityId') || undefined;
   const { isAuthenticated, user, updateUser } = useAuth();
   const { data: venues = [] } = useVenues();
-  const { data: venueDetails } = useVenue(type === 'onsite' && venueId ? venueId : '');
   const { data: communities = [] } = useCommunities();
   const [communityId, setCommunityId] = useState<string>(communityIdFromQuery || '');
 
@@ -168,7 +167,9 @@ const CreateClassPage = () => {
   const [meetingLink, setMeetingLink] = useState('');
   const [customPlatformName, setCustomPlatformName] = useState('');
   const [physicalLocation, setPhysicalLocation] = useState('');
-  
+
+  const { data: venueDetails } = useVenue(type === 'onsite' && venueId ? venueId : '');
+
   const weekDays = [
     { value: 'monday', label: 'Monday' },
     { value: 'tuesday', label: 'Tuesday' },
@@ -295,8 +296,16 @@ const CreateClassPage = () => {
     }
 
     try {
-      if (!title || !description || !skill || !venueId || !startTime) {
+      if (!title?.trim() || !description?.trim() || !skill?.trim() || !startTime) {
         toast.error('Please fill in all required fields');
+        return;
+      }
+      if (type === 'onsite' && !venueId) {
+        toast.error('Please select a venue for onsite classes');
+        return;
+      }
+      if ((type === 'online' || type === 'hybrid') && !meetingLink?.trim()) {
+        toast.error('Please enter the meeting link');
         return;
       }
 
@@ -1037,7 +1046,7 @@ const CreateClassPage = () => {
                   <p className="text-xs text-muted-foreground mt-1">Free class</p>
                 )}
                 {price && parseFloat(price) > 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">+4% processing fee applies</p>
+                  <p className="text-xs text-muted-foreground mt-1">+5% processing fee applies</p>
                 )}
               </div>
             </div>

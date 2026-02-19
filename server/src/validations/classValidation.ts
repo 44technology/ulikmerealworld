@@ -10,7 +10,7 @@ export const createClassSchema = z.object({
   maxStudents: z.number().int().positive().optional(),
   price: z.number().positive().optional(),
   schedule: z.string().max(200).optional(),
-  venueId: z.string().uuid(),
+  venueId: z.string().uuid().optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
 });

@@ -298,7 +298,7 @@ export default function ClassesPage() {
                     }}
                   />
                   {price && parseFloat(price) > 0 && (
-                    <p className="text-xs text-muted-foreground">+4% processing fee applies</p>
+                    <p className="text-xs text-muted-foreground">+5% processing fee applies</p>
                   )}
                 </div>
                 <div className="space-y-2">

@@ -42,13 +42,13 @@ export async function getPaymentBreakdown(
   const venueRent = 0;
   const venueRentLabel = '$0 per 30 min';
 
-  // Ulikme commission % from platform settings (default 4)
-  let ulikmeCommissionPercent = 4;
+  // Ulikme commission % from platform settings (default 5)
+  let ulikmeCommissionPercent = 5;
   try {
     const setting = await prisma.platformSetting.findUnique({
       where: { key: COMMISSION_KEY },
     });
-    if (setting?.value) ulikmeCommissionPercent = Number(setting.value) || 4;
+    if (setting?.value) ulikmeCommissionPercent = Number(setting.value) || 5;
   } catch {
     // keep default
   }
@@ -78,7 +78,7 @@ export async function getPaymentBreakdown(
 export function calculatePaymentBreakdown(grossAmount: number): PaymentCalculation {
   const stripeFee = Math.round(grossAmount * STRIPE_FEE_PERCENTAGE * 100) / 100;
   const netAmount = Math.round((grossAmount - stripeFee) * 100) / 100;
-  const ulikmeCommissionPercent = 4;
+  const ulikmeCommissionPercent = 5;
   const platformFee = Math.round(grossAmount * (ulikmeCommissionPercent / 100) * 100) / 100;
   const venueRent = 0;
   const payoutAmount = Math.round((grossAmount - stripeFee - platformFee - venueRent) * 100) / 100;

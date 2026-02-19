@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Edit, Upload, Box, Camera, Video, Image as ImageIcon, MapPin, Eye } from 'lucide-react';
+import { Search, Edit, Upload, Video, Image as ImageIcon, MapPin, Eye } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
@@ -28,8 +28,6 @@ const mockVenues = [
     rating: 4.5,
     status: 'active',
     approvalStatus: 'pending' as ApprovalStatus,
-    has3D: true,
-    hasAR: true,
     menuItems: 15,
     images: 8,
     videos: 2,
@@ -42,8 +40,6 @@ const mockVenues = [
     rating: 4.8,
     status: 'active',
     approvalStatus: 'approved' as ApprovalStatus,
-    has3D: false,
-    hasAR: true,
     menuItems: 25,
     images: 12,
     videos: 1,
@@ -181,26 +177,8 @@ export default function VenuesPage() {
                     </div>
                   </div>
 
-                  {/* 3D/AR & Media Status */}
+                  {/* Media Status */}
                   <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border">
-                    <div className="flex items-center gap-2">
-                      <Box className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">3D Model:</span>
-                      {venue.has3D ? (
-                        <Badge variant="default" className="bg-green-500">Available</Badge>
-                      ) : (
-                        <Badge variant="outline">Not Available</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Camera className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">AR:</span>
-                      {venue.hasAR ? (
-                        <Badge variant="default" className="bg-green-500">Available</Badge>
-                      ) : (
-                        <Badge variant="outline">Not Available</Badge>
-                      )}
-                    </div>
                     <div className="flex items-center gap-2">
                       <ImageIcon className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">{venue.images} images</span>
@@ -254,11 +232,11 @@ export default function VenuesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Upload Media</DialogTitle>
-            <DialogDescription>Add images, videos, or 3D/AR models for {selectedVenue?.name}</DialogDescription>
+            <DialogDescription>Add images or videos for {selectedVenue?.name}</DialogDescription>
           </DialogHeader>
           {selectedVenue && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <Button variant="outline" className="h-24 flex-col gap-2">
                   <ImageIcon className="w-6 h-6" />
                   <span>Upload Images</span>
@@ -266,10 +244,6 @@ export default function VenuesPage() {
                 <Button variant="outline" className="h-24 flex-col gap-2">
                   <Video className="w-6 h-6" />
                   <span>Upload Videos</span>
-                </Button>
-                <Button variant="outline" className="h-24 flex-col gap-2">
-                  <Box className="w-6 h-6" />
-                  <span>Upload 3D/AR</span>
                 </Button>
               </div>
               <div className="flex gap-4">

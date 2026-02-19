@@ -288,6 +288,8 @@ model Community {
   creator     User     @relation("CommunityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   members     CommunityMember[]
   classes     Class[]
+  posts       Post[]
+  stories     Story[]
 
   @@index([creatorId])
   @@index([isPublic])
@@ -337,6 +339,8 @@ model Class {
   enrollments ClassEnrollment[]
   tickets     Ticket[]
   payments    Payment[]
+  posts       Post[]
+  stories     Story[]
 
   @@index([venueId])
   @@index([communityId])
@@ -368,23 +372,29 @@ model ClassEnrollment {
 }
 
 model Story {
-  id        String   @id @default(uuid())
-  userId    String
-  image     String   // Story image URL
-  venueId   String?  // Optional: if story is about a venue
-  meetupId  String?  // Optional: if story is about a meetup
-  expiresAt DateTime // Stories expire after 24 hours
-  createdAt DateTime @default(now())
+  id          String    @id @default(uuid())
+  userId      String
+  image       String    // Story image URL
+  venueId     String?   // Optional: if story is about a venue
+  meetupId    String?   // Optional: if story is about a meetup
+  classId     String?   // Optional: if story links to a class
+  communityId String?   // Optional: if story links to a community
+  expiresAt   DateTime  // Stories expire after 24 hours
+  createdAt   DateTime  @default(now())
 
   // Relations
   user      User     @relation("UserStories", fields: [userId], references: [id], onDelete: Cascade)
   venue     Venue?   @relation(fields: [venueId], references: [id], onDelete: SetNull)
   meetup    Meetup?  @relation(fields: [meetupId], references: [id], onDelete: SetNull)
+  class     Class?   @relation(fields: [classId], references: [id], onDelete: SetNull)
+  community Community? @relation(fields: [communityId], references: [id], onDelete: SetNull)
   views     StoryView[]
 
   @@index([userId])
   @@index([venueId])
   @@index([meetupId])
+  @@index([classId])
+  @@index([communityId])
   @@index([expiresAt])
   @@map("stories")
 }
@@ -406,25 +416,31 @@ model StoryView {
 }
 
 model Post {
-  id        String   @id @default(uuid())
-  userId    String
-  content   String?  // Post text content
-  image     String?  // Post image URL
-  venueId   String?  // Optional: if post is about a venue
-  meetupId  String?  // Optional: if post is about a meetup
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid())
+  userId       String
+  content      String?  // Post text content
+  image        String?  // Post image URL
+  venueId      String?  // Optional: if post is about a venue
+  meetupId     String?  // Optional: if post is about a meetup
+  classId      String?  // Optional: if post links to a class
+  communityId  String?  // Optional: if post is in a community feed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   user      User     @relation("UserPosts", fields: [userId], references: [id], onDelete: Cascade)
   venue     Venue?   @relation(fields: [venueId], references: [id], onDelete: SetNull)
   meetup    Meetup?  @relation("MeetupPosts", fields: [meetupId], references: [id], onDelete: SetNull)
+  class     Class?   @relation(fields: [classId], references: [id], onDelete: SetNull)
+  community Community? @relation(fields: [communityId], references: [id], onDelete: SetNull)
   likes     PostLike[]
   comments  PostComment[]
 
   @@index([userId])
   @@index([venueId])
   @@index([meetupId])
+  @@index([classId])
+  @@index([communityId])
   @@index([createdAt])
   @@map("posts")
 }

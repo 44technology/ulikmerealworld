@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MoreVertical, Phone, Video, Send, Mic, MapPin, Calendar, Clock, ChevronRight, X, Star, GraduationCap, MessageCircle, Plus, Users, Sparkles, CheckCircle2, Info, ArrowRight, MessageSquare, Camera, Box, Eye, RotateCcw, UtensilsCrossed } from 'lucide-react';
+import { Search, MoreVertical, Phone, Video, Send, Mic, MapPin, Calendar, Clock, ChevronRight, X, Star, GraduationCap, MessageCircle, Plus, Users, Sparkles, CheckCircle2, Info, ArrowRight, MessageSquare, UtensilsCrossed } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
@@ -91,7 +91,6 @@ const sampleMenuItems = [
     description: 'Fresh Atlantic salmon with lemon butter sauce',
     price: 28,
     image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400',
-    arModel: '/models/salmon.glb',
     ingredients: ['Salmon', 'Lemon', 'Butter', 'Herbs', 'Olive Oil'],
     calories: 420,
     category: 'Main Course',
@@ -102,7 +101,6 @@ const sampleMenuItems = [
     description: 'Crisp romaine lettuce with parmesan and croutons',
     price: 16,
     image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400',
-    arModel: '/models/caesar.glb',
     ingredients: ['Romaine Lettuce', 'Parmesan', 'Croutons', 'Caesar Dressing'],
     calories: 280,
     category: 'Salad',
@@ -113,7 +111,6 @@ const sampleMenuItems = [
     description: 'Warm chocolate cake with molten center',
     price: 12,
     image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400',
-    arModel: '/models/cake.glb',
     ingredients: ['Dark Chocolate', 'Butter', 'Eggs', 'Sugar', 'Flour'],
     calories: 450,
     category: 'Dessert',
@@ -124,7 +121,6 @@ const sampleMenuItems = [
     description: 'Classic Italian pizza with fresh mozzarella and basil',
     price: 18,
     image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400',
-    arModel: '/models/pizza.glb',
     ingredients: ['Mozzarella', 'Tomato Sauce', 'Basil', 'Olive Oil'],
     calories: 320,
     category: 'Main Course',
@@ -135,7 +131,6 @@ const sampleMenuItems = [
     description: 'Juicy beef patty with lettuce, tomato, and special sauce',
     price: 22,
     image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
-    arModel: '/models/burger.glb',
     ingredients: ['Beef Patty', 'Lettuce', 'Tomato', 'Onion', 'Special Sauce'],
     calories: 580,
     category: 'Main Course',
@@ -159,7 +154,6 @@ const ChatPage = () => {
   const [assistantMessages, setAssistantMessages] = useState<Array<{id: string; content: string; actionButton?: any}>>([]);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [selectedMenuItem, setSelectedMenuItem] = useState<typeof sampleMenuItems[0] | null>(null);
-  const [menuViewMode, setMenuViewMode] = useState<'2d' | '3d' | 'ar'>('2d');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
@@ -1136,10 +1130,7 @@ const ChatPage = () => {
               {sampleMenuItems.map((item) => (
                 <motion.button
                   key={item.id}
-                  onClick={() => {
-                    setSelectedMenuItem(item);
-                    setMenuViewMode('2d');
-                  }}
+                  onClick={() => setSelectedMenuItem(item)}
                   className="w-full text-left border-b border-border pb-4 last:border-0 last:pb-0"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1148,9 +1139,6 @@ const ChatPage = () => {
                   <div className="flex gap-4">
                     <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
                       <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-primary/90 backdrop-blur-sm">
-                        <Camera className="w-3 h-3 text-white" />
-                      </div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-1">
@@ -1179,22 +1167,10 @@ const ChatPage = () => {
                         )}
                       </div>
 
-                      {/* Calories & AR Button */}
+                      {/* Calories */}
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">Calories:</span>
                         <span className="text-xs font-medium text-foreground">{item.calories} kcal</span>
-                        <motion.button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedMenuItem(item);
-                            setMenuViewMode('ar');
-                          }}
-                          className="ml-auto px-2 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium flex items-center gap-1"
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          View in AR
-                        </motion.button>
                       </div>
                     </div>
                   </div>
@@ -1204,7 +1180,7 @@ const ChatPage = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Menu Item Detail Modal with 3D/AR View */}
+        {/* Menu Item Detail Modal */}
         <AnimatePresence>
           {selectedMenuItem && (
             <Dialog open={!!selectedMenuItem} onOpenChange={() => setSelectedMenuItem(null)}>
@@ -1222,214 +1198,46 @@ const ChatPage = () => {
                 </DialogHeader>
 
                 <div className="px-6 pb-6 space-y-4">
-                  {/* View Mode Tabs */}
-                  <div className="flex gap-2 border-b border-border">
-                    <button
-                      onClick={() => setMenuViewMode('2d')}
-                      className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        menuViewMode === '2d'
-                          ? 'text-primary border-b-2 border-primary'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <Eye className="w-4 h-4 inline mr-2" />
-                      View
-                    </button>
-                    <button
-                      onClick={() => setMenuViewMode('3d')}
-                      className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        menuViewMode === '3d'
-                          ? 'text-primary border-b-2 border-primary'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <Box className="w-4 h-4 inline mr-2" />
-                      3D Model
-                    </button>
-                    <button
-                      onClick={() => setMenuViewMode('ar')}
-                      className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        menuViewMode === 'ar'
-                          ? 'text-primary border-b-2 border-primary'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <Camera className="w-4 h-4 inline mr-2" />
-                      AR View
-                    </button>
+                  <div className="relative aspect-video rounded-xl overflow-hidden">
+                    <img
+                      src={selectedMenuItem.image}
+                      alt={selectedMenuItem.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
 
-                  {/* Content Area */}
-                  <AnimatePresence mode="wait">
-                    {menuViewMode === '2d' && (
-                      <motion.div
-                        key="2d"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-4"
-                      >
-                        {/* Image */}
-                        <div className="relative aspect-video rounded-xl overflow-hidden">
-                          <img
-                            src={selectedMenuItem.image}
-                            alt={selectedMenuItem.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold text-foreground">{selectedMenuItem.name}</h3>
+                        <p className="text-sm text-muted-foreground">{selectedMenuItem.category}</p>
+                      </div>
+                      <span className="text-2xl font-bold text-primary">${selectedMenuItem.price}</span>
+                    </div>
 
-                        {/* Details */}
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="text-xl font-bold text-foreground">{selectedMenuItem.name}</h3>
-                              <p className="text-sm text-muted-foreground">{selectedMenuItem.category}</p>
-                            </div>
-                            <span className="text-2xl font-bold text-primary">${selectedMenuItem.price}</span>
-                          </div>
+                    <p className="text-foreground">{selectedMenuItem.description}</p>
 
-                          <p className="text-foreground">{selectedMenuItem.description}</p>
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-2">Ingredients</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedMenuItem.ingredients.map((ingredient: string, idx: number) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1 rounded-full bg-muted text-sm text-foreground"
+                          >
+                            {ingredient}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
 
-                          {/* Ingredients */}
-                          <div>
-                            <h4 className="text-sm font-semibold text-foreground mb-2">Ingredients</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {selectedMenuItem.ingredients.map((ingredient: string, idx: number) => (
-                                <span
-                                  key={idx}
-                                  className="px-3 py-1 rounded-full bg-muted text-sm text-foreground"
-                                >
-                                  {ingredient}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Nutrition Info */}
-                          <div className="p-4 rounded-xl bg-muted">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Calories</span>
-                              <span className="text-sm font-semibold text-foreground">{selectedMenuItem.calories} kcal</span>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {menuViewMode === '3d' && (
-                      <motion.div
-                        key="3d"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-4"
-                      >
-                        <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex flex-col items-center justify-center p-8 relative overflow-hidden">
-                          <div className="relative w-full h-full flex items-center justify-center">
-                            <div className="absolute inset-0 opacity-10" style={{
-                              backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
-                              backgroundSize: '20px 20px'
-                            }} />
-                            <div className="relative z-10 text-center">
-                              <Box className="w-24 h-24 mx-auto mb-4 text-primary/50" />
-                              <p className="text-lg font-semibold text-foreground mb-2">3D Model View</p>
-                              <p className="text-sm text-muted-foreground mb-4">
-                                {selectedMenuItem.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground px-4">
-                                In production, this would display an interactive 3D model using Three.js, react-three-fiber, or model-viewer.
-                              </p>
-                            </div>
-                          </div>
-                          
-                          {/* Controls */}
-                          <div className="absolute bottom-4 left-4 right-4 flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => toast.info('Rotate model - Use mouse/touch to interact')}
-                            >
-                              <RotateCcw className="w-4 h-4 mr-2" />
-                              Rotate
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => toast.info('Zoom in/out - Pinch or scroll')}
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              Zoom
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                          <p className="text-sm text-foreground">
-                            <strong>3D Model:</strong> {selectedMenuItem.arModel}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Interactive 3D model allows you to rotate, zoom, and explore the dish from all angles.
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {menuViewMode === 'ar' && (
-                      <motion.div
-                        key="ar"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-4"
-                      >
-                        <div className="aspect-square bg-black rounded-xl flex flex-col items-center justify-center p-8 relative overflow-hidden">
-                          <div className="relative w-full h-full flex items-center justify-center">
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30 opacity-20" />
-                            <div className="relative z-10 text-center">
-                              <Camera className="w-24 h-24 mx-auto mb-4 text-white/50" />
-                              <p className="text-lg font-semibold text-white mb-2">AR View</p>
-                              <p className="text-sm text-white/80 mb-4">
-                                {selectedMenuItem.name}
-                              </p>
-                              <p className="text-xs text-white/60 px-4 mb-4">
-                                Point your camera at a flat surface to place the 3D model in your environment.
-                              </p>
-                              <div className="flex flex-col gap-2">
-                                <Button
-                                  className="bg-white text-black hover:bg-white/90"
-                                  onClick={() => toast.info('AR view would activate camera. In production, this uses AR.js, WebXR, or 8th Wall.')}
-                                >
-                                  <Camera className="w-4 h-4 mr-2" />
-                                  Start AR Experience
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                          <p className="text-sm font-semibold text-foreground mb-2">AR Features:</p>
-                          <ul className="text-xs text-muted-foreground space-y-1">
-                            <li>• Place the dish in your real environment</li>
-                            <li>• View it from different angles</li>
-                            <li>• See accurate size and proportions</li>
-                            <li>• Share AR experience with friends</li>
-                          </ul>
-                        </div>
-
-                        <div className="p-4 rounded-xl bg-muted">
-                          <p className="text-sm text-foreground mb-2">
-                            <strong>AR Model:</strong> {selectedMenuItem.arModel}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            In production, this would use WebXR API, AR.js, 8th Wall, or similar AR framework to overlay the 3D model onto your camera view.
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                    <div className="p-4 rounded-xl bg-muted">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Calories</span>
+                        <span className="text-sm font-semibold text-foreground">{selectedMenuItem.calories} kcal</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
@@ -1479,17 +1287,17 @@ const ChatPage = () => {
             </button>
           </div>
 
-          <TabsList className="grid w-full grid-cols-4 bg-muted rounded-xl p-1 h-10">
-            <TabsTrigger value="friends" className="rounded-lg text-sm data-[state=active]:bg-card">
+          <TabsList className="grid w-full grid-cols-4 bg-muted rounded-xl p-1 h-10 gap-1">
+            <TabsTrigger value="friends" className="rounded-lg text-sm border-l-4 border-l-primary data-[state=active]:bg-card pl-2">
               Friends
             </TabsTrigger>
-            <TabsTrigger value="vibes" className="rounded-lg text-sm data-[state=active]:bg-card">
+            <TabsTrigger value="vibes" className="rounded-lg text-sm border-l-4 border-l-secondary data-[state=active]:bg-card pl-2">
               Vibes
             </TabsTrigger>
-            <TabsTrigger value="classes" className="rounded-lg text-sm data-[state=active]:bg-card">
+            <TabsTrigger value="classes" className="rounded-lg text-sm border-l-4 border-l-accent data-[state=active]:bg-card pl-2">
               Classes
             </TabsTrigger>
-            <TabsTrigger value="communities" className="rounded-lg text-sm data-[state=active]:bg-card">
+            <TabsTrigger value="communities" className="rounded-lg text-sm border-l-4 border-l-destructive data-[state=active]:bg-card pl-2">
               Communities
             </TabsTrigger>
           </TabsList>
@@ -1504,11 +1312,17 @@ const ChatPage = () => {
                 <p className="text-muted-foreground">No chats yet</p>
               </div>
             ) : (
-              combinedChats.map((chat) => (
+              combinedChats.map((chat) => {
+                const borderColorClass =
+                  chat.type === 'friendme' ? 'border-l-primary' :
+                  chat.type === 'vibe' ? 'border-l-secondary' :
+                  chat.type === 'class' ? 'border-l-accent' :
+                  'border-l-primary';
+                return (
                 <motion.button
                   key={chat.id}
                   onClick={() => setSelectedChat(chat.id)}
-                  className="w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left"
+                  className={`w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left border-l-4 ${borderColorClass}`}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="relative">
@@ -1532,7 +1346,8 @@ const ChatPage = () => {
                     </span>
                   )}
                 </motion.button>
-              ))
+              );
+              })
             )}
           </TabsContent>
 
@@ -1547,7 +1362,7 @@ const ChatPage = () => {
                 <motion.button
                   key={chat.id}
                   onClick={() => setSelectedChat(chat.id)}
-                  className="w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left"
+                  className="w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left border-l-4 border-l-primary"
                   whileTap={{ scale: 0.98 }}
                 >
                   <UserAvatar 
@@ -1589,12 +1404,12 @@ const ChatPage = () => {
                       setSelectedChat(chat.id);
                     }
                   }}
-                  className="w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left"
+                  className="w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left border-l-4 border-l-secondary"
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
                     <img src={chat.avatar} alt={chat.name} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-secondary/20 to-transparent" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
@@ -1632,14 +1447,14 @@ const ChatPage = () => {
                       setSelectedChat(chat.id);
                     }
                   }}
-                  className="w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left"
+                  className="w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left border-l-4 border-l-accent"
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
                     <img src={chat.avatar} alt={chat.name} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
-                    <div className="absolute top-1 right-1 w-6 h-6 rounded-full bg-primary/90 flex items-center justify-center">
-                      <GraduationCap className="w-3 h-3 text-primary-foreground" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-accent/20 to-transparent" />
+                    <div className="absolute top-1 right-1 w-6 h-6 rounded-full bg-accent/90 flex items-center justify-center">
+                      <GraduationCap className="w-3 h-3 text-accent-foreground" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1672,7 +1487,7 @@ const ChatPage = () => {
                     <motion.button
                       key={comm.id}
                       onClick={() => navigate(`/community/${comm.id}`)}
-                      className="w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left border border-border"
+                      className="w-full p-3 rounded-xl bg-card flex items-center gap-3 text-left border-l-4 border-l-destructive border border-border"
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-muted">

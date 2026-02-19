@@ -17,7 +17,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { getAuthToken } from '@/lib/api';
+import { getAuthToken, API_ORIGIN } from '@/lib/api';
 import { CLASS_AND_COMMUNITY_CATEGORIES } from '@/constants/categories';
 
 const MOCK_COMMUNITIES_KEY = 'ulikme_mock_communities';
@@ -83,7 +83,7 @@ export default function CreateCommunityPage() {
       }
 
       const token = getAuthToken();
-      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const apiBase = API_ORIGIN;
       const response = await fetch(`${apiBase}/api/communities`, {
         method: 'POST',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
@@ -385,7 +385,7 @@ export default function CreateCommunityPage() {
 
                   try {
                     const token = getAuthToken();
-                    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/social-followers`, {
+                    const response = await fetch(`${API_ORIGIN}/api/users/social-followers`, {
                       method: 'PUT',
                       headers: {
                         'Content-Type': 'application/json',

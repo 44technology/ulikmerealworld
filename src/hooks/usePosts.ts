@@ -52,13 +52,14 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ content, image, venueId, meetupId, communityId }: { content?: string; image?: File; venueId?: string; meetupId?: string; communityId?: string }) => {
+    mutationFn: async ({ content, image, venueId, meetupId, communityId, classId }: { content?: string; image?: File; venueId?: string; meetupId?: string; communityId?: string; classId?: string }) => {
       if (image) {
         const additionalData: Record<string, any> = {};
         if (content) additionalData.content = content;
         if (venueId) additionalData.venueId = venueId;
         if (meetupId) additionalData.meetupId = meetupId;
         if (communityId) additionalData.communityId = communityId;
+        if (classId) additionalData.classId = classId;
 
         const response = await apiUpload<{ success: boolean; data: Post }>(
           API_ENDPOINTS.POSTS.CREATE,
@@ -71,7 +72,7 @@ export const useCreatePost = () => {
           API_ENDPOINTS.POSTS.CREATE,
           {
             method: 'POST',
-            body: JSON.stringify({ content, venueId, meetupId, communityId }),
+            body: JSON.stringify({ content, venueId, meetupId, communityId, classId }),
           }
         );
         return response.data;
