@@ -146,6 +146,23 @@ export const API_ENDPOINTS = {
     COMMENT: (id: string) => `${API_BASE_URL}/posts/${id}/comment`,
     COMMENTS: (id: string) => `${API_BASE_URL}/posts/${id}/comments`,
   },
+  // Communities
+  COMMUNITIES: {
+    LIST: `${API_BASE_URL}/communities`,
+    DETAIL: (id: string) => `${API_BASE_URL}/communities/${id}`,
+    CREATE: `${API_BASE_URL}/communities`,
+    JOIN: (id: string) => `${API_BASE_URL}/communities/${id}/join`,
+    LEAVE: (id: string) => `${API_BASE_URL}/communities/${id}/leave`,
+    ADMIN_REQUEST: (id: string) => `${API_BASE_URL}/communities/${id}/admin-request`,
+    MY_ADMIN_REQUEST: (id: string) => `${API_BASE_URL}/communities/${id}/admin-request/me`,
+    ADMIN_REQUESTS: (id: string) => `${API_BASE_URL}/communities/${id}/admin-requests`,
+    APPROVE_ADMIN_REQUEST: (id: string, requestId: string) =>
+      `${API_BASE_URL}/communities/${id}/admin-requests/${requestId}/approve`,
+    REJECT_ADMIN_REQUEST: (id: string, requestId: string) =>
+      `${API_BASE_URL}/communities/${id}/admin-requests/${requestId}/reject`,
+    SET_MEMBER_ROLE: (id: string, userId: string) =>
+      `${API_BASE_URL}/communities/${id}/members/${userId}/role`,
+  },
 };
 
 /**

@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { API_ORIGIN } from '@/lib/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { API_ORIGIN, API_ENDPOINTS, apiRequest } from '@/lib/api';
 
 export interface Community {
   id: string;
@@ -228,4 +228,158 @@ export function getCommunityIdsWithPendingRequest(userId: string | undefined): s
   return Object.keys(all).filter((communityId) =>
     (all[communityId] ?? []).some((r) => r.userId === userId)
   );
+}
+
+// --- Community detail (with members & roles) and admin requests (API) ---
+
+export interface CommunityMemberWithUser {
+  id: string;
+  userId: string;
+  role: string;
+  joinedAt: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    displayName: string | null;
+    avatar: string | null;
+  };
+}
+
+export interface CommunityDetail extends Community {
+  isMember: boolean;
+  isOwner: boolean;
+  currentUserRole: string | null;
+  members?: CommunityMemberWithUser[];
+}
+
+export interface CommunityAdminRequestItem {
+  id: string;
+  communityId: string;
+  userId: string;
+  status: string;
+  requestedAt: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    displayName: string | null;
+    avatar: string | null;
+  };
+}
+
+async function fetchCommunityDetail(id: string): Promise<CommunityDetail | null> {
+  try {
+    const token = localStorage.getItem('authToken');
+    const res = await fetch(`${API_ORIGIN}/api/communities/${id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return {
+      ...normalizeCommunity(data),
+      isMember: data.isMember ?? false,
+      isOwner: data.isOwner ?? false,
+      currentUserRole: data.currentUserRole ?? null,
+      members: data.members,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function useCommunityDetail(communityId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: ['community', communityId],
+    queryFn: () => fetchCommunityDetail(communityId!),
+    enabled: !!communityId && enabled,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useCommunityAdminRequests(communityId: string | undefined, canManage: boolean) {
+  return useQuery({
+    queryKey: ['community-admin-requests', communityId],
+    queryFn: async () => {
+      const result = await apiRequest<CommunityAdminRequestItem[] | { data: CommunityAdminRequestItem[] }>(
+        API_ENDPOINTS.COMMUNITIES.ADMIN_REQUESTS(communityId!)
+      );
+      const list = Array.isArray(result) ? result : (result as any)?.data;
+      return Array.isArray(list) ? list : [];
+    },
+    enabled: !!communityId && !!canManage,
+    staleTime: 20 * 1000,
+  });
+}
+
+export function useMyCommunityAdminRequest(communityId: string | undefined) {
+  return useQuery({
+    queryKey: ['my-admin-request', communityId],
+    queryFn: async () => {
+      const res = await apiRequest<{ status: string } | null | { data: { status: string } }>(
+        API_ENDPOINTS.COMMUNITIES.MY_ADMIN_REQUEST(communityId!)
+      );
+      if (res && typeof res === 'object' && 'status' in res) return res as { status: string };
+      return (res as any)?.data ?? null;
+    },
+    enabled: !!communityId,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useRequestCommunityAdmin(communityId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      return apiRequest(API_ENDPOINTS.COMMUNITIES.ADMIN_REQUEST(communityId!), { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['my-admin-request', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['communities'] });
+    },
+  });
+}
+
+export function useApproveCommunityAdminRequest(communityId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (requestId: string) => {
+      await apiRequest(API_ENDPOINTS.COMMUNITIES.APPROVE_ADMIN_REQUEST(communityId!, requestId), { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['community-admin-requests', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['communities'] });
+    },
+  });
+}
+
+export function useRejectCommunityAdminRequest(communityId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (requestId: string) => {
+      await apiRequest(API_ENDPOINTS.COMMUNITIES.REJECT_ADMIN_REQUEST(communityId!, requestId), { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community-admin-requests', communityId] });
+    },
+  });
+}
+
+export function useSetCommunityMemberRole(communityId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: 'moderator' | 'member' }) => {
+      await apiRequest(API_ENDPOINTS.COMMUNITIES.SET_MEMBER_ROLE(communityId!, userId), {
+        method: 'PATCH',
+        body: JSON.stringify({ role }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['community-admin-requests', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['communities'] });
+    },
+  });
 }

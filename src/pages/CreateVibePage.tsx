@@ -531,9 +531,32 @@ const CreateVibePage = () => {
                   const v = e.target.value;
                   setCustomGroupSize(v);
                   if (v) setGroupSize('custom');
+                  const num = parseInt(v, 10);
+                  if (!isNaN(num) && num >= 15 && eventType === 'activity') {
+                    setRecommendedType('event');
+                    setRecommendedMaxAttendees(num);
+                    setShowTypeRecommendationModal(true);
+                  }
                 }}
                 className="h-10 w-24 rounded-xl text-right"
               />
+            </div>
+            <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border bg-muted/30">
+              <p className="text-sm text-muted-foreground">Planning an event with 15+ people?</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl gap-1.5 shrink-0"
+                onClick={() => {
+                  setRecommendedType('event');
+                  setRecommendedMaxAttendees(15);
+                  setShowTypeRecommendationModal(true);
+                }}
+              >
+                <Ticket className="w-4 h-4" />
+                Event (15+)
+              </Button>
             </div>
             {pricing === 'paid' && (
               <div className="flex items-center justify-between gap-4">
@@ -1037,6 +1060,8 @@ const CreateVibePage = () => {
                 <Button
                   onClick={() => {
                     setEventType('event');
+                    setGroupSize('custom');
+                    setCustomGroupSize(String(recommendedMaxAttendees || 15));
                     setShowTypeRecommendationModal(false);
                     toast.success('Event mode activated! Ticket and check-in features are now available.');
                   }}

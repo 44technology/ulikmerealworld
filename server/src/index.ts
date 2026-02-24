@@ -21,6 +21,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import platformSettingsRoutes from './routes/platformSettingsRoutes.js';
+import communityRoutes from './routes/communityRoutes.js';
 
 dotenv.config();
 
@@ -181,6 +182,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/settings/platform', platformSettingsRoutes);
+app.use('/api/communities', communityRoutes);
 
 // 404 handler
 app.use((req, res) => {

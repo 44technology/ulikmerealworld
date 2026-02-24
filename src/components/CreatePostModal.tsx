@@ -24,6 +24,7 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
   const [content, setContent] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isVideo, setIsVideo] = useState(false);
   const [selectedVenue, setSelectedVenue] = useState<string>('');
   const [selectedMeetup, setSelectedMeetup] = useState<string>('');
   const [selectedCommunityId, setSelectedCommunityId] = useState<string>('');
@@ -35,10 +36,11 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
   const { data: communities = [] } = useCommunities();
   const { data: classes = [] } = useClasses();
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedImage(file);
+      setIsVideo(file.type.startsWith('video/'));
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -54,7 +56,7 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
     }
 
     if (!content.trim() && !selectedImage) {
-      toast.error('Please add content or an image');
+      toast.error('Please add content or a photo/video');
       return;
     }
 
@@ -72,6 +74,7 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
       setContent('');
       setSelectedImage(null);
       setImagePreview(null);
+      setIsVideo(false);
       setSelectedVenue('');
       setSelectedMeetup('');
       setSelectedCommunityId('');
@@ -130,11 +133,11 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
             </div>
           </div>
 
-          {/* Image Preview/Upload */}
+          {/* Photo or Video Preview/Upload */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-foreground flex items-center gap-2">
               <span className="w-1 h-4 bg-gradient-primary rounded-full"></span>
-              Add Photo
+              Add Photo or Video
             </label>
             {imagePreview ? (
               <motion.div
@@ -143,16 +146,26 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
                 className="relative group"
               >
                 <div className="relative overflow-hidden rounded-2xl border-2 border-border">
-                  <img
-                    src={imagePreview}
-                    alt="Post preview"
-                    className="w-full h-64 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  {isVideo ? (
+                    <video
+                      src={imagePreview}
+                      controls
+                      playsInline
+                      className="w-full h-64 object-contain bg-black"
+                    />
+                  ) : (
+                    <img
+                      src={imagePreview}
+                      alt="Post preview"
+                      className="w-full h-64 object-cover"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                   <motion.button
                     onClick={() => {
                       setSelectedImage(null);
                       setImagePreview(null);
+                      setIsVideo(false);
                     }}
                     className="absolute top-3 right-3 p-2.5 rounded-full bg-black/70 backdrop-blur-md hover:bg-black/90 transition-colors shadow-lg"
                     whileTap={{ scale: 0.9 }}
@@ -173,8 +186,8 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
                   <ImageIcon className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">Tap to add photo</p>
-                  <p className="text-xs text-muted-foreground mt-1">JPG, PNG up to 10MB</p>
+                  <p className="text-sm font-medium text-foreground">Tap to add photo or video</p>
+                  <p className="text-xs text-muted-foreground mt-1">JPG, PNG, MP4 up to 50MB</p>
                 </div>
               </motion.button>
             )}
@@ -182,8 +195,8 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
-            onChange={handleImageSelect}
+            accept="image/*,video/*"
+            onChange={handleMediaSelect}
             className="hidden"
           />
 

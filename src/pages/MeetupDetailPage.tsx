@@ -376,7 +376,7 @@ const MeetupDetailPage = () => {
             <ArrowLeft className="w-6 h-6 text-foreground" />
           </motion.button>
           <h1 className="text-xl font-bold text-foreground">
-            {getVibeTypeLabel((meetup as any)?.type)} Details
+            Vibe details
           </h1>
           <div className="flex gap-2 ml-auto">
             {isHost && (

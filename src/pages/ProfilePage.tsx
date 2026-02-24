@@ -806,7 +806,6 @@ const ProfilePage = () => {
               { label: 'Schedule', icon: CalendarRange, route: '/schedule' },
               { label: 'Earnings & Payouts', icon: Wallet, route: '/payouts' },
               { label: 'Saved Venues', icon: Heart, route: '/discover' },
-              { label: 'Social Feed', icon: Users, route: '/social' },
               { label: 'Settings', icon: Settings, route: '/settings' },
             ].map((item) => {
               const Icon = item.icon;

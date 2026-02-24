@@ -13,7 +13,7 @@ interface User {
   photos?: string[];
   interests?: string[];
   lookingFor?: string[];
-  /** Profession/occupation (meslek) from onboarding */
+  /** Profession/occupation from onboarding */
   occupation?: string;
   socialMediaFollowers?: number;
   /** Areas of experience/expertise (deneyim alanları) */

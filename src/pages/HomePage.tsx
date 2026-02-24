@@ -255,7 +255,19 @@ const HomePage = () => {
 
   // Use API data if available, otherwise fall back to mock data
   const meetups = (meetupsData?.data && meetupsData.data.length > 0) ? meetupsData.data : mockMeetups;
-  const venues = (venuesData?.data && venuesData.data.length > 0) ? venuesData.data : mockVenues;
+  const venuesRaw = (venuesData && Array.isArray(venuesData) && venuesData.length > 0) ? venuesData : mockVenues;
+  const venues = useMemo(() => venuesRaw.map((v: any) => ({
+    id: v.id || '',
+    name: v.name || 'Unknown Venue',
+    category: v.category || v.amenities?.[0] || v.description || 'Venue',
+    image: v.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
+    rating: v.rating ?? 4.5,
+    reviewCount: v.reviewCount ?? v._count?.meetups ?? 0,
+    distance: v.distance ?? `${Math.round(Math.random() * 5 + 0.5)} mi`,
+    priceRange: v.priceRange,
+    isOpen: v.isOpen !== undefined ? v.isOpen : true,
+    hasDeals: v.hasDeals ?? false,
+  })), [venuesRaw]);
 
   // Format date helper function
   const formatDate = (date: string | Date | undefined) => {

@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import prisma from '../config/database.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { AuthRequest } from '../middleware/auth.js';
-import { uploadToCloudinary } from '../utils/upload.js';
+import { uploadToCloudinaryForPost } from '../utils/upload.js';
 
 export const createPost = async (
   req: AuthRequest,
@@ -36,9 +36,9 @@ export const createPost = async (
       }
     }
 
-    // Validate that either content or image is provided
+    // Validate that either content or image/video is provided
     if (!content && !req.file) {
-      throw new AppError('Post must have content or image', 400);
+      throw new AppError('Post must have content or image/video', 400);
     }
 
     // Check if user is authenticated
@@ -49,10 +49,10 @@ export const createPost = async (
     let imageUrl = null;
     if (req.file) {
       try {
-        imageUrl = await uploadToCloudinary(req.file);
+        imageUrl = await uploadToCloudinaryForPost(req.file);
       } catch (uploadError: any) {
         console.error('Cloudinary upload error:', uploadError);
-        throw new AppError('Failed to upload image: ' + (uploadError.message || 'Unknown error'), 500);
+        throw new AppError('Failed to upload media: ' + (uploadError.message || 'Unknown error'), 500);
       }
     }
 

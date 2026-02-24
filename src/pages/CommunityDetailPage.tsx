@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper, UserPlus, Check, X, Share2, Link2, Copy } from 'lucide-react';
+import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper, UserPlus, Check, X, Share2, Link2, Copy, Shield, ShieldCheck, UserCog } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,13 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   useCommunities,
+  useCommunityDetail,
+  useCommunityAdminRequests,
+  useMyCommunityAdminRequest,
+  useRequestCommunityAdmin,
+  useApproveCommunityAdminRequest,
+  useRejectCommunityAdminRequest,
+  useSetCommunityMemberRole,
   addUserToCommunity,
   getUserCommunityIds,
   getCommunityJoinRequests,
@@ -20,6 +27,8 @@ import {
   removeCommunityJoinRequest,
   hasUserRequestedCommunity,
   type JoinRequest,
+  type CommunityMemberWithUser,
+  type CommunityAdminRequestItem,
 } from '@/hooks/useCommunities';
 import { useClasses } from '@/hooks/useClasses';
 import { useMeetups } from '@/hooks/useMeetups';
@@ -41,6 +50,8 @@ interface Community {
   memberCount: number;
   isMember: boolean;
   isOwner: boolean;
+  members?: CommunityMemberWithUser[];
+  currentUserRole?: string | null;
 }
 
 const COMMUNITY_POSTS_KEY = (id: string) => `ulikme_community_posts_${id}`;
@@ -124,6 +135,14 @@ export default function CommunityDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: communitiesList = [] } = useCommunities();
+  const { data: communityDetail } = useCommunityDetail(id);
+  const canManageAdmins = communityDetail?.isOwner || communityDetail?.currentUserRole === 'moderator';
+  const { data: adminRequests = [] } = useCommunityAdminRequests(id, !!canManageAdmins);
+  const { data: myAdminRequest } = useMyCommunityAdminRequest(communityDetail?.isMember ? id : undefined);
+  const requestAdminMutation = useRequestCommunityAdmin(id);
+  const approveAdminMutation = useApproveCommunityAdminRequest(id);
+  const rejectAdminMutation = useRejectCommunityAdminRequest(id);
+  const setMemberRoleMutation = useSetCommunityMemberRole(id);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
@@ -172,8 +191,19 @@ export default function CommunityDetailPage() {
   const { data: communityClasses = [] } = useClasses(undefined, undefined, undefined, undefined, undefined, id ?? undefined);
   const { data: communityVibes = [] } = useMeetups(id ? { communityId: id } : undefined);
   const { data: apiPosts = [] } = usePosts(undefined, undefined, id ?? undefined);
-  const [members] = useState<any[]>(MOCK_MEMBERS);
   const [posts, setPosts] = useState<CommunityPost[]>(() => (id ? loadCommunityPosts(id) : MOCK_POSTS_FALLBACK));
+  const displayMembers = useMemo((): { id: string; displayName: string; avatar?: string; role: string; userId?: string }[] => {
+    if (community?.members && community.members.length > 0) {
+      return community.members.map((m) => ({
+        id: m.user.id,
+        userId: m.user.id,
+        displayName: m.user.displayName || [m.user.firstName, m.user.lastName].filter(Boolean).join(' ') || 'User',
+        avatar: m.user.avatar ?? undefined,
+        role: m.role === 'owner' ? 'Owner' : m.role === 'moderator' ? 'Admin' : 'Member',
+      }));
+    }
+    return MOCK_MEMBERS;
+  }, [community?.members]);
 
   const mergedPosts = useMemo((): CommunityPost[] => {
     const fromApi: CommunityPost[] = (apiPosts as ApiPost[]).map((p) => ({
@@ -193,6 +223,23 @@ export default function CommunityDetailPage() {
   }, [apiPosts, posts]);
 
   useEffect(() => {
+    const fromApi = communityDetail && (communityDetail as any).isMember !== undefined;
+    if (fromApi && communityDetail) {
+      setCommunity({
+        id: communityDetail.id,
+        name: communityDetail.name,
+        description: communityDetail.description,
+        image: communityDetail.image,
+        isPublic: communityDetail.isPublic ?? true,
+        creator: communityDetail.creator,
+        memberCount: communityDetail.memberCount ?? 0,
+        isMember: communityDetail.isMember,
+        isOwner: communityDetail.isOwner,
+        members: communityDetail.members,
+        currentUserRole: communityDetail.currentUserRole ?? undefined,
+      });
+      return;
+    }
     if (communityFromList) {
       const isMember = id ? getUserCommunityIds(user?.id ?? '').includes(id) : false;
       const isOwner = user?.id === communityFromList.creator?.id;
@@ -221,7 +268,7 @@ export default function CommunityDetailPage() {
         isOwner: false,
       });
     }
-  }, [id, user, communityFromList]);
+  }, [id, user, communityFromList, communityDetail]);
 
   useEffect(() => {
     if (id) setPendingJoinRequests(getCommunityJoinRequests(id));
@@ -525,11 +572,11 @@ export default function CommunityDetailPage() {
           )}
         </div>
 
-        {/* Tabs - Skool style: Posts, Members, Classes */}
+        {/* Tabs - Skool style: Communities (posts), Members, Classes, Vibes */}
         <div className="px-4 pt-6">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'posts' | 'members' | 'classes' | 'vibes')}>
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="posts" className="text-sm">Posts</TabsTrigger>
+              <TabsTrigger value="posts" className="text-sm">Communities</TabsTrigger>
               <TabsTrigger value="members" className="text-sm">Members</TabsTrigger>
               <TabsTrigger value="classes" className="text-sm">Classes</TabsTrigger>
               <TabsTrigger value="vibes" className="text-sm">Vibes</TabsTrigger>
@@ -668,19 +715,138 @@ export default function CommunityDetailPage() {
                   </div>
                 </div>
               )}
+
+              {/* Admin requests: members who asked to be admin. Owner/Admin can approve or reject. */}
+              {canManageAdmins && adminRequests.length > 0 && (
+                <div className="mb-4 p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+                  <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    Admin requests
+                  </p>
+                  <p className="text-xs text-muted-foreground">Members who asked to become community admin.</p>
+                  <div className="space-y-2">
+                    {adminRequests.map((req: CommunityAdminRequestItem) => (
+                      <div
+                        key={req.id}
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border bg-card"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <UserAvatar
+                            src={req.user?.avatar}
+                            alt={req.user?.displayName || [req.user?.firstName, req.user?.lastName].filter(Boolean).join(' ')}
+                            size="md"
+                          />
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground truncate">
+                              {req.user?.displayName || [req.user?.firstName, req.user?.lastName].filter(Boolean).join(' ') || 'User'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Requested {new Date(req.requestedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 border-green-600/50 hover:bg-green-600/10"
+                            disabled={approveAdminMutation.isPending}
+                            onClick={() => approveAdminMutation.mutate(req.id, { onSuccess: () => toast.success('Admin assigned') })}
+                          >
+                            <Check className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                            disabled={rejectAdminMutation.isPending}
+                            onClick={() => rejectAdminMutation.mutate(req.id, { onSuccess: () => toast.success('Request rejected') })}
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Member: request to be admin (only if not already owner/admin) */}
+              {community.isMember && !community.isOwner && community.currentUserRole !== 'moderator' && (
+                <div className="mb-4">
+                  {myAdminRequest?.status === 'PENDING' ? (
+                    <div className="p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-primary" />
+                      <span className="text-sm text-foreground">Admin request pending. The owner will review it.</span>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full border-primary/40 text-primary hover:bg-primary/10"
+                      disabled={requestAdminMutation.isPending}
+                      onClick={() => requestAdminMutation.mutate(undefined, { onSuccess: () => toast.success('Request sent'), onError: (e: any) => toast.error(e?.message || 'Failed') })}
+                    >
+                      <UserCog className="w-4 h-4 mr-2" />
+                      {requestAdminMutation.isPending ? 'Sending...' : 'Request to be admin'}
+                    </Button>
+                  )}
+                </div>
+              )}
+
               <p className="text-sm text-muted-foreground mb-2">{community.memberCount} members</p>
-              {members.map((member) => (
+              {displayMembers.map((member) => (
                 <motion.div
                   key={member.id}
-                  onClick={() => navigate(`/user/${member.id}`)}
-                  className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card cursor-pointer hover:bg-muted/30"
+                  className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card"
                   whileTap={{ scale: 0.98 }}
                 >
-                  <UserAvatar src={member.avatar} alt={member.displayName} size="md" />
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">{member.displayName}</p>
-                    <p className="text-xs text-muted-foreground">{member.role}</p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/user/${member.userId ?? member.id}`)}
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-muted/30 rounded-lg -m-1 p-1"
+                  >
+                    <UserAvatar src={member.avatar} alt={member.displayName} size="md" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{member.displayName}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        {member.role === 'Admin' && <ShieldCheck className="w-3 h-3 text-primary" />}
+                        {member.role}
+                      </p>
+                    </div>
+                  </button>
+                  {community.isOwner && member.role !== 'Owner' && member.userId && (
+                    <div className="flex-shrink-0">
+                      {member.role === 'Admin' ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-muted-foreground"
+                          disabled={setMemberRoleMutation.isPending}
+                          onClick={() => setMemberRoleMutation.mutate(
+                            { userId: member.userId!, role: 'member' },
+                            { onSuccess: () => toast.success('Admin removed'), onError: (e: any) => toast.error(e?.message) }
+                          )}
+                        >
+                          Remove admin
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-primary border-primary/40"
+                          disabled={setMemberRoleMutation.isPending}
+                          onClick={() => setMemberRoleMutation.mutate(
+                            { userId: member.userId!, role: 'moderator' },
+                            { onSuccess: () => toast.success('Assigned as admin'), onError: (e: any) => toast.error(e?.message) }
+                          )}
+                        >
+                          Assign as admin
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </TabsContent>

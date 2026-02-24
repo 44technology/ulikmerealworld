@@ -96,6 +96,7 @@ model User {
   tickets         Ticket[]
   createdCommunities Community[] @relation("CommunityCreator")
   communityMemberships CommunityMember[]
+  communityAdminRequests CommunityAdminRequest[]
 
   @@index([email])
   @@index([phone])
@@ -284,12 +285,13 @@ model Community {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  creatorId   String
-  creator     User     @relation("CommunityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  members     CommunityMember[]
-  classes     Class[]
-  posts       Post[]
-  stories     Story[]
+  creatorId     String
+  creator       User     @relation("CommunityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  members       CommunityMember[]
+  adminRequests CommunityAdminRequest[]
+  classes       Class[]
+  posts         Post[]
+  stories       Story[]
 
   @@index([creatorId])
   @@index([isPublic])
@@ -301,7 +303,7 @@ model CommunityMember {
   communityId String
   userId      String
   role        String   @default("member") // owner, moderator, member
-  joinedAt    DateTime @default(now())
+  joinedAt   DateTime @default(now())
 
   // Relations
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
@@ -311,6 +313,27 @@ model CommunityMember {
   @@index([communityId])
   @@index([userId])
   @@map("community_members")
+}
+
+// Member requests to become community admin (moderator). Owner approves or rejects.
+model CommunityAdminRequest {
+  id          String   @id @default(uuid())
+  communityId String
+  userId      String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  requestedAt DateTime @default(now())
+  respondedAt DateTime?
+  respondedBy String?  // User ID who approved/rejected (owner)
+
+  // Relations
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId]) // One pending request per user per community
+  @@index([communityId])
+  @@index([userId])
+  @@index([status])
+  @@map("community_admin_requests")
 }
 
 model Class {

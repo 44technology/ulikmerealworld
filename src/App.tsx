@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { WalletProvider } from "@/contexts/WalletContext";
@@ -22,7 +22,6 @@ import BadgesPage from "./pages/BadgesPage";
 import ClassesPage from "./pages/ClassesPage";
 import ClassDetailPage from "./pages/ClassDetailPage";
 import MyClassesPage from "./pages/MyClassesPage";
-import SocialFeedPage from "./pages/SocialFeedPage";
 import SettingsPage from "./pages/SettingsPage";
 import MeetupDetailPage from "./pages/MeetupDetailPage";
 import VenueDetailPage from "./pages/VenueDetailPage";
@@ -75,7 +74,7 @@ const App = () => (
           <Route path="/classes" element={<ClassesPage />} />
           <Route path="/class/:id" element={<ClassDetailPage />} />
           <Route path="/my-classes" element={<MyClassesPage />} />
-          <Route path="/social" element={<SocialFeedPage />} />
+          <Route path="/social" element={<Navigate to="/communities?tab=feed" replace />} />
           <Route path="/settings" element={<SettingsPage />} />
             <Route path="/settings/wallet" element={<WalletPage />} />
             <Route path="/meetup/:id" element={<MeetupDetailPage />} />

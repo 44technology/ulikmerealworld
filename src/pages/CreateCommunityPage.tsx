@@ -103,7 +103,7 @@ export default function CreateCommunityPage() {
       const isNetworkError =
         error instanceof TypeError && (error.message === 'Failed to fetch' || (error as any).name === 'TypeError');
       if (isNetworkError) {
-        // Backend yok: mock olarak kaydet, sayfa çalışsın
+        // Backend not available: save as mock so the page still works
         const mockId = `mock-${Date.now()}`;
         try {
           const list = JSON.parse(localStorage.getItem(MOCK_COMMUNITIES_KEY) || '[]');

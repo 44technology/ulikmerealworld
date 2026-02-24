@@ -255,10 +255,10 @@ const TicketDetailPage = () => {
           </div>
         </div>
 
-        {/* Event Details */}
+        {/* Vibe details */}
         {event && (
           <div className="card-elevated p-4 rounded-2xl space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">Event Details</h2>
+            <h2 className="text-lg font-semibold text-foreground">Vibe details</h2>
             
             <div>
               <h3 className="font-semibold text-foreground mb-2">{event.title}</h3>
@@ -323,7 +323,7 @@ const TicketDetailPage = () => {
                   }
                 }}
               >
-                View Event Details
+                View Vibe details
               </Button>
             </div>
           </div>

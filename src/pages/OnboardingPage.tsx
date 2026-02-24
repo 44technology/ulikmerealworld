@@ -188,7 +188,7 @@ const messages: Record<OnboardingStep, string[]> = {
   ],
   occupation: [
     "Thanks!",
-    "What's your profession? (Meslek)",
+    "What's your profession?",
   ],
   lookingFor: [
     "Great!",
@@ -868,23 +868,18 @@ const OnboardingPage = () => {
       case 'occupation':
         return (
           <div className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-3">
+            <select
+              value={occupation}
+              onChange={(e) => setOccupation(e.target.value)}
+              className="w-full h-14 rounded-2xl border-2 border-border bg-card px-4 text-base text-foreground focus:border-primary focus:outline-none"
+            >
+              <option value="">Select your profession</option>
               {occupationOptions.map((option) => (
-                <motion.button
-                  key={option.id}
-                  onClick={() => setOccupation(option.id)}
-                  className={`p-4 rounded-2xl border-2 transition-all ${
-                    occupation === option.id 
-                      ? 'border-primary bg-primary/10' 
-                      : 'border-border bg-card'
-                  }`}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <span className="text-2xl">{option.emoji}</span>
-                  <p className="mt-2 font-medium text-xs">{option.label}</p>
-                </motion.button>
+                <option key={option.id} value={option.id}>
+                  {option.emoji} {option.label}
+                </option>
               ))}
-            </div>
+            </select>
             <Button 
               onClick={() => setStep('lookingFor')} 
               disabled={!occupation || loading}

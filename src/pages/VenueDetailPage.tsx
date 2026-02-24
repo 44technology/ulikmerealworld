@@ -317,7 +317,7 @@ const VenueDetailPage = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold text-foreground text-lg">Yaklaşanlar</h3>
+                  <h3 className="font-semibold text-foreground text-lg">Upcoming</h3>
                 </div>
                 {upcomingEvents.length > 3 && (
                   <motion.button
