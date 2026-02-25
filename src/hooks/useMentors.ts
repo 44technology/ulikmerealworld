@@ -46,8 +46,8 @@ export const useMentor = (id: string) => {
 const getMockMentors = (): Mentor[] => [
   {
     id: '1',
-    name: 'Ahmet Yılmaz',
-    displayName: 'Ahmet Yılmaz',
+    name: 'Alex Mitchell',
+    displayName: 'Alex Mitchell',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
     bio: '15 years of experience in the technology sector. I mentor in software development and startup creation.',
     title: 'CTO & Founder',
@@ -64,8 +64,8 @@ const getMockMentors = (): Mentor[] => [
   },
   {
     id: '2',
-    name: 'Zeynep Kaya',
-    displayName: 'Zeynep Kaya',
+    name: 'Sarah Chen',
+    displayName: 'Sarah Chen',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
     bio: '12 years of experience in digital marketing and brand management. I have worked at Fortune 500 companies.',
     title: 'Marketing Director',
@@ -82,8 +82,8 @@ const getMockMentors = (): Mentor[] => [
   },
   {
     id: '3',
-    name: 'Mehmet Demir',
-    displayName: 'Mehmet Demir',
+    name: 'James Wilson',
+    displayName: 'James Wilson',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
     bio: 'Expert in finance and investment consulting. I have been providing consulting services to individual and corporate clients for 20 years.',
     title: 'Senior Financial Advisor',
@@ -100,8 +100,8 @@ const getMockMentors = (): Mentor[] => [
   },
   {
     id: '4',
-    name: 'Ayşe Öztürk',
-    displayName: 'Ayşe Öztürk',
+    name: 'Emma Davis',
+    displayName: 'Emma Davis',
     avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
     bio: 'Mentor in entrepreneurship and business development. I have consulted for 50+ startups.',
     title: 'Entrepreneurship Coach',
@@ -118,8 +118,8 @@ const getMockMentors = (): Mentor[] => [
   },
   {
     id: '5',
-    name: 'Can Arslan',
-    displayName: 'Can Arslan',
+    name: 'Ryan Brooks',
+    displayName: 'Ryan Brooks',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
     bio: 'Expert in design and UX/UI. I have worked at companies like Apple and Google.',
     title: 'Senior Product Designer',
@@ -136,8 +136,8 @@ const getMockMentors = (): Mentor[] => [
   },
   {
     id: '6',
-    name: 'Elif Şahin',
-    displayName: 'Elif Şahin',
+    name: 'Olivia Martinez',
+    displayName: 'Olivia Martinez',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
     bio: 'Consultant in human resources and career development. I have guided thousands of people in their career journey.',
     title: 'Career Development Coach',

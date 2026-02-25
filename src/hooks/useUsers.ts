@@ -25,7 +25,7 @@ export interface User {
   lookingFor?: string[];
   photos?: string[];
   isVerified: boolean;
-  /** Certified in these areas (sertifikalı olduğu alanlar) */
+  /** Certified in these areas */
   certifiedAreas?: string[];
   spotifyConnected?: boolean;
   spotifyLastTrack?: SpotifyTrack;

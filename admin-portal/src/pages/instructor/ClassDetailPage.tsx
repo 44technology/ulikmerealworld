@@ -192,7 +192,7 @@ export default function ClassDetailPage() {
   const classId = parseInt(id || '0');
   
   const classData = useMemo(() => mockClasses.find(c => c.id === classId), [classId]);
-  // Materials: class'a bağlı olanlar (lesson'a bağlı veya değil) + bağımsız olanlar (classId: null)
+  // Materials: those linked to this class (to a lesson or not) + standalone (classId: null)
   const initialMaterials = useMemo(() => {
     const classRelatedMaterials = mockMaterials.filter(m => m.classId === classId);
     const independentMaterials = mockMaterials.filter(m => m.classId === null);
@@ -355,7 +355,7 @@ export default function ClassDetailPage() {
       id: materials.length + 1,
       title: materialTitle,
       type: materialType,
-      classId: materialLessonId ? classId : null, // Bağımsız materyal için null
+      classId: materialLessonId ? classId : null, // null for standalone material
       lessonId: materialLessonId ? parseInt(materialLessonId) : null,
       uploadedAt: new Date().toISOString().split('T')[0],
     };

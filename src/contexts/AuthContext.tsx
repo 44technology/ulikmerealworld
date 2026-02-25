@@ -16,9 +16,9 @@ interface User {
   /** Profession/occupation from onboarding */
   occupation?: string;
   socialMediaFollowers?: number;
-  /** Areas of experience/expertise (deneyim alanları) */
+  /** Areas of experience/expertise */
   expertise?: string[];
-  /** Certified in these areas (sertifikalı olduğu alanlar) */
+  /** Certified in these areas */
   certifiedAreas?: string[];
   canCreateClasses?: boolean;
   classCreationRequestStatus?: 'pending' | 'approved' | 'rejected' | null;

@@ -88,7 +88,7 @@ const MyTicketsPage = () => {
     return Array.isArray(list) ? list : mockTickets;
   }, [apiTickets]);
 
-  // Upcoming: only non-expired, future events (süresi geçmemiş)
+  // Upcoming: only non-expired, future events
   const upcomingTickets = tickets.filter((ticket: any) => {
     const eventDate = ticket.class?.startTime || ticket.meetup?.startTime;
     const isFuture = eventDate && new Date(eventDate) > new Date();
@@ -102,7 +102,7 @@ const MyTicketsPage = () => {
     return !eventDate || isPast || ticket.status === 'USED' || ticket.status === 'EXPIRED';
   });
 
-  // Under Past: split into Used vs Expired (süresi geçmiş)
+  // Under Past: split into Used vs Expired
   const pastUsedTickets = pastTickets.filter((t: any) => t.status === 'USED');
   const pastExpiredTickets = pastTickets.filter((t: any) => {
     const eventDate = t.class?.startTime || t.meetup?.startTime;
@@ -278,7 +278,7 @@ const MyTicketsPage = () => {
                   <div>
                     <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
                       <AlertCircle className="w-4 h-4" />
-                      Expired (Süresi geçmiş)
+                      Expired
                     </h3>
                     <div className="space-y-4">
                       {pastExpiredTickets.map((ticket) => (

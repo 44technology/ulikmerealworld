@@ -899,7 +899,7 @@ const ProfilePage = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
-                    Certified in (sertifikalı olduğunuz alanlar)
+                    Certified in
                   </label>
                   <Input
                     value={editForm.certifiedAreas}

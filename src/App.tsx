@@ -37,6 +37,7 @@ import MyTicketsPage from "./pages/MyTicketsPage";
 import TicketDetailPage from "./pages/TicketDetailPage";
 import PayoutsPage from "./pages/PayoutsPage";
 import CommunitiesPage from "./pages/CommunitiesPage";
+import DiscoverCommunitiesPage from "./pages/DiscoverCommunitiesPage";
 import CreateCommunityPage from "./pages/CreateCommunityPage";
 import CommunityDetailPage from "./pages/CommunityDetailPage";
 import SchedulePage from "./pages/SchedulePage";
@@ -91,6 +92,7 @@ const App = () => (
             <Route path="/ticket/:ticketId" element={<TicketDetailPage />} />
             <Route path="/payouts" element={<PayoutsPage />} />
             <Route path="/communities" element={<CommunitiesPage />} />
+            <Route path="/discover-communities" element={<DiscoverCommunitiesPage />} />
             <Route path="/create-community" element={<CreateCommunityPage />} />
             <Route path="/community/:id" element={<CommunityDetailPage />} />
             <Route path="/schedule" element={<SchedulePage />} />

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Search, ChevronRight, Plus, Calendar, Clock, MapPin, ArrowRight, GraduationCap, DollarSign, Ticket, Users, Users2, PartyPopper } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
@@ -628,7 +628,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Communities Section - Skool style (ana sayfada üstte) */}
+        {/* Communities Section - Skool style */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -896,11 +896,13 @@ const HomePage = () => {
                   </div>
                 ) : venues && venues.length > 0 ? (
                   venues.slice(0, 6).map((venue: any) => (
-                    <VenueCard
+                    <Link
                       key={venue.id}
-                      {...venue}
-                      onPress={() => navigate(`/venue/${venue.id}`)}
-                    />
+                      to={`/venue/${venue.id}`}
+                      className="block min-w-0"
+                    >
+                      <VenueCard {...venue} />
+                    </Link>
                   ))
                 ) : (
                   <div className="text-center py-8 col-span-2">

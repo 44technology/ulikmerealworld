@@ -178,7 +178,7 @@ export default function UsersPage() {
                         <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                           <Users className="w-4 h-4" />
                           {(user as any).socialMediaFollowers != null
-                            ? Number((user as any).socialMediaFollowers).toLocaleString() + ' takipçi'
+                            ? Number((user as any).socialMediaFollowers).toLocaleString() + ' followers'
                             : '—'}
                         </span>
                         {(user as any).expertise?.length > 0 && (
@@ -312,26 +312,26 @@ export default function UsersPage() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Sosyal medya takipçi sayısı</label>
+              <label className="text-sm font-medium">Social media followers</label>
               <Input
                 type="number"
                 min={0}
-                placeholder="Örn: 10000"
+                placeholder="e.g. 10000"
                 value={editFollowers}
                 onChange={(e) => setEditFollowers(e.target.value)}
                 className="mt-1"
               />
-              <p className="text-xs text-muted-foreground mt-1">Instagram, Twitter, YouTube vb. toplam takipçi</p>
+              <p className="text-xs text-muted-foreground mt-1">Total followers (Instagram, Twitter, YouTube, etc.)</p>
             </div>
             <div>
-              <label className="text-sm font-medium">Deneyim alanları (expertise)</label>
+              <label className="text-sm font-medium">Areas of experience (expertise)</label>
               <Input
-                placeholder="Örn: Girişimcilik, Pazarlama, Tech"
+                placeholder="e.g. Entrepreneurship, Marketing, Tech"
                 value={editExpertise}
                 onChange={(e) => setEditExpertise(e.target.value)}
                 className="mt-1"
               />
-              <p className="text-xs text-muted-foreground mt-1">Virgülle ayırarak yazın</p>
+              <p className="text-xs text-muted-foreground mt-1">Separate with commas</p>
             </div>
           </div>
           <DialogFooter>

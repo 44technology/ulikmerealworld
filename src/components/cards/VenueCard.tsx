@@ -30,10 +30,11 @@ const VenueCard = ({
 }: VenueCardProps) => {
   return (
     <motion.div
-      className="card-interactive overflow-hidden w-full min-w-0 rounded-2xl border border-border bg-card flex flex-col"
+      role="link"
+      className="card-interactive overflow-hidden w-full min-w-0 rounded-2xl border border-border bg-card flex flex-col cursor-pointer"
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
-      onClick={onPress}
+      onClick={(e) => { onPress?.(); }}
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden flex-shrink-0">

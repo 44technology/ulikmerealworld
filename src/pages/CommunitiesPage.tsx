@@ -142,7 +142,7 @@ export default function CommunitiesPage() {
         </div>
         {mainTab === 'communities' && (
           <>
-            <div className="px-4 pb-2">
+            <div className="px-4 pb-2 flex items-center justify-between gap-2">
               <p className="text-sm text-muted-foreground">
                 {filterTab === 'joined'
                   ? `${filteredCommunities.length} joined`
@@ -150,6 +150,13 @@ export default function CommunitiesPage() {
                     ? `${filteredCommunities.length} pending approval`
                     : `${filteredCommunities.length} communities`}
               </p>
+              <motion.button
+                onClick={() => navigate('/discover-communities')}
+                className="text-sm font-medium text-primary hover:underline shrink-0"
+                whileTap={{ scale: 0.98 }}
+              >
+                Discover
+              </motion.button>
             </div>
             <div className="px-4 pb-2">
               <div className="relative">
@@ -388,7 +395,7 @@ export default function CommunitiesPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {filteredCommunities.map((community, index) => {
               const isJoined = myCommunityIds.has(community.id);
               const isPending = !isJoined && hasUserRequestedCommunity(user?.id, community.id);

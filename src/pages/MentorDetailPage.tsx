@@ -179,7 +179,7 @@ const MentorDetailPage = () => {
               <div className="card-elevated p-4 rounded-2xl">
                 <div className="flex items-center gap-2 mb-3">
                   <Award className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold text-foreground">Başarılar & Ödüller</h3>
+                  <h3 className="font-semibold text-foreground">Achievements & Awards</h3>
                 </div>
                 <div className="space-y-2">
                   {mentor.achievements.map((achievement, index) => (

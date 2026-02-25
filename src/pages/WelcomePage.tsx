@@ -10,7 +10,7 @@ const WelcomePage = () => {
   const [showTagline, setShowTagline] = useState(false);
   const [showButton, setShowButton] = useState(false);
 
-  // Giriş yapmış kullanıcı ana sayfaya (home feed) yönlendirilsin
+  // Logged-in user is redirected to home feed
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/home', { replace: true });

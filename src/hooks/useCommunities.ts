@@ -8,6 +8,10 @@ export interface Community {
   image?: string;
   isPublic: boolean;
   memberCount: number;
+  /** Optional: for discover filtering (e.g. English, Spanish) */
+  language?: string;
+  /** Optional: area/category (e.g. Startup, Wellness, Design) */
+  category?: string;
   creator: {
     id: string;
     displayName: string;
@@ -23,6 +27,8 @@ const MOCK_COMMUNITIES: Community[] = [
     image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400',
     isPublic: true,
     memberCount: 1240,
+    language: 'English',
+    category: 'Startup',
     creator: { id: 'c1', displayName: 'Alex Chen' },
   },
   {
@@ -32,6 +38,8 @@ const MOCK_COMMUNITIES: Community[] = [
     image: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=400',
     isPublic: true,
     memberCount: 892,
+    language: 'English',
+    category: 'Wellness',
     creator: { id: 'c2', displayName: 'Sarah Kim' },
   },
   {
@@ -41,6 +49,8 @@ const MOCK_COMMUNITIES: Community[] = [
     image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400',
     isPublic: true,
     memberCount: 2103,
+    language: 'English',
+    category: 'Design',
     creator: { id: 'c3', displayName: 'Jordan Lee' },
   },
   {
@@ -50,6 +60,8 @@ const MOCK_COMMUNITIES: Community[] = [
     image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400',
     isPublic: true,
     memberCount: 567,
+    language: 'Spanish',
+    category: 'Language',
     creator: { id: 'c4', displayName: 'Maria Garcia' },
   },
   {
@@ -59,6 +71,8 @@ const MOCK_COMMUNITIES: Community[] = [
     image: 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=400',
     isPublic: true,
     memberCount: 734,
+    language: 'English',
+    category: 'Photography',
     creator: { id: 'c5', displayName: 'David Park' },
   },
 ];
@@ -84,6 +98,8 @@ function normalizeCommunity(c: any): Community {
     image: c.image || c.imageUrl,
     isPublic: c.isPublic ?? true,
     memberCount: c.memberCount ?? c._count?.members ?? 0,
+    language: c.language,
+    category: c.category ?? c.area,
     creator: {
       id: c.creator?.id ?? c.userId ?? '',
       displayName: c.creator?.displayName ?? c.creator?.firstName ?? 'Creator',

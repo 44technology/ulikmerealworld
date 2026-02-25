@@ -1165,7 +1165,7 @@ const CreateClassPage = () => {
               <p className="text-xs text-muted-foreground">Instagram, YouTube, Twitter, TikTok, etc.</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="required-expertise">Areas of experience (deneyim alanları)</Label>
+              <Label htmlFor="required-expertise">Areas of experience</Label>
               <Input
                 id="required-expertise"
                 placeholder="e.g. Marketing, Startup, Tech"
@@ -1175,7 +1175,7 @@ const CreateClassPage = () => {
               <p className="text-xs text-muted-foreground">Separate with commas</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="required-certified">Certified in (sertifikalı olduğunuz alanlar)</Label>
+              <Label htmlFor="required-certified">Certified in</Label>
               <Input
                 id="required-certified"
                 placeholder="e.g. Google Ads, AWS, PMP (optional)"

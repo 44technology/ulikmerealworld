@@ -199,12 +199,12 @@ const VenueDetailPage = () => {
   
   // Format venue data
   const venueImage = venue.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400';
-  const venueRating = 4.5; // Default rating (backend'de rating field'ı yok)
+  const venueRating = 4.5; // Default rating (no rating field from API)
   const venueReviewCount = venue._count?.meetups || 0;
-  const venuePriceRange = '$$'; // Default (backend'de priceRange field'ı yok)
-  const venueDistance = '0.5 mi'; // Default (backend'de distance field'ı yok)
+  const venuePriceRange = '$$'; // Default (no priceRange from API)
+  const venueDistance = '0.5 mi'; // Default (no distance from API)
   const venueCategory = venue.description || 'Venue';
-  const venueIsOpen = true; // Default (backend'de isOpen field'ı yok)
+  const venueIsOpen = true; // Default (no isOpen from API)
 
   const handleViewMenuItem = (item: typeof sampleMenuItems[0]) => {
     setSelectedMenuItem(item);

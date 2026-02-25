@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Filter, Star, ChevronRight, GraduationCap, X, DollarSign, Award, Tag, ArrowLeft, Calendar } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import VenueCard from '@/components/cards/VenueCard';
@@ -24,8 +24,11 @@ import { usePersonalization } from '@/hooks/usePersonalization';
 import { toast } from 'sonner';
 import ClassCard from '@/components/cards/ClassCard';
 
+type DiscoverTab = 'vibes' | 'venues' | 'classes';
+
 const DiscoverPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuth();
   const { personalize, trackJoin } = usePersonalization();
   const joinMeetup = useJoinMeetup();
@@ -39,7 +42,19 @@ const DiscoverPage = () => {
     priceFilter: 'all' as 'all' | 'free' | 'paid',
     certificateFilter: 'all' as 'all' | 'certified' | 'non-certified',
   });
-  const [activeTab, setActiveTab] = useState<'vibes' | 'venues' | 'classes'>('classes');
+  const tabFromUrl = searchParams.get('tab') as DiscoverTab | null;
+  const [activeTab, setActiveTabState] = useState<DiscoverTab>(() =>
+    tabFromUrl === 'vibes' || tabFromUrl === 'venues' || tabFromUrl === 'classes' ? tabFromUrl : 'classes'
+  );
+  useEffect(() => {
+    if (tabFromUrl === 'vibes' || tabFromUrl === 'venues' || tabFromUrl === 'classes') {
+      setActiveTabState(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+  const setActiveTab = (tab: DiscoverTab) => {
+    setActiveTabState(tab);
+    setSearchParams({ tab }, { replace: true });
+  };
 
   // Convert distance filter to radius in miles
   const radius = filters.distance ? parseFloat(filters.distance) * 1.60934 : undefined; // Convert miles to km
@@ -272,7 +287,7 @@ const DiscoverPage = () => {
       </div>
 
       <div className="px-4 pb-4">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'vibes' | 'venues' | 'classes')} className="mt-4">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as DiscoverTab)} className="mt-4">
           <TabsList className="grid w-full grid-cols-3 bg-muted rounded-xl p-1 h-12">
             <TabsTrigger value="vibes" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
               Vibes
@@ -315,9 +330,9 @@ const DiscoverPage = () => {
                 </div>
               ) : venues && venues.length > 0 ? (
                 venues.map((venue: any) => {
-                  // Normalize venue data for VenueCard
+                  if (!venue?.id) return null;
                   const normalizedVenue = {
-                    id: venue.id || '',
+                    id: venue.id,
                     name: venue.name || 'Unknown Venue',
                     category: venue.category || venue.amenities?.[0] || 'Venue',
                     image: venue.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
@@ -328,19 +343,14 @@ const DiscoverPage = () => {
                     isOpen: venue.isOpen !== undefined ? venue.isOpen : true,
                     hasDeals: venue.hasDeals || false,
                   };
-                  
                   return (
-                    <VenueCard
+                    <Link
                       key={venue.id}
-                      {...normalizedVenue}
-                      onPress={() => {
-                        if (venue.id) {
-                          navigate(`/venue/${venue.id}`);
-                        } else {
-                          console.warn('Venue ID is missing:', venue);
-                        }
-                      }}
-                    />
+                      to={`/venue/${venue.id}`}
+                      className="block min-w-0"
+                    >
+                      <VenueCard {...normalizedVenue} />
+                    </Link>
                   );
                 })
               ) : (

@@ -12,6 +12,7 @@ import {
   Ticket,
   Wallet,
   Calendar,
+  MapPin,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -20,6 +21,7 @@ const navItems = [
   { icon: Sparkles, label: 'Life', path: '/life' },
   { icon: Dice5, label: 'Surprise Me', path: '/surprise' },
   { icon: Compass, label: 'Discover', path: '/discover' },
+  { icon: MapPin, label: 'Venues', path: '/discover?tab=venues' },
   { icon: GraduationCap, label: 'Classes', path: '/classes' },
   { icon: Users, label: 'Communities', path: '/communities' },
   { icon: MessageCircle, label: 'Chat', path: '/chat' },
