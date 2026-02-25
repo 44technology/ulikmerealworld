@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Clock, DollarSign, Heart, Share2, Shield, UtensilsCrossed, X, Tag, Percent, Calendar, GraduationCap, Users, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Clock, DollarSign, Heart, Share2, Shield, UtensilsCrossed, X, Tag, Percent, Calendar, GraduationCap, Users, ChevronRight, Sparkles } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';

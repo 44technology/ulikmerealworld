@@ -48,7 +48,6 @@ const navigation: Array<{
       { name: 'Boosts', href: '/visibility/boosts', icon: TrendingUp },
       { name: 'Trending', href: '/visibility/trending', icon: Star },
       { name: 'Nearby', href: '/visibility/nearby', icon: MapPin },
-      { name: 'Ad Campaigns', href: '/visibility/influencer', icon: Star },
     ]
   },
   {

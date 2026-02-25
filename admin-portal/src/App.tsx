@@ -145,7 +145,6 @@ function AppRoutes() {
               <Route path="/events/:id" element={<VenueEventDetailPage />} />
               <Route path="/campaigns" element={<VenueCampaignsPage />} />
               <Route path="/discounts" element={<VenueDiscountsPage />} />
-              <Route path="/ads" element={<VenueAdsPage />} />
               
               {/* Visibility */}
               <Route path="/visibility/boosts" element={<VisibilityBoostsPage />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Edit, Upload, Video, Image as ImageIcon, MapPin, Eye } from 'lucide-react';
+import { Search, Edit, Upload, Video, Image as ImageIcon, MapPin, Eye, Plus } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
@@ -15,11 +15,28 @@ import {
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
+import { toast } from 'sonner';
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
+type VenueItem = {
+  id: string;
+  name: string;
+  category: string;
+  address: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  rating: number;
+  status: string;
+  approvalStatus: ApprovalStatus;
+  menuItems: number;
+  images: number;
+  videos: number;
+};
+
 // Mock data
-const mockVenues = [
+const initialVenues: VenueItem[] = [
   {
     id: '1',
     name: 'Coffee House',
@@ -27,7 +44,7 @@ const mockVenues = [
     address: '123 Main St, Miami, FL',
     rating: 4.5,
     status: 'active',
-    approvalStatus: 'pending' as ApprovalStatus,
+    approvalStatus: 'pending',
     menuItems: 15,
     images: 8,
     videos: 2,
@@ -39,21 +56,33 @@ const mockVenues = [
     address: '456 Ocean Dr, Miami, FL',
     rating: 4.8,
     status: 'active',
-    approvalStatus: 'approved' as ApprovalStatus,
+    approvalStatus: 'approved',
     menuItems: 25,
     images: 12,
     videos: 1,
   },
 ];
 
+const emptyCreateForm = {
+  name: '',
+  category: '',
+  address: '',
+  city: '',
+  state: '',
+  country: '',
+};
+
 export default function VenuesPage() {
+  const [venues, setVenues] = useState<VenueItem[]>(initialVenues);
   const [searchQuery, setSearchQuery] = useState('');
   const [approvalFilter, setApprovalFilter] = useState<'all' | ApprovalStatus>('all');
-  const [selectedVenue, setSelectedVenue] = useState<typeof mockVenues[0] | null>(null);
+  const [selectedVenue, setSelectedVenue] = useState<VenueItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState(emptyCreateForm);
 
-  const filteredVenues = mockVenues.filter((venue) => {
+  const filteredVenues = venues.filter((venue) => {
     const matchesSearch =
       venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       venue.address.toLowerCase().includes(searchQuery.toLowerCase());
@@ -62,7 +91,44 @@ export default function VenuesPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const pendingCount = mockVenues.filter((v) => v.approvalStatus === 'pending').length;
+  const pendingCount = venues.filter((v) => v.approvalStatus === 'pending').length;
+
+  const handleCreateVenue = () => {
+    if (!createForm.name.trim()) {
+      toast.error('Venue name is required');
+      return;
+    }
+    if (!createForm.category.trim()) {
+      toast.error('Category is required');
+      return;
+    }
+    if (!createForm.address.trim()) {
+      toast.error('Address is required');
+      return;
+    }
+    const addressLine = [createForm.address, createForm.city, createForm.state, createForm.country]
+      .filter(Boolean)
+      .join(', ');
+    const newVenue: VenueItem = {
+      id: String(Math.max(0, ...venues.map((v) => parseInt(v.id, 10) || 0)) + 1),
+      name: createForm.name.trim(),
+      category: createForm.category.trim(),
+      address: addressLine || createForm.address,
+      city: createForm.city || undefined,
+      state: createForm.state || undefined,
+      country: createForm.country || undefined,
+      rating: 0,
+      status: 'active',
+      approvalStatus: 'approved',
+      menuItems: 0,
+      images: 0,
+      videos: 0,
+    };
+    setVenues((prev) => [newVenue, ...prev]);
+    setCreateForm(emptyCreateForm);
+    setIsCreateDialogOpen(false);
+    toast.success('Venue created successfully.');
+  };
   const getApprovalBadgeVariant = (status: ApprovalStatus) =>
     status === 'pending' ? 'secondary' : status === 'approved' ? 'default' : 'destructive';
   const getApprovalLabel = (status: ApprovalStatus) =>
@@ -76,7 +142,10 @@ export default function VenuesPage() {
           <h1 className="text-3xl font-bold text-foreground">Venues</h1>
           <p className="text-muted-foreground mt-1">Manage restaurants, cafes, and venues</p>
         </div>
-        <Button>Add New Venue</Button>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add New Venue
+        </Button>
       </div>
 
       {/* Search & Filter */}
@@ -194,6 +263,76 @@ export default function VenuesPage() {
           </Card>
         ))}
       </div>
+
+      {/* Create Venue Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Venue</DialogTitle>
+            <DialogDescription>Add a new venue. You can edit details and upload media after creation.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Venue Name *</Label>
+              <Input
+                placeholder="e.g. Coffee House"
+                value={createForm.name}
+                onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Category *</Label>
+              <Input
+                placeholder="e.g. Café, Restaurant, Bar"
+                value={createForm.category}
+                onChange={(e) => setCreateForm((f) => ({ ...f, category: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Address *</Label>
+              <Input
+                placeholder="Street address"
+                value={createForm.address}
+                onChange={(e) => setCreateForm((f) => ({ ...f, address: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>City</Label>
+                <Input
+                  placeholder="City"
+                  value={createForm.city}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, city: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>State / Region</Label>
+                <Input
+                  placeholder="State or region"
+                  value={createForm.state}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, state: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Country</Label>
+              <Input
+                placeholder="Country"
+                value={createForm.country}
+                onChange={(e) => setCreateForm((f) => ({ ...f, country: e.target.value }))}
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button onClick={handleCreateVenue} className="flex-1">
+                Create Venue
+              </Button>
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
