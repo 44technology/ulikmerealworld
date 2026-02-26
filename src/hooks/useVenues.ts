@@ -14,6 +14,8 @@ export interface Venue {
   longitude: number;
   image?: string;
   website?: string;
+  /** Optional menu URL (e.g. PDF or web menu) - shown in venue info */
+  menuUrl?: string;
   phone?: string;
   capacity?: number;
   amenities: string[];

@@ -1,16 +1,10 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Clock, DollarSign, Heart, Share2, Shield, UtensilsCrossed, X, Tag, Percent, Calendar, GraduationCap, Users, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Clock, DollarSign, Heart, Share2, UtensilsCrossed, Tag, Percent, Calendar, GraduationCap, Users, ChevronRight, Sparkles, ExternalLink } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { useVenue } from '@/hooks/useVenues';
 import { useClasses } from '@/hooks/useClasses';
 import { useMeetups } from '@/hooks/useMeetups';
@@ -19,40 +13,6 @@ import { getVibeTypeLabel } from '@/lib/vibeLabels';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import ClassCard from '@/components/cards/ClassCard';
-
-// Sample menu items for restaurants
-const sampleMenuItems = [
-  {
-    id: '1',
-    name: 'Grilled Salmon',
-    description: 'Fresh Atlantic salmon with lemon butter sauce',
-    price: 28,
-    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400',
-    ingredients: ['Salmon', 'Lemon', 'Butter', 'Herbs', 'Olive Oil'],
-    calories: 420,
-    category: 'Main Course',
-  },
-  {
-    id: '2',
-    name: 'Caesar Salad',
-    description: 'Crisp romaine lettuce with parmesan and croutons',
-    price: 16,
-    image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400',
-    ingredients: ['Romaine Lettuce', 'Parmesan', 'Croutons', 'Caesar Dressing'],
-    calories: 280,
-    category: 'Salad',
-  },
-  {
-    id: '3',
-    name: 'Chocolate Lava Cake',
-    description: 'Warm chocolate cake with molten center',
-    price: 12,
-    image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400',
-    ingredients: ['Dark Chocolate', 'Butter', 'Eggs', 'Sugar', 'Flour'],
-    calories: 450,
-    category: 'Dessert',
-  },
-];
 
 // Sample campaigns for venues
 const sampleCampaigns = [
@@ -138,7 +98,6 @@ const sampleCampaigns = [
 const VenueDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [selectedMenuItem, setSelectedMenuItem] = useState<typeof sampleMenuItems[0] | null>(null);
   const [favourite, setFavourite] = useState(false);
   const { data: venue, isLoading, error } = useVenue(id || '');
 
@@ -205,10 +164,6 @@ const VenueDetailPage = () => {
   const venueDistance = '0.5 mi'; // Default (no distance from API)
   const venueCategory = venue.description || 'Venue';
   const venueIsOpen = true; // Default (no isOpen from API)
-
-  const handleViewMenuItem = (item: typeof sampleMenuItems[0]) => {
-    setSelectedMenuItem(item);
-  };
 
   // Separate campaigns and free items
   const campaigns = sampleCampaigns.filter(c => c.type !== 'free-item');
@@ -307,6 +262,17 @@ const VenueDetailPage = () => {
                 className="text-sm text-primary hover:underline"
               >
                 {venue.website}
+              </a>
+            )}
+            {venue.menuUrl && (
+              <a 
+                href={venue.menuUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                View menu
               </a>
             )}
           </div>
@@ -576,12 +542,11 @@ const VenueDetailPage = () => {
 
           {/* Tabs */}
           <Tabs defaultValue="ambiance" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-muted rounded-xl p-1 h-12">
+            <TabsList className="grid w-full grid-cols-2 bg-muted rounded-xl p-1 h-12">
               <TabsTrigger value="ambiance" className="rounded-lg">Ambiance</TabsTrigger>
               <TabsTrigger value="menu" className="rounded-lg">
                 {isRestaurant ? 'Menu' : 'Services'}
               </TabsTrigger>
-              <TabsTrigger value="safety" className="rounded-lg">Safety</TabsTrigger>
             </TabsList>
 
             <TabsContent value="ambiance" className="mt-4 space-y-4">
@@ -626,68 +591,25 @@ const VenueDetailPage = () => {
 
             <TabsContent value="menu" className="mt-4 space-y-4">
               {isRestaurant ? (
-                <>
-                  <div className="card-elevated p-4">
-                    <h3 className="font-semibold text-foreground mb-4">Menu</h3>
-                    <div className="space-y-4">
-                      {sampleMenuItems.map((item) => (
-                        <motion.button
-                          key={item.id}
-                          onClick={() => handleViewMenuItem(item)}
-                          className="w-full text-left border-b border-border pb-4 last:border-0 last:pb-0"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <div className="flex gap-4">
-                            <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                              <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-primary/90 backdrop-blur-sm">
-                                <Camera className="w-3 h-3 text-white" />
-                              </div>
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between mb-1">
-                                <div>
-                                  <h4 className="font-semibold text-foreground">{item.name}</h4>
-                                  <p className="text-xs text-muted-foreground">{item.category}</p>
-                                </div>
-                                <span className="text-lg font-bold text-primary">${item.price}</span>
-                              </div>
-                              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{item.description}</p>
-                              
-                              {/* Ingredients */}
-                              <div className="flex flex-wrap gap-1 mb-2">
-                                {item.ingredients.slice(0, 3).map((ingredient, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="px-2 py-0.5 rounded-full bg-muted text-xs text-foreground"
-                                  >
-                                    {ingredient}
-                                  </span>
-                                ))}
-                                {item.ingredients.length > 3 && (
-                                  <span className="px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
-                                    +{item.ingredients.length - 3} more
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Calories */}
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">Calories:</span>
-                                <span className="text-xs font-medium text-foreground">{item.calories} kcal</span>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : (
                 <div className="card-elevated p-4">
                   <h3 className="font-semibold text-foreground mb-3">Menu</h3>
+                  {venue.menuUrl ? (
+                    <a
+                      href={venue.menuUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      View menu online
+                    </a>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No menu link provided.</p>
+                  )}
+                </div>
+              ) : (
+                <div className="card-elevated p-4">
+                  <h3 className="font-semibold text-foreground mb-3">Services</h3>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
                       <UtensilsCrossed className="w-5 h-5 text-primary" />
@@ -709,46 +631,6 @@ const VenueDetailPage = () => {
                 </div>
               )}
             </TabsContent>
-
-            <TabsContent value="safety" className="mt-4">
-              <div className="card-elevated p-4 space-y-4">
-                <h3 className="font-semibold text-foreground mb-3">Safety & Health</h3>
-                
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Shield className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="font-medium text-foreground">Security</p>
-                      <p className="text-sm text-muted-foreground">24/7 security staff on premises</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Shield className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="font-medium text-foreground">Health Protocols</p>
-                      <p className="text-sm text-muted-foreground">Regular sanitization and health checks</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Shield className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="font-medium text-foreground">Emergency Contacts</p>
-                      <p className="text-sm text-muted-foreground">On-site medical assistance available</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Shield className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="font-medium text-foreground">Accessibility</p>
-                      <p className="text-sm text-muted-foreground">Wheelchair accessible facilities</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
           </Tabs>
 
           {/* Action Buttons */}
@@ -769,70 +651,6 @@ const VenueDetailPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Menu Item Detail Modal */}
-      <AnimatePresence>
-        {selectedMenuItem && (
-          <Dialog open={!!selectedMenuItem} onOpenChange={() => setSelectedMenuItem(null)}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
-              <DialogHeader className="px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between">
-                  <DialogTitle className="text-2xl font-bold">{selectedMenuItem.name}</DialogTitle>
-                  <button
-                    onClick={() => setSelectedMenuItem(null)}
-                    className="p-2 rounded-full bg-muted hover:bg-accent transition-colors"
-                  >
-                    <X className="w-5 h-5 text-foreground" />
-                  </button>
-                </div>
-              </DialogHeader>
-
-              <div className="px-6 pb-6 space-y-4">
-                <div className="relative aspect-video rounded-xl overflow-hidden">
-                  <img
-                    src={selectedMenuItem.image}
-                    alt={selectedMenuItem.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-foreground">{selectedMenuItem.name}</h3>
-                      <p className="text-sm text-muted-foreground">{selectedMenuItem.category}</p>
-                    </div>
-                    <span className="text-2xl font-bold text-primary">${selectedMenuItem.price}</span>
-                  </div>
-
-                  <p className="text-foreground">{selectedMenuItem.description}</p>
-
-                  <div>
-                    <h4 className="text-sm font-semibold text-foreground mb-2">Ingredients</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedMenuItem.ingredients.map((ingredient, idx) => (
-                        <span
-                          key={idx}
-                          className="px-3 py-1 rounded-full bg-muted text-sm text-foreground"
-                        >
-                          {ingredient}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-muted">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Calories</span>
-                      <span className="text-sm font-semibold text-foreground">{selectedMenuItem.calories} kcal</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-      </AnimatePresence>
     </AppLayout>
   );
 };
