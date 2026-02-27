@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageCircle, Share2, MoreVertical, X, Plus, Sparkles, ArrowLeft } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreVertical, X, Plus, Sparkles, ArrowLeft, ChevronRight, ChevronLeft, Pause, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -223,6 +223,199 @@ const posts = [
   },
 ];
 
+// Instagram-style full-screen single Life viewer for web
+function LifeViewerOverlay({
+  post,
+  postIndex,
+  totalPosts,
+  isPaused,
+  liked,
+  onPrev,
+  onNext,
+  onClose,
+  onPauseToggle,
+  onLike,
+  onComment,
+}: {
+  post: any;
+  postIndex: number;
+  totalPosts: number;
+  isPaused: boolean;
+  liked: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+  onClose: () => void;
+  onPauseToggle: () => void;
+  onLike: () => void;
+  onComment: () => void;
+}) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 100) {
+          onNext();
+          return 0;
+        }
+        return p + (100 / 50); // 5s total (50 * 100ms)
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isPaused, postIndex, onNext]);
+
+  useEffect(() => {
+    setProgress(0);
+  }, [postIndex]);
+
+  const displayName = post?.user?.name || post?.venue?.name || 'User';
+  const avatar = post?.user?.avatar || post?.venue?.avatar;
+  const time = post?.time || '';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+    >
+      {/* Progress bars at top (one segment per post, like Instagram) */}
+      <div className="absolute top-0 left-0 right-0 flex gap-0.5 h-1 z-50 px-2 pt-2">
+        {Array.from({ length: totalPosts }).map((_, i) => (
+          <div key={i} className="flex-1 h-full bg-white/30 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-white rounded-full"
+              initial={{ width: 0 }}
+              animate={{
+                width: i < postIndex ? '100%' : i === postIndex ? `${progress}%` : '0%',
+              }}
+              transition={{ duration: 0.15 }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Header: profile + time | pause, menu, close */}
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 pt-6 z-40">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="ring-2 ring-white/50 rounded-full">
+              <UserAvatar src={avatar} alt={displayName} size="sm" />
+            </div>
+          <div className="min-w-0">
+            <p className="text-white font-semibold text-sm truncate">{displayName}</p>
+            <p className="text-white/70 text-xs truncate">{time}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <motion.button
+            onClick={onPauseToggle}
+            className="p-2 rounded-full hover:bg-white/10 text-white"
+            whileTap={{ scale: 0.9 }}
+            aria-label={isPaused ? 'Play' : 'Pause'}
+          >
+            {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
+          </motion.button>
+          <motion.button
+            className="p-2 rounded-full hover:bg-white/10 text-white"
+            whileTap={{ scale: 0.9 }}
+            aria-label="More"
+          >
+            <MoreVertical className="w-5 h-5" />
+          </motion.button>
+          <motion.button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-white/10 text-white"
+            whileTap={{ scale: 0.9 }}
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Content: image centered, vertical aspect */}
+      <div className="absolute inset-0 flex items-center justify-center pt-14 pb-24">
+        <div className="h-full w-full max-w-[min(100vw,calc(100vh*9/16))] flex items-center justify-center relative">
+          {post?.image && (
+            <img
+              src={post.image}
+              alt={post.content || ''}
+              className="max-h-full w-auto max-w-full object-contain"
+            />
+          )}
+          {post?.isSponsored && (
+            <span className="absolute top-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
+              Sponsored
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Left/Right nav areas */}
+      <div className="absolute inset-0 flex pt-14 pb-24">
+        <div
+          className="flex-1 cursor-pointer"
+          onClick={onPrev}
+          aria-label="Previous"
+        />
+        <div
+          className="flex-1 cursor-pointer"
+          onClick={onNext}
+          aria-label="Next"
+        />
+      </div>
+
+      {/* Arrow buttons for desktop */}
+      {postIndex > 0 && (
+        <motion.button
+          onClick={onPrev}
+          className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white z-30"
+          whileTap={{ scale: 0.9 }}
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </motion.button>
+      )}
+      {postIndex < totalPosts - 1 ? (
+        <motion.button
+          onClick={onNext}
+          className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white z-30"
+          whileTap={{ scale: 0.9 }}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </motion.button>
+      ) : (
+        <motion.button
+          onClick={onClose}
+          className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white z-30"
+          whileTap={{ scale: 0.9 }}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </motion.button>
+      )}
+
+      {/* Bottom: heart (like) */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-40">
+        <motion.button
+          onClick={onLike}
+          className="p-3 rounded-full bg-black/30 backdrop-blur-sm"
+          whileTap={{ scale: 0.9 }}
+        >
+          <Heart
+            className={`w-8 h-8 ${liked ? 'fill-red-500 text-red-500' : 'text-white'}`}
+          />
+        </motion.button>
+        <button
+          onClick={onComment}
+          className="text-white/80 text-sm font-medium"
+        >
+          Comment
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 const LifePage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -235,6 +428,9 @@ const LifePage = () => {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
   const [mediaModalPost, setMediaModalPost] = useState<any>(null);
+  const [lifeViewerOpen, setLifeViewerOpen] = useState(false);
+  const [lifeViewerIndex, setLifeViewerIndex] = useState(0);
+  const [lifeViewerPaused, setLifeViewerPaused] = useState(false);
 
   // Fetch posts from backend
   const { data: backendPosts, isLoading } = usePosts();
@@ -549,7 +745,12 @@ const LifePage = () => {
               >
                 <button
                   type="button"
-                  onClick={() => setMediaModalPost(post)}
+                  onClick={() => {
+                    const idx = allPosts.findIndex((p: any) => p.id === post.id);
+                    setLifeViewerIndex(idx >= 0 ? idx : 0);
+                    setLifeViewerPaused(false);
+                    setLifeViewerOpen(true);
+                  }}
                   className="aspect-[4/3] relative bg-muted w-full block cursor-pointer overflow-hidden"
                 >
                   <img src={post.image} alt="" className="h-full w-full object-cover" />
@@ -601,55 +802,36 @@ const LifePage = () => {
         </div>
         <CreatePostModal open={showCreatePost} onOpenChange={setShowCreatePost} onSuccess={() => window.location.reload()} />
 
-        {/* Web: modal for image/video */}
+        {/* Web: Instagram-style full-screen single Life viewer */}
         <AnimatePresence>
-          {mediaModalPost && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
-              onClick={() => setMediaModalPost(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0.95 }}
-                onClick={(e) => e.stopPropagation()}
-                className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center"
-              >
-                <button
-                  type="button"
-                  onClick={() => setMediaModalPost(null)}
-                  className="absolute -top-12 right-0 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white z-10"
-                  aria-label="Kapat"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                {mediaModalPost.image && (
-                  (mediaModalPost.video || (typeof mediaModalPost.image === 'string' && /\.(mp4|webm|mov)(\?|$)/i.test(mediaModalPost.image))) ? (
-                    <video
-                      src={mediaModalPost.video || mediaModalPost.image}
-                      controls
-                      autoPlay
-                      playsInline
-                      className="max-h-[85vh] w-auto max-w-full rounded-xl object-contain"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  ) : (
-                    <img
-                      src={mediaModalPost.image}
-                      alt={mediaModalPost.content || ''}
-                      className="max-h-[85vh] w-auto max-w-full rounded-xl object-contain"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )
-                )}
-                {mediaModalPost.content && (
-                  <p className="mt-3 text-sm text-white/90 text-center max-w-lg line-clamp-2">{mediaModalPost.content}</p>
-                )}
-              </motion.div>
-            </motion.div>
+          {lifeViewerOpen && allPosts[lifeViewerIndex] && (
+            <LifeViewerOverlay
+              post={allPosts[lifeViewerIndex]}
+              postIndex={lifeViewerIndex}
+              totalPosts={allPosts.length}
+              isPaused={lifeViewerPaused}
+              liked={!!likedPosts[allPosts[lifeViewerIndex].id]}
+              onPrev={() => {
+                if (lifeViewerIndex > 0) {
+                  setLifeViewerIndex(lifeViewerIndex - 1);
+                }
+              }}
+              onNext={() => {
+                if (lifeViewerIndex < allPosts.length - 1) {
+                  setLifeViewerIndex(lifeViewerIndex + 1);
+                } else {
+                  setLifeViewerOpen(false);
+                }
+              }}
+              onClose={() => setLifeViewerOpen(false)}
+              onPauseToggle={() => setLifeViewerPaused((p) => !p)}
+              onLike={() => toggleLike(allPosts[lifeViewerIndex].id)}
+              onComment={() => {
+                setSelectedPostId(allPosts[lifeViewerIndex].id);
+                setLifeViewerOpen(false);
+                setShowComments(true);
+              }}
+            />
           )}
         </AnimatePresence>
 

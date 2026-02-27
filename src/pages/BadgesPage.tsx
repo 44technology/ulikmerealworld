@@ -5,17 +5,17 @@ import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 
 const earnedBadges = [
-  { id: '1', icon: Star, name: 'First Vibe', description: 'Attended your first meetup', color: 'from-amber-400/20 to-orange-500/10', borderColor: 'border-amber-500/30', iconColor: 'text-amber-600 dark:text-amber-400', earnedDate: 'Jan 10, 2024' },
+  { id: '1', icon: Star, name: 'First Activity', description: 'Attended your first meetup', color: 'from-amber-400/20 to-orange-500/10', borderColor: 'border-amber-500/30', iconColor: 'text-amber-600 dark:text-amber-400', earnedDate: 'Jan 10, 2024' },
   { id: '2', icon: Users, name: 'Social Butterfly', description: 'Connected with 10+ people', color: 'from-primary/20 to-primary/5', borderColor: 'border-primary/30', iconColor: 'text-primary', earnedDate: 'Jan 15, 2024' },
   { id: '3', icon: Heart, name: 'Verified Member', description: 'Completed profile verification', color: 'from-rose-400/20 to-pink-500/10', borderColor: 'border-rose-500/30', iconColor: 'text-rose-600 dark:text-rose-400', earnedDate: 'Jan 5, 2024' },
 ];
 
 const availableBadges = [
-  { id: '4', icon: Trophy, name: 'Vibe Master', description: 'Host 10 successful vibes', progress: 3, total: 10 },
+  { id: '4', icon: Trophy, name: 'Activity Master', description: 'Host 10 successful activities', progress: 3, total: 10 },
   { id: '5', icon: Crown, name: 'Community Leader', description: 'Get 50 connections', progress: 24, total: 50 },
-  { id: '6', icon: Calendar, name: 'Regular', description: 'Attend vibes 4 weeks in a row', progress: 2, total: 4 },
+  { id: '6', icon: Calendar, name: 'Regular', description: 'Attend activities 4 weeks in a row', progress: 2, total: 4 },
   { id: '7', icon: MapPin, name: 'Explorer', description: 'Visit 20 different venues', progress: 8, total: 20 },
-  { id: '8', icon: Zap, name: 'Quick Connect', description: 'Make 5 connections in one vibe', progress: 3, total: 5 },
+  { id: '8', icon: Zap, name: 'Quick Connect', description: 'Make 5 connections in one activity', progress: 3, total: 5 },
   { id: '9', icon: Target, name: 'Perfect Host', description: 'Get 5-star rating as host', progress: 0, total: 1 },
 ];
 

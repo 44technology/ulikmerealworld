@@ -52,9 +52,17 @@ export default {
         ring: "hsl(var(--ring))",
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
+        lg: "var(--radius-lg, 1rem)",
+        md: "var(--radius)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "var(--radius-xl, 1.25rem)",
+        "2xl": "1.5rem",
+      },
+      boxShadow: {
+        card: "var(--shadow-card, 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06))",
+      },
+      backgroundImage: {
+        "gradient-primary": "linear-gradient(135deg, #ED6C27 0%, #d85a1a 100%)",
       },
     },
   },

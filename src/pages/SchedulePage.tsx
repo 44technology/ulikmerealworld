@@ -70,7 +70,7 @@ const TYPE_CONFIG: Record<
     icon: GraduationCap,
   },
   vibe: {
-    label: 'Vibe',
+    label: 'Activity',
     color: 'text-emerald-600 dark:text-emerald-400',
     bg: 'bg-emerald-500/15',
     border: 'border-l-emerald-500',
@@ -172,7 +172,7 @@ const SchedulePage = () => {
         items.push({
           id: `vibe-${m.id}`,
           type: 'vibe',
-          title: m.title || 'Vibe',
+          title: m.title || 'Activity',
           startTime: m.startTime,
           endTime: m.endTime,
           venueName: m.venue?.name,
@@ -265,7 +265,7 @@ const SchedulePage = () => {
           </motion.button>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-foreground">Schedule</h1>
-            <p className="text-xs text-muted-foreground">Class, vibe, event & ready to meet in one place</p>
+            <p className="text-xs text-muted-foreground">Class, activity, event & ready to meet in one place</p>
           </div>
           <div className="w-10" />
         </div>

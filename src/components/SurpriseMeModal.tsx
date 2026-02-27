@@ -73,7 +73,7 @@ const SurpriseMeModal = ({ isOpen, onClose }: SurpriseMeModalProps) => {
 
   const handleJoin = async () => {
     if (!isAuthenticated) {
-      toast.error('Please login to join a vibe');
+      toast.error('Please login to join an activity');
       navigate('/login');
       return;
     }
@@ -85,11 +85,11 @@ const SurpriseMeModal = ({ isOpen, onClose }: SurpriseMeModalProps) => {
 
     try {
       await joinMeetup.mutateAsync({ meetupId: selectedMeetup.id });
-      toast.success('Successfully joined the blind vibe!');
+      toast.success('Successfully joined the blind activity!');
       onClose();
       navigate(`/meetup/${selectedMeetup.id}`);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to join vibe');
+      toast.error(error.message || 'Failed to join activity');
     }
   };
 
@@ -127,7 +127,7 @@ const SurpriseMeModal = ({ isOpen, onClose }: SurpriseMeModalProps) => {
               </motion.button>
               <Sparkles className="w-8 h-8 mx-auto text-primary-foreground mb-2" />
               <h2 className="text-xl font-bold text-primary-foreground">Surprise Me!</h2>
-              <p className="text-primary-foreground/80 text-sm">Roll the dice for a blind vibe</p>
+              <p className="text-primary-foreground/80 text-sm">Roll the dice for a blind activity</p>
             </div>
 
             {/* Content */}
@@ -149,7 +149,7 @@ const SurpriseMeModal = ({ isOpen, onClose }: SurpriseMeModalProps) => {
                   </motion.div>
 
                   <p className="text-muted-foreground mb-6">
-                    Join a mystery vibe where you won't see who else is joining until you meet in person!
+                    Join a mystery activity where you won't see who else is joining until you meet in person!
                   </p>
 
                   <Button
@@ -228,7 +228,7 @@ const SurpriseMeModal = ({ isOpen, onClose }: SurpriseMeModalProps) => {
                   </div>
 
                   <p className="text-xs text-muted-foreground mb-4">
-                    🎭 This is a blind vibe - you won't see other participants until you meet!
+                    🎭 This is a blind activity - you won't see other participants until you meet!
                   </p>
 
                   <div className="flex gap-3">
@@ -244,7 +244,7 @@ const SurpriseMeModal = ({ isOpen, onClose }: SurpriseMeModalProps) => {
                       disabled={joinMeetup.isPending}
                       className="flex-1 h-12 bg-gradient-primary"
                     >
-                      {joinMeetup.isPending ? 'Joining...' : 'Join Blind Vibe'}
+                      {joinMeetup.isPending ? 'Joining...' : 'Join Blind Activity'}
                     </Button>
                   </div>
                 </motion.div>

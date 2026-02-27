@@ -273,7 +273,7 @@ const CreateVibePage = () => {
       
       if (pricing === 'paid') {
         if (!pricePerPerson || pricePerPerson.trim() === '') {
-          toast.error('Please enter a price for paid vibes');
+          toast.error('Please enter a price for paid activities');
           return;
         }
         const price = parseFloat(pricePerPerson);
@@ -282,7 +282,7 @@ const CreateVibePage = () => {
           return;
         }
         if (price < 10) {
-          toast.error('Paid vibes must be at least $10');
+          toast.error('Paid activities must be at least $10');
           return;
         }
         meetupData.pricePerPerson = price;
@@ -306,7 +306,7 @@ const CreateVibePage = () => {
           duration: 5000,
         });
       } else {
-        toast.success('Vibe created successfully!');
+        toast.success('Activity created successfully!');
       }
       
       if (communityId) {
@@ -317,7 +317,7 @@ const CreateVibePage = () => {
     } catch (error: any) {
       console.error('Create vibe error:', error);
       // Try to get detailed error message
-      let errorMessage = 'Failed to create vibe';
+      let errorMessage = 'Failed to create activity';
       if (error.response?.data?.errors) {
         const errors = error.response.data.errors;
         errorMessage = errors.map((e: any) => `${e.path}: ${e.message}`).join(', ');
@@ -399,7 +399,7 @@ const CreateVibePage = () => {
             >
               <X className="w-6 h-6 text-foreground" />
             </motion.button>
-            <h1 className="font-bold text-foreground text-lg">Create Vibe</h1>
+            <h1 className="font-bold text-foreground text-lg">Create Activity</h1>
             <motion.button
               onClick={() => canSubmit() && handleCreateVibe()}
               disabled={!canSubmit() || createMeetup.isPending}

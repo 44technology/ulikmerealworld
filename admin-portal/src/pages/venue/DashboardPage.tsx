@@ -4,7 +4,7 @@ import { Megaphone, Sparkles, Percent, Image, TrendingUp } from 'lucide-react';
 export default function DashboardPage() {
   const stats = [
     { title: 'Active Campaigns', value: '12', icon: Megaphone, change: '+3 this month' },
-    { title: 'Vibes Created', value: '28', icon: Sparkles, change: '+5 this week' },
+    { title: 'Activities Created', value: '28', icon: Sparkles, change: '+5 this week' },
     { title: 'Active Discounts', value: '8', icon: Percent, change: '2 expiring soon' },
   ];
 

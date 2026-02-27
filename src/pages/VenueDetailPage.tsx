@@ -287,7 +287,7 @@ const VenueDetailPage = () => {
                 </div>
                 {upcomingEvents.length > 3 && (
                   <motion.button
-                    onClick={() => navigate(`/discover?venue=${id}`)}
+                    onClick={() => navigate(`/venues`)}
                     className="text-primary text-sm font-medium flex items-center gap-1"
                     whileTap={{ scale: 0.95 }}
                   >

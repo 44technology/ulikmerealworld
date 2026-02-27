@@ -538,7 +538,7 @@ export default function ClassesPage() {
           <Card 
             key={cls.id} 
             className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => navigate(`/classes/${cls.id}`)}
+            onClick={() => navigate(String(cls.id))}
           >
             <CardHeader>
               <div className="flex items-center justify-between">

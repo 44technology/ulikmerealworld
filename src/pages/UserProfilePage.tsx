@@ -401,13 +401,13 @@ const UserProfilePage = () => {
               <p className="text-[11px] text-muted-foreground">Connections</p>
             </motion.button>
             <motion.button
-              onClick={() => navigate(`/user/${userId}/vibes`)}
+              onClick={() => navigate(`/user/${userId}/activities`)}
               className="rounded-xl border border-border/60 bg-card/80 p-3 text-center hover:bg-muted/40 transition-colors"
               whileTap={{ scale: 0.98 }}
             >
               <Calendar className="w-4 h-4 mx-auto text-primary mb-0.5" />
               <p className="text-base font-semibold text-foreground">-</p>
-              <p className="text-[11px] text-muted-foreground">Vibes</p>
+              <p className="text-[11px] text-muted-foreground">Activities</p>
             </motion.button>
             <motion.button
               onClick={() => navigate(`/user/${userId}/badges`)}

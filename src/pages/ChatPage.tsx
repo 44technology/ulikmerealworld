@@ -245,7 +245,7 @@ const ChatPage = () => {
     
     return {
       id: `meetup-${meetup.id}`,
-      name: meetup.title || 'Vibe Chat',
+      name: meetup.title || 'Activity Chat',
       avatar: meetup.image || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=150',
       lastMessage: 'No messages yet',
       time: '',
@@ -505,7 +505,7 @@ const ChatPage = () => {
                       <Calendar className="w-4 h-4 text-secondary" />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-xs text-muted-foreground">Vibe</p>
+                      <p className="text-xs text-muted-foreground">Activity</p>
                       <p className="text-sm font-semibold text-foreground truncate">
                         {currentChat.meetup.title || currentChat.name}
                       </p>
@@ -1292,7 +1292,7 @@ const ChatPage = () => {
               Friends
             </TabsTrigger>
             <TabsTrigger value="vibes" className="rounded-lg text-sm border-l-4 border-l-secondary data-[state=active]:bg-card pl-2">
-              Vibes
+              Activities
             </TabsTrigger>
             <TabsTrigger value="classes" className="rounded-lg text-sm border-l-4 border-l-accent data-[state=active]:bg-card pl-2">
               Classes
@@ -1391,7 +1391,7 @@ const ChatPage = () => {
           <TabsContent value="vibes" className="mt-4 space-y-2">
             {meetupChats.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No vibe chats yet</p>
+                <p className="text-muted-foreground">No activity chats yet</p>
               </div>
             ) : (
               meetupChats.map((chat) => (

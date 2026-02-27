@@ -247,7 +247,7 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
             <label className="text-sm font-semibold text-foreground flex items-center gap-2">
               <span className="w-1 h-4 bg-gradient-primary rounded-full"></span>
               <Calendar className="w-4 h-4 text-primary" />
-              Link to Vibe (Optional)
+              Link to Activity (Optional)
             </label>
             <select
               value={selectedMeetup}
@@ -257,7 +257,7 @@ const CreatePostModal = ({ open, onOpenChange, onSuccess }: CreatePostModalProps
               }}
               className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-border text-foreground focus:outline-none focus:border-primary/50 transition-colors"
             >
-              <option value="">Select a vibe...</option>
+              <option value="">Select an activity...</option>
               {meetups?.slice(0, 10).map((meetup: any) => (
                 <option key={meetup.id} value={meetup.id}>
                   {meetup.title}

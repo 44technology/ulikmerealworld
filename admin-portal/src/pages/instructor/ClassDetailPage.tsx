@@ -67,8 +67,8 @@ const mockClasses = [
         title: 'Introduction to Diction',
         description: 'Learn the fundamentals of proper diction',
         lessons: [
-          { id: 'lesson-1', title: 'Diction Basics', duration: '30 min', description: 'Understanding proper pronunciation' },
-          { id: 'lesson-2', title: 'Vowel Sounds', duration: '45 min', description: 'Mastering vowel pronunciation' },
+          { id: 'lesson-1', title: 'Diction Basics', duration: '30 min', description: 'Understanding proper pronunciation', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' },
+          { id: 'lesson-2', title: 'Vowel Sounds', duration: '45 min', description: 'Mastering vowel pronunciation', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4' },
         ],
       },
       {
@@ -76,8 +76,8 @@ const mockClasses = [
         title: 'Advanced Techniques',
         description: 'Advanced diction and speech techniques',
         lessons: [
-          { id: 'lesson-3', title: 'Consonant Clarity', duration: '40 min', description: 'Clear consonant pronunciation' },
-          { id: 'lesson-4', title: 'Speech Flow', duration: '50 min', description: 'Natural speech patterns' },
+          { id: 'lesson-3', title: 'Consonant Clarity', duration: '40 min', description: 'Clear consonant pronunciation', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4' },
+          { id: 'lesson-4', title: 'Speech Flow', duration: '50 min', description: 'Natural speech patterns', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4' },
         ],
       },
     ],
@@ -110,8 +110,8 @@ const mockClasses = [
         title: 'AutoCAD Interface',
         description: 'Understanding the AutoCAD workspace',
         lessons: [
-          { id: 'lesson-1', title: 'Interface Overview', duration: '45 min', description: 'Navigating AutoCAD interface' },
-          { id: 'lesson-2', title: 'Basic Tools', duration: '60 min', description: 'Essential drawing tools' },
+          { id: 'lesson-1', title: 'Interface Overview', duration: '45 min', description: 'Navigating AutoCAD interface', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4' },
+          { id: 'lesson-2', title: 'Basic Tools', duration: '60 min', description: 'Essential drawing tools', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4' },
         ],
       },
     ],
@@ -226,6 +226,15 @@ export default function ClassDetailPage() {
   // Edit class dialog state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
+  // Ticket dialog state
+  const [isTicketDialogOpen, setIsTicketDialogOpen] = useState(false);
+  const [tickets, setTickets] = useState<Array<{ id: number; title: string; price: number; type: 'paid' | 'free'; available: number; sold: number }>>([]);
+  const [newTicketType, setNewTicketType] = useState<'paid' | 'free'>('paid');
+  const [newTicketPrice, setNewTicketPrice] = useState('');
+  const [newTicketAvailable, setNewTicketAvailable] = useState('');
+  // Q&A list dialog state
+  const [isQADialogOpen, setIsQADialogOpen] = useState(false);
+  const [selectedLessonForQA, setSelectedLessonForQA] = useState<string | null>(null);
   // Q&A state
   const [selectedQA, setSelectedQA] = useState<string | null>(null);
   const [isAnswerDialogOpen, setIsAnswerDialogOpen] = useState(false);
@@ -337,7 +346,7 @@ export default function ClassDetailPage() {
       <div className="p-6">
         <div className="text-center py-12">
           <p className="text-muted-foreground">Class not found</p>
-          <Button onClick={() => navigate('/classes')} className="mt-4">
+          <Button onClick={() => navigate(-1)} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Classes
           </Button>
@@ -433,7 +442,7 @@ export default function ClassDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => navigate('/classes')}>
+          <Button variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
@@ -684,8 +693,8 @@ export default function ClassDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Tabs: Materials and Course Content */}
-      <Tabs defaultValue="materials" className="space-y-4">
+      {/* Tabs: Syllabus first, then Materials and Course Content */}
+      <Tabs defaultValue="syllabus" className="space-y-4">
         <TabsList>
           <TabsTrigger value="syllabus">Course Syllabus</TabsTrigger>
           <TabsTrigger value="materials">Materials</TabsTrigger>
@@ -733,9 +742,36 @@ export default function ClassDetailPage() {
                                     <Clock className="w-3 h-3" />
                                     {lesson.duration}
                                   </span>
+                                  {'videoUrl' in lesson && (lesson as { videoUrl?: string }).videoUrl && (
+                                    <span className="flex items-center gap-1 text-primary">
+                                      <PlayCircle className="w-3 h-3" />
+                                      Video
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
+
+                            {/* Lesson video - most modules are video-based */}
+                            {'videoUrl' in lesson && (lesson as { videoUrl?: string }).videoUrl && (
+                              <div className="mt-3 rounded-xl overflow-hidden border border-border bg-black/5">
+                                <p className="text-xs font-medium text-muted-foreground px-3 py-2 border-b border-border flex items-center gap-2">
+                                  <PlayCircle className="w-3.5 h-3.5 text-primary" />
+                                  Lesson video
+                                </p>
+                                <div className="aspect-video max-w-2xl">
+                                  <video
+                                    src={(lesson as { videoUrl: string }).videoUrl}
+                                    controls
+                                    className="w-full h-full object-contain"
+                                    preload="metadata"
+                                    playsInline
+                                  >
+                                    Your browser does not support the video tag.
+                                  </video>
+                                </div>
+                              </div>
+                            )}
 
                             {/* Q&A Section for this lesson */}
                             <div className="mt-4 p-4 rounded-lg bg-muted/50 border border-border">

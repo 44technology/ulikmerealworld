@@ -1,50 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
 @layer base {
   :root {
-    /* ULIKME Brand Palette */
-    /* Full White #F4F6F5 | Classic Orange #F5B027 | Vivid Tangelo #ED6C27 */
-    /* Black Steel #0D1216 | Rich Light Blue #4799D4 | Subtle Pastel Red #F0827A */
-    --color-white: 120 8% 96%;
+    /* ULIKME Brand – Primary: #ED6C27 (elegant orange) */
+    --color-white: 0 0% 100%;
     --color-orange: 38 90% 56%;
-    --color-tangelo: 19 85% 54%;
+    --color-tangelo: 19 85% 54%; /* #ED6C27 */
     --color-black-steel: 210 27% 7%;
     --color-blue: 204 60% 55%;
     --color-red: 5 78% 71%;
 
-    --background: var(--color-white);
+    --background: 0 0% 99%;
     --foreground: var(--color-black-steel);
 
-    --card: 120 8% 98%;
+    --card: 0 0% 100%;
     --card-foreground: var(--color-black-steel);
 
-    --popover: var(--color-white);
+    --popover: 0 0% 100%;
     --popover-foreground: var(--color-black-steel);
 
-    --primary: var(--color-blue);
-    --primary-foreground: var(--color-white);
+    --primary: var(--color-tangelo);
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: var(--color-orange);
-    --secondary-foreground: var(--color-black-steel);
+    --secondary: 19 85% 96%;
+    --secondary-foreground: var(--color-tangelo);
 
-    --muted: 120 8% 94%;
+    --muted: 0 0% 96%;
     --muted-foreground: 210 10% 45%;
 
-    --accent: var(--color-tangelo);
-    --accent-foreground: var(--color-white);
+    --accent: 19 85% 96%;
+    --accent-foreground: var(--color-tangelo);
 
     --destructive: var(--color-red);
     --destructive-foreground: var(--color-white);
 
-    --border: 120 8% 88%;
-    --input: 120 8% 88%;
-    --ring: var(--color-blue);
+    --border: 0 0% 91%;
+    --input: 0 0% 91%;
+    --ring: var(--color-tangelo);
 
-    --radius: 1rem;
+    --radius: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
   }
 
   .dark {
@@ -57,24 +58,24 @@
     --popover: 210 27% 10%;
     --popover-foreground: var(--color-white);
 
-    --primary: var(--color-blue);
-    --primary-foreground: var(--color-white);
+    --primary: var(--color-tangelo);
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: var(--color-orange);
-    --secondary-foreground: var(--color-black-steel);
+    --secondary: 19 85% 20%;
+    --secondary-foreground: 19 85% 90%;
 
     --muted: 210 20% 15%;
     --muted-foreground: 120 8% 70%;
 
-    --accent: var(--color-tangelo);
-    --accent-foreground: var(--color-white);
+    --accent: 19 85% 20%;
+    --accent-foreground: 19 85% 90%;
 
     --destructive: var(--color-red);
     --destructive-foreground: var(--color-white);
 
     --border: 210 20% 20%;
     --input: 210 20% 20%;
-    --ring: var(--color-blue);
+    --ring: var(--color-tangelo);
   }
 }
 
@@ -86,5 +87,13 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .card-elegant {
+    @apply rounded-xl border border-border/80 bg-card shadow-card;
   }
 }

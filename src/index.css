@@ -32,8 +32,8 @@
     --popover: var(--color-white);
     --popover-foreground: var(--color-black-steel);
 
-    /* Primary: Rich Light Blue (#4799D4) */
-    --primary: var(--color-blue);
+    /* Primary: Vivid Tangelo (#ED6C27) – venue ile uyumlu turuncu */
+    --primary: var(--color-tangelo);
     --primary-foreground: var(--color-white);
 
     /* Secondary: Classic Orange (#F5B027) */
@@ -43,9 +43,9 @@
     --muted: 120 8% 94%;
     --muted-foreground: 210 10% 45%;
 
-    /* Accent: Vivid Tangelo (#ED6C27) */
-    --accent: var(--color-tangelo);
-    --accent-foreground: var(--color-white);
+    /* Accent: Tangelo – turuncu aile */
+    --accent: 19 85% 96%;
+    --accent-foreground: var(--color-tangelo);
 
     /* Destructive: Subtle Pastel Red (#F0827A) */
     --destructive: var(--color-red);
@@ -53,12 +53,12 @@
 
     --border: 120 8% 88%;
     --input: 120 8% 88%;
-    --ring: var(--color-blue);
+    --ring: var(--color-tangelo);
 
     --radius: 1rem;
 
-    /* Module Colors - Updated to match new palette */
-    --friendme: var(--color-blue);
+    /* Module Colors – turuncu ağırlıklı palet */
+    --friendme: 204 60% 55%;
     --friendme-foreground: var(--color-white);
     
     --loveme: var(--color-red);
@@ -67,27 +67,27 @@
     --connectme: var(--color-orange);
     --connectme-foreground: var(--color-black-steel);
 
-    /* Gradients - Updated with new colors */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--color-blue)) 0%, hsl(var(--color-tangelo)) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(var(--color-orange)) 0%, hsl(var(--color-tangelo)) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(var(--color-blue) / 0.1) 0%, transparent 50%);
+    /* Gradients – turuncu tonları (venue’dan farklı: açık turuncu → tangelo) */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--color-orange)) 0%, hsl(var(--color-tangelo)) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--color-tangelo)) 0%, hsl(19, 85%, 42%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(var(--color-tangelo) / 0.12) 0%, transparent 50%);
     
-    /* Shadows - Updated with new colors */
+    /* Shadows – turuncu glow */
     --shadow-sm: 0 1px 2px 0 hsl(var(--color-black-steel) / 0.05);
     --shadow-md: 0 4px 6px -1px hsl(var(--color-black-steel) / 0.1), 0 2px 4px -2px hsl(var(--color-black-steel) / 0.1);
     --shadow-lg: 0 10px 15px -3px hsl(var(--color-black-steel) / 0.1), 0 4px 6px -4px hsl(var(--color-black-steel) / 0.1);
     --shadow-xl: 0 20px 25px -5px hsl(var(--color-black-steel) / 0.1), 0 8px 10px -6px hsl(var(--color-black-steel) / 0.1);
-    --shadow-glow: 0 0 20px hsl(var(--color-blue) / 0.3);
+    --shadow-glow: 0 0 20px hsl(var(--color-tangelo) / 0.35);
     
-    /* Sidebar (keeping for compatibility) */
+    /* Sidebar – turuncu tema */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-primary: var(--color-tangelo);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 19 85% 96%;
+    --sidebar-accent-foreground: var(--color-tangelo);
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: var(--color-tangelo);
   }
 
   .dark {
@@ -101,8 +101,8 @@
     --popover: 210 27% 10%;
     --popover-foreground: var(--color-white);
 
-    /* Primary: Rich Light Blue (#4799D4) */
-    --primary: var(--color-blue);
+    /* Primary: Vivid Tangelo (#ED6C27) */
+    --primary: var(--color-tangelo);
     --primary-foreground: var(--color-white);
 
     /* Secondary: Classic Orange (#F5B027) */
@@ -112,9 +112,9 @@
     --muted: 210 20% 15%;
     --muted-foreground: 120 8% 70%;
 
-    /* Accent: Vivid Tangelo (#ED6C27) */
-    --accent: var(--color-tangelo);
-    --accent-foreground: var(--color-white);
+    /* Accent: turuncu aile */
+    --accent: 19 85% 20%;
+    --accent-foreground: 19 85% 90%;
 
     /* Destructive: Subtle Pastel Red (#F0827A) */
     --destructive: var(--color-red);
@@ -122,16 +122,16 @@
 
     --border: 210 20% 20%;
     --input: 210 20% 20%;
-    --ring: var(--color-blue);
+    --ring: var(--color-tangelo);
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: var(--color-tangelo);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-accent: 19 85% 20%;
+    --sidebar-accent-foreground: 19 85% 90%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: var(--color-tangelo);
   }
 }
 

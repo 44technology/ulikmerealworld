@@ -21,6 +21,7 @@ import {
   MessageCircle,
   MessageSquare,
   Users,
+  QrCode,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -38,8 +39,9 @@ const navigation: Array<{
   { name: 'Locations', href: '/locations', icon: MapPin },
   { name: 'Content', href: '/content', icon: Image },
   { name: 'Chat', href: '/chat', icon: MessageSquare },
-  { name: 'Vibes', href: '/vibes', icon: Users },
+  { name: 'Activities', href: '/vibes', icon: Users },
   { name: 'Events', href: '/events', icon: Calendar },
+  { name: 'Check-in (QR)', href: '/checkin', icon: QrCode },
   {
     name: 'Visibility',
     href: '#',
@@ -47,7 +49,6 @@ const navigation: Array<{
     children: [
       { name: 'Boosts', href: '/visibility/boosts', icon: TrendingUp },
       { name: 'Trending', href: '/visibility/trending', icon: Star },
-      { name: 'Nearby', href: '/visibility/nearby', icon: MapPin },
     ]
   },
   {

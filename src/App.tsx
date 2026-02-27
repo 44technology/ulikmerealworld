@@ -10,7 +10,8 @@ import WelcomePage from "./pages/WelcomePage";
 import OnboardingPage from "./pages/OnboardingPage";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
-import DiscoverPage from "./pages/DiscoverPage";
+import ActivitiesPage from "./pages/ActivitiesPage";
+import VenuesPage from "./pages/VenuesPage";
 import CreateVibePage from "./pages/CreateVibePage";
 import CreateClassPage from "./pages/CreateClassPage";
 import EventsPage from "./pages/EventsPage";
@@ -43,6 +44,9 @@ import CommunityDetailPage from "./pages/CommunityDetailPage";
 import SchedulePage from "./pages/SchedulePage";
 import SelectVenuePage from "./pages/SelectVenuePage";
 import WalletPage from "./pages/WalletPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import LivePage from "./pages/LivePage";
+import PostDetailPage from "./pages/PostDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,7 +65,9 @@ const App = () => (
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/home" element={<HomePage />} />
-            <Route path="/discover" element={<DiscoverPage />} />
+            <Route path="/activities" element={<ActivitiesPage />} />
+            <Route path="/venues" element={<VenuesPage />} />
+            <Route path="/discover" element={<Navigate to="/activities" replace />} />
             <Route path="/create" element={<CreateVibePage />} />
             <Route path="/create-event" element={<CreateVibePage />} />
             <Route path="/create-class" element={<CreateClassPage />} />
@@ -75,14 +81,17 @@ const App = () => (
           <Route path="/classes" element={<ClassesPage />} />
           <Route path="/class/:id" element={<ClassDetailPage />} />
           <Route path="/my-classes" element={<MyClassesPage />} />
-          <Route path="/social" element={<Navigate to="/communities?tab=feed" replace />} />
-          <Route path="/settings" element={<SettingsPage />} />
+<Route path="/social" element={<Navigate to="/communities" replace />} />
+            <Route path="/feed" element={<Navigate to="/communities" replace />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/settings/wallet" element={<WalletPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/live" element={<LivePage />} />
             <Route path="/meetup/:id" element={<MeetupDetailPage />} />
             <Route path="/venue/:id" element={<VenueDetailPage />} />
             <Route path="/user/:userId" element={<UserProfilePage />} />
             <Route path="/user/:userId/connections" element={<UserConnectionsPage />} />
-            <Route path="/user/:userId/vibes" element={<UserVibesPage />} />
+            <Route path="/user/:userId/activities" element={<UserVibesPage />} />
             <Route path="/user/:userId/badges" element={<UserBadgesPage />} />
             <Route path="/life" element={<LifePage />} />
             <Route path="/surprise" element={<SurpriseMePage />} />
@@ -92,6 +101,7 @@ const App = () => (
             <Route path="/ticket/:ticketId" element={<TicketDetailPage />} />
             <Route path="/payouts" element={<PayoutsPage />} />
             <Route path="/communities" element={<CommunitiesPage />} />
+            <Route path="/post/:id" element={<PostDetailPage />} />
             <Route path="/discover-communities" element={<DiscoverCommunitiesPage />} />
             <Route path="/create-community" element={<CreateCommunityPage />} />
             <Route path="/community/:id" element={<CommunityDetailPage />} />

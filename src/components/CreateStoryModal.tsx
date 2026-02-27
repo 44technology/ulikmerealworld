@@ -151,7 +151,7 @@ const CreateStoryModal = ({ open, onOpenChange, onSuccess }: CreateStoryModalPro
           {/* Optional: Link to Meetup */}
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
-              Link to Vibe (Optional)
+              Link to Activity (Optional)
             </label>
             <select
               value={selectedMeetup}

@@ -309,17 +309,17 @@ const MeetupDetailPage = () => {
           } catch (ticketError: any) {
             // Ticket creation failed, but join succeeded
             console.warn('Ticket creation failed:', ticketError);
-            toast.success('Joined the vibe!');
+            toast.success('Joined the activity!');
             navigate('/home');
           }
         } else {
           // No physical location, no ticket needed
-          toast.success('Joined the vibe!');
+          toast.success('Joined the activity!');
           navigate('/home');
         }
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to join vibe');
+      toast.error(error.message || 'Failed to join activity');
     }
   };
 
@@ -376,7 +376,7 @@ const MeetupDetailPage = () => {
             <ArrowLeft className="w-6 h-6 text-foreground" />
           </motion.button>
           <h1 className="text-xl font-bold text-foreground">
-            Vibe details
+            Activity details
           </h1>
           <div className="flex gap-2 ml-auto">
             {isHost && (
@@ -432,7 +432,7 @@ const MeetupDetailPage = () => {
             <div className="absolute bottom-4 left-4 right-4">
               {isBlindMeet && !revealDetails ? (
                 <>
-                  <h1 className="text-2xl font-bold text-card mb-2 blur-sm select-none">Mystery Vibe</h1>
+                  <h1 className="text-2xl font-bold text-card mb-2 blur-sm select-none">Mystery Activity</h1>
                   <span className="px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm text-card text-sm font-medium">
                     ???
                   </span>
@@ -497,7 +497,7 @@ const MeetupDetailPage = () => {
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">Hosted by</p>
                   <p className="font-semibold text-foreground">Anonymous</p>
-                  <p className="text-xs text-muted-foreground mt-1">🎭 This is a blind vibe</p>
+                  <p className="text-xs text-muted-foreground mt-1">🎭 This is a blind activity</p>
                 </div>
               </div>
             </div>
@@ -513,7 +513,7 @@ const MeetupDetailPage = () => {
                 <Input
                   value={editData.title}
                   onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                  placeholder="Vibe title"
+                  placeholder="Activity title"
                   className="w-full"
                 />
               </div>
@@ -524,7 +524,7 @@ const MeetupDetailPage = () => {
                 <Textarea
                   value={editData.description}
                   onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                  placeholder="Describe your vibe..."
+                  placeholder="Describe your activity..."
                   className="w-full min-h-[100px]"
                 />
               </div>
@@ -909,7 +909,7 @@ const MeetupDetailPage = () => {
                     onClick={handleJoin}
                     className="flex-1 h-12 bg-gradient-primary"
                   >
-                    {isPaidMeetup ? `Join vibe — $${pricePerPerson}` : 'Join vibe'}
+                    {isPaidMeetup ? `Join activity — $${pricePerPerson}` : 'Join activity'}
                   </Button>
                 </div>
                 
@@ -936,7 +936,7 @@ const MeetupDetailPage = () => {
           <DialogHeader>
             <DialogTitle>Complete Payment</DialogTitle>
             <DialogDescription>
-              Pay ${pricePerPerson} per person to join this vibe
+              Pay ${pricePerPerson} per person to join this activity
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

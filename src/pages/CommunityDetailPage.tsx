@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper, UserPlus, Check, X, Share2, Link2, Copy, Shield, ShieldCheck, UserCog } from 'lucide-react';
+import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper, UserPlus, Check, X, Share2, Link2, Copy, Shield, ShieldCheck, UserCog, Tag, CheckCircle2, ChevronRight } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,10 @@ interface Community {
   isOwner: boolean;
   members?: CommunityMemberWithUser[];
   currentUserRole?: string | null;
+  costLabel?: string;
+  creatorVerification?: string;
+  highlightsHeading?: string;
+  highlights?: string[];
 }
 
 const COMMUNITY_POSTS_KEY = (id: string) => `ulikme_community_posts_${id}`;
@@ -151,7 +155,7 @@ export default function CommunityDetailPage() {
   const [newCommentText, setNewCommentText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState<'posts' | 'members' | 'classes' | 'vibes'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'members' | 'classes' | 'activities'>('posts');
   const [pendingJoinRequests, setPendingJoinRequests] = useState<JoinRequest[]>(() =>
     id ? getCommunityJoinRequests(id) : []
   );
@@ -237,6 +241,10 @@ export default function CommunityDetailPage() {
         isOwner: communityDetail.isOwner,
         members: communityDetail.members,
         currentUserRole: communityDetail.currentUserRole ?? undefined,
+        costLabel: (communityDetail as any).costLabel,
+        creatorVerification: (communityDetail as any).creatorVerification,
+        highlightsHeading: (communityDetail as any).highlightsHeading,
+        highlights: (communityDetail as any).highlights,
       });
       return;
     }
@@ -253,6 +261,10 @@ export default function CommunityDetailPage() {
         memberCount: communityFromList.memberCount ?? 0,
         isMember,
         isOwner,
+        costLabel: (communityFromList as any).costLabel,
+        creatorVerification: (communityFromList as any).creatorVerification,
+        highlightsHeading: (communityFromList as any).highlightsHeading,
+        highlights: (communityFromList as any).highlights,
       });
     } else if (id && user) {
       const isMember = getUserCommunityIds(user.id ?? '').includes(id);
@@ -513,18 +525,90 @@ export default function CommunityDetailPage() {
             <div className="flex items-end justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-foreground mb-1">{community.name}</h2>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {community.isPublic ? (
-                    <Globe className="w-4 h-4" />
-                  ) : (
-                    <Lock className="w-4 h-4" />
-                  )}
-                  <span>{community.memberCount} members</span>
-                </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Info bar: Public | Members | Cost | By Creator */}
+        <div className="px-4 pt-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              {community.isPublic ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+              {community.isPublic ? 'Public' : 'Private'}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Users className="w-4 h-4" />
+              {community.memberCount >= 1000
+                ? `${(community.memberCount / 1000).toFixed(1)}k members`
+                : `${community.memberCount} members`}
+            </span>
+            {community.costLabel && (
+              <span className="flex items-center gap-1.5">
+                <Tag className="w-4 h-4" />
+                {community.costLabel}
+              </span>
+            )}
+            {!community.costLabel && (
+              <span className="flex items-center gap-1.5">
+                <Tag className="w-4 h-4" />
+                Free
+              </span>
+            )}
+            <span className="flex items-center gap-2 ml-auto">
+              <User className="w-4 h-4" />
+              <span>By</span>
+              <button
+                type="button"
+                onClick={() => community.creator?.id && navigate(`/user/${community.creator.id}`)}
+                className="flex items-center gap-1.5 font-medium text-foreground hover:underline"
+              >
+                <UserAvatar
+                  src={community.creator?.avatar}
+                  alt={community.creator?.displayName}
+                  size="xs"
+                  className="ring-1 ring-border rounded-full"
+                />
+                {community.creator?.displayName}
+              </button>
+            </span>
+          </div>
+        </div>
+
+        {/* Creator verification */}
+        {community.creatorVerification && (
+          <div className="px-4 pt-2">
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+              <span>
+                {community.creator?.displayName} is a verified {community.creatorVerification}
+              </span>
+            </p>
+          </div>
+        )}
+
+        {/* Highlights: heading + bullet list */}
+        {(community.highlightsHeading || (community.highlights?.length ?? 0) > 0) && (
+          <div className="px-4 pt-4">
+            <div className="rounded-2xl border border-border bg-card/50 p-4 space-y-3">
+              {community.highlightsHeading && (
+                <h3 className="font-semibold text-foreground text-sm leading-snug">
+                  {community.highlightsHeading}
+                </h3>
+              )}
+              {community.highlights && community.highlights.length > 0 && (
+                <ul className="space-y-2">
+                  {community.highlights.map((item: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <ChevronRight className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Description */}
         {community.description && (
@@ -572,14 +656,14 @@ export default function CommunityDetailPage() {
           )}
         </div>
 
-        {/* Tabs - Skool style: Communities (posts), Members, Classes, Vibes */}
+        {/* Tabs: Socialize (feed) under Communities detail, then Members, Classes, Activities */}
         <div className="px-4 pt-6">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'posts' | 'members' | 'classes' | 'vibes')}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'posts' | 'members' | 'classes' | 'activities')}>
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="posts" className="text-sm">Communities</TabsTrigger>
+              <TabsTrigger value="posts" className="text-sm">Socialize</TabsTrigger>
               <TabsTrigger value="members" className="text-sm">Members</TabsTrigger>
               <TabsTrigger value="classes" className="text-sm">Classes</TabsTrigger>
-              <TabsTrigger value="vibes" className="text-sm">Vibes</TabsTrigger>
+              <TabsTrigger value="activities" className="text-sm">Activities</TabsTrigger>
             </TabsList>
 
             <TabsContent value="posts" className="mt-4 space-y-4">
@@ -907,7 +991,7 @@ export default function CommunityDetailPage() {
                 ))}
             </TabsContent>
 
-            <TabsContent value="vibes" className="mt-4 space-y-3">
+            <TabsContent value="activities" className="mt-4 space-y-3">
               {community.isMember && (
                 <motion.button
                   type="button"
@@ -918,19 +1002,19 @@ export default function CommunityDetailPage() {
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <Plus className="w-5 h-5 text-primary" />
                   </div>
-                  <span className="font-medium text-foreground">Create Vibe</span>
+                  <span className="font-medium text-foreground">Create Activity</span>
                 </motion.button>
               )}
               {communityVibes.length === 0 && !community.isMember && (
                 <div className="text-center py-12">
                   <PartyPopper className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-muted-foreground font-medium mb-2">No activities or events yet</p>
-                  <p className="text-sm text-muted-foreground">Join the community to see and create vibes.</p>
+                  <p className="text-sm text-muted-foreground">Join the community to see and create activities.</p>
                 </div>
               )}
               {communityVibes.length === 0 && community.isMember && (
                 <div className="text-center py-8">
-                  <p className="text-sm text-muted-foreground">No vibes yet. Use the button above to create one.</p>
+                  <p className="text-sm text-muted-foreground">No activities yet. Use the button above to create one.</p>
                 </div>
               )}
               {communityVibes.length > 0 && communityVibes.map((vibe) => (

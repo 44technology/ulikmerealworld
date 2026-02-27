@@ -391,7 +391,7 @@ const CreateClassPage = () => {
       if (communityId) {
         navigate(`/community/${communityId}`);
       } else {
-        navigate('/discover');
+        navigate('/activities');
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to create class');

@@ -89,10 +89,10 @@ export default function VibeDetailPage() {
       <div className="p-6">
         <Button variant="ghost" onClick={() => navigate('/vibes')} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Vibes
+          Back to Activities
         </Button>
         <div className="text-center py-12 text-muted-foreground">
-          Vibe not found
+          Activity not found
         </div>
       </div>
     );
@@ -102,10 +102,10 @@ export default function VibeDetailPage() {
     <div className="p-6 space-y-6">
       <Button variant="ghost" onClick={() => navigate('/vibes')} className="mb-4">
         <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Vibes
+        Back to Activities
       </Button>
 
-      {/* Vibe Info Card */}
+      {/* Activity Info Card */}
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">{vibeData.title}</CardTitle>
@@ -137,7 +137,7 @@ export default function VibeDetailPage() {
               <Percent className="w-4 h-4 text-primary" />
               Discount
             </CardTitle>
-            <CardDescription>Venue discount for this vibe</CardDescription>
+            <CardDescription>Venue discount for this activity</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm">
@@ -183,7 +183,7 @@ export default function VibeDetailPage() {
               alt="QR Code"
               className="rounded border border-border"
             />
-            <p className="text-xs text-muted-foreground mt-2 text-center">Scan for vibe page</p>
+            <p className="text-xs text-muted-foreground mt-2 text-center">Scan for activity page</p>
           </CardContent>
         </Card>
       </div>
@@ -198,7 +198,7 @@ export default function VibeDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-foreground">Tickets</h2>
-              <p className="text-muted-foreground mt-1">Manage ticket pricing and availability for this vibe</p>
+              <p className="text-muted-foreground mt-1">Manage ticket pricing and availability for this activity</p>
             </div>
             <Dialog open={isTicketDialogOpen} onOpenChange={setIsTicketDialogOpen}>
               <DialogTrigger asChild>
@@ -210,7 +210,7 @@ export default function VibeDetailPage() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Create New Ticket</DialogTitle>
-                  <DialogDescription>Add a ticket option for this vibe</DialogDescription>
+                  <DialogDescription>Add a ticket option for this activity</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">

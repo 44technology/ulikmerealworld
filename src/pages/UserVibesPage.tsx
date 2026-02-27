@@ -41,7 +41,7 @@ const UserVibesPage = () => {
             <ArrowLeft className="w-6 h-6 text-foreground" />
           </motion.button>
           <h1 className="text-xl font-bold text-foreground">
-            {user?.displayName || user?.firstName}'s Vibes
+            {user?.displayName || user?.firstName}'s Activities
           </h1>
         </div>
         
@@ -51,7 +51,7 @@ const UserVibesPage = () => {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search vibes..."
+              placeholder="Search activities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-12 pl-12 pr-4 rounded-2xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -74,7 +74,7 @@ const UserVibesPage = () => {
           <TabsContent value="upcoming" className="space-y-3">
             {upcomingMeetups.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No upcoming vibes</p>
+                <p className="text-muted-foreground">No upcoming activities</p>
               </div>
             ) : (
               upcomingMeetups.map((meetup, index) => (
@@ -111,7 +111,7 @@ const UserVibesPage = () => {
           <TabsContent value="past" className="space-y-3">
             {pastMeetups.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No past vibes</p>
+                <p className="text-muted-foreground">No past activities</p>
               </div>
             ) : (
               pastMeetups.map((meetup, index) => (

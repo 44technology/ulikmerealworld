@@ -17,6 +17,14 @@ export interface Community {
     displayName: string;
     avatar?: string;
   };
+  /** Optional: cost label e.g. "Free" or "$49/month" */
+  costLabel?: string;
+  /** Optional: creator verification line e.g. "verified n8n Expert Partner with 440k YT subs" */
+  creatorVerification?: string;
+  /** Optional: highlights section heading e.g. "FREE DOWNLOADS: 100+ templates..." */
+  highlightsHeading?: string;
+  /** Optional: bullet points for highlights/offerings */
+  highlights?: string[];
 }
 
 const MOCK_COMMUNITIES: Community[] = [
@@ -51,7 +59,15 @@ const MOCK_COMMUNITIES: Community[] = [
     memberCount: 2103,
     language: 'English',
     category: 'Design',
-    creator: { id: 'c3', displayName: 'Jordan Lee' },
+    creator: { id: 'c3', displayName: 'Jordan Lee', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' },
+    costLabel: 'Free',
+    creatorVerification: 'Design Partner with 12k community members',
+    highlightsHeading: 'FREE DOWNLOADS: 50+ design templates and UI kits ready to use',
+    highlights: [
+      'A full design system with components for Figma and React',
+      'A brand kit generator that creates palettes, typography, and assets from a single prompt',
+      'A no-code landing page builder so you can ship product pages without touching code',
+    ],
   },
   {
     id: 'comm-4',
@@ -105,6 +121,10 @@ function normalizeCommunity(c: any): Community {
       displayName: c.creator?.displayName ?? c.creator?.firstName ?? 'Creator',
       avatar: c.creator?.avatar,
     },
+    costLabel: c.costLabel ?? c.price ?? (c.isFree !== false ? 'Free' : undefined),
+    creatorVerification: c.creatorVerification ?? c.creator?.verification,
+    highlightsHeading: c.highlightsHeading ?? c.highlightsTitle,
+    highlights: c.highlights ?? c.highlightList,
   };
 }
 
@@ -116,8 +136,13 @@ async function fetchCommunities(): Promise<Community[]> {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!res.ok) return [...stored, ...MOCK_COMMUNITIES];
-    const data = await res.json();
-    const list = Array.isArray(data) ? data : data?.data ?? data?.communities ?? [];
+    let data: unknown;
+    try {
+      data = await res.json();
+    } catch {
+      return [...stored, ...MOCK_COMMUNITIES];
+    }
+    const list = Array.isArray(data) ? data : (data as { data?: unknown[]; communities?: unknown[] })?.data ?? (data as { data?: unknown[]; communities?: unknown[] })?.communities ?? [];
     const fromApi = list.length > 0 ? list.map((c: any) => normalizeCommunity(c)) : MOCK_COMMUNITIES;
     return [...stored, ...fromApi];
   } catch {

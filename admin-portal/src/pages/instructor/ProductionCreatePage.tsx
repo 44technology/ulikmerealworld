@@ -25,7 +25,7 @@ export default function ProductionCreatePage() {
       class: 'Class',
       event: 'Event',
       qa: 'Q&A Session',
-      vibe: 'Vibe'
+      vibe: 'Activity'
     };
     toast.success(`${labels[activeTab]} created successfully!`);
     setTitle('');
@@ -37,7 +37,7 @@ export default function ProductionCreatePage() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Create Content</h1>
-        <p className="text-muted-foreground mt-2">Create classes, events, or vibes</p>
+        <p className="text-muted-foreground mt-2">Create classes, events, or activities</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'class' | 'event' | 'vibe' | 'qa')}>
@@ -56,7 +56,7 @@ export default function ProductionCreatePage() {
           </TabsTrigger>
           <TabsTrigger value="vibe" className="flex items-center gap-2">
             <Sparkles className="w-4 h-4" />
-            Vibe
+            Activity
           </TabsTrigger>
         </TabsList>
 
@@ -154,12 +154,12 @@ export default function ProductionCreatePage() {
         <TabsContent value="vibe" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Create Vibe</CardTitle>
-              <CardDescription>Create a new vibe/meetup</CardDescription>
+              <CardTitle>Create Activity</CardTitle>
+              <CardDescription>Create a new activity/meetup</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Vibe Title</Label>
+                <Label>Activity Title</Label>
                 <Input
                   placeholder="e.g., Coffee & Code"
                   value={title}
@@ -169,14 +169,14 @@ export default function ProductionCreatePage() {
               <div className="space-y-2">
                 <Label>Description</Label>
                 <Textarea
-                  placeholder="Describe your vibe..."
+                  placeholder="Describe your activity..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
                 />
               </div>
               <Button onClick={handleSubmit} className="w-full">
-                Create Vibe
+                Create Activity
               </Button>
             </CardContent>
           </Card>

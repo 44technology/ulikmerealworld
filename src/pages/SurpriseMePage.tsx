@@ -128,7 +128,7 @@ const SurpriseMePage = () => {
         });
         
         if (availableMeetups.length === 0 && availableClasses.length === 0) {
-          toast.error('No available vibes or classes at the moment. Try again later!');
+          toast.error('No available activities or classes at the moment. Try again later!');
           return;
         }
         
@@ -195,7 +195,7 @@ const SurpriseMePage = () => {
       if (itemType === 'vibe') {
         const result = await joinMeetup.mutateAsync({ meetupId: selectedItem.id });
         // QR code ticket is included in join response if meetup has physical location
-        toast.success('Successfully joined the surprise vibe!');
+        toast.success('Successfully joined the surprise activity!');
         // Use setTimeout to ensure state updates complete before navigation
         setTimeout(() => {
           navigate(`/meetup/${selectedItem.id}`);
@@ -211,7 +211,7 @@ const SurpriseMePage = () => {
       }
     } catch (error: any) {
       console.error('Join error:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || `Failed to ${itemType === 'vibe' ? 'join vibe' : 'enroll in class'}`;
+      const errorMessage = error?.response?.data?.message || error?.message || `Failed to ${itemType === 'vibe' ? 'join activity' : 'enroll in class'}`;
       toast.error(errorMessage);
     }
   };
@@ -260,7 +260,7 @@ const SurpriseMePage = () => {
 
                 <h2 className="text-2xl font-bold text-foreground mb-2">Roll the Dice</h2>
                 <p className="text-muted-foreground mb-4">
-                  Discover a random vibe or class! 🎲✨
+                  Discover a random activity or class! 🎲✨
                 </p>
                 {!canRollToday && (
                   <div className="mb-4 p-3 rounded-xl bg-muted border border-border">
@@ -488,7 +488,7 @@ const SurpriseMePage = () => {
                   </>
                 ) : (
                   <>
-                    <h3 className="text-xl font-bold text-foreground mb-1">Mystery Vibe</h3>
+                    <h3 className="text-xl font-bold text-foreground mb-1">Mystery Activity</h3>
                     <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400/20 to-orange-500/20 border-2 border-yellow-400/30 text-yellow-600 dark:text-yellow-400 text-sm font-bold">
                         <span>🎲</span>
@@ -535,7 +535,7 @@ const SurpriseMePage = () => {
                 )}
 
                 <p className="text-xs text-muted-foreground mb-4">
-                  🎭 Surprise {itemType === 'class' ? 'class' : 'vibe'}! {itemType === 'vibe' && 'Details will be revealed 2 hours before the event!'}
+                  🎭 Surprise {itemType === 'class' ? 'class' : 'activity'}! {itemType === 'vibe' && 'Details will be revealed 2 hours before the event!'}
                 </p>
 
                 <div className="flex gap-3">

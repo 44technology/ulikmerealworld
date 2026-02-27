@@ -249,7 +249,7 @@ const MyTicketsPage = () => {
               <div className="text-center py-12">
                 <Ticket className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <p className="text-muted-foreground mb-2">No upcoming tickets</p>
-                <p className="text-xs text-muted-foreground">Enroll in a class or join a vibe to get tickets</p>
+                <p className="text-xs text-muted-foreground">Enroll in a class or join an activity to get tickets</p>
               </div>
             ) : (
               <>

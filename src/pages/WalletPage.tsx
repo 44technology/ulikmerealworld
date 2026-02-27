@@ -112,7 +112,7 @@ export default function WalletPage() {
         </motion.button>
 
         <p className="text-sm text-muted-foreground">
-          Saved cards can be used when paying for classes, vibes, and events. You can also save a card during checkout.
+          Saved cards can be used when paying for classes, activities, and events. You can also save a card during checkout.
         </p>
 
         {cards.length === 0 ? (

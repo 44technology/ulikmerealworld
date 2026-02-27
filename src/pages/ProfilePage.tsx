@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Settings, ChevronRight, MapPin, Star, Trophy, Users, Calendar, CalendarRange, Heart, Share2, Edit, GraduationCap, X, Music, ExternalLink, Sparkles, Play, Image as ImageIcon, Video as VideoIcon, Check, CheckCircle, Ticket, Users2, Wallet, Compass } from 'lucide-react';
+import { Settings, ChevronRight, MapPin, Star, Trophy, Users, Calendar, CalendarRange, Heart, Share2, Edit, GraduationCap, X, Music, ExternalLink, Sparkles, Play, Image as ImageIcon, Video as VideoIcon, Check, CheckCircle, Ticket, Users2, Wallet, Activity } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -168,7 +168,7 @@ const ProfilePage = () => {
       route: '/connections' 
     },
     { 
-      label: 'Vibes', 
+      label: 'Activities', 
       value: statsData?.meetups ?? 0, 
       icon: Calendar, 
       route: '/my-meetups' 
@@ -415,7 +415,7 @@ const ProfilePage = () => {
           <div className="mt-6 px-4">
           <div className="card-elevated rounded-2xl overflow-hidden">
             {[
-              { icon: Compass, label: 'Discover', path: '/discover' },
+              { icon: Activity, label: 'Activities', path: '/activities' },
               { icon: Calendar, label: 'Schedule', path: '/schedule' },
               { icon: Wallet, label: 'Payouts', path: '/payouts' },
             ].map((item) => {
@@ -805,7 +805,7 @@ const ProfilePage = () => {
               { label: 'My Tickets', icon: Ticket, route: '/tickets' },
               { label: 'Schedule', icon: CalendarRange, route: '/schedule' },
               { label: 'Earnings & Payouts', icon: Wallet, route: '/payouts' },
-              { label: 'Saved Venues', icon: Heart, route: '/discover' },
+              { label: 'Saved Venues', icon: Heart, route: '/venues' },
               { label: 'Settings', icon: Settings, route: '/settings' },
             ].map((item) => {
               const Icon = item.icon;

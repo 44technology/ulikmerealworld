@@ -1,6 +1,6 @@
 import {
   Home,
-  Sparkles,
+  Star,
   Dice5,
   MessageCircle,
   User,
@@ -11,7 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const navItems = [
   { icon: Home, label: 'Home', path: '/home' },
-  { icon: Sparkles, label: 'Life', path: '/life' },
+  { icon: Star, label: 'Life', path: '/life' },
   { icon: Dice5, label: 'Surprise', path: '/surprise', isMain: true },
   { icon: MessageCircle, label: 'Chats', path: '/chat' },
   { icon: User, label: 'Profile', path: '/profile' },
@@ -55,20 +55,20 @@ const BottomNav = () => {
               <div className="relative">
                 <Icon
                   className={`w-6 h-6 transition-colors ${
-                    isActive ? 'text-primary' : 'text-muted-foreground'
+                    isActive ? 'text-accent' : 'text-muted-foreground'
                   }`}
                 />
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
+                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 )}
               </div>
               <span
                 className={`text-xs font-medium truncate w-full text-center ${
-                  isActive ? 'text-primary' : 'text-muted-foreground'
+                  isActive ? 'text-accent' : 'text-muted-foreground'
                 }`}
               >
                 {item.label}

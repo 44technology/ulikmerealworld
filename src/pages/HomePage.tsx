@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, ChevronRight, Plus, Calendar, Clock, MapPin, ArrowRight, GraduationCap, DollarSign, Ticket, Users, Users2, PartyPopper } from 'lucide-react';
+import { Search, ChevronRight, Plus, Calendar, Clock, MapPin, ArrowRight, GraduationCap, DollarSign, Ticket, Users, Users2, PartyPopper, Star, Bell, Radio } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import { meetups as mockMeetups, venues as mockVenues } from '@/data/mockData';
@@ -18,7 +18,6 @@ import { getVibeTypeLabel } from '@/lib/vibeLabels';
 import VenueCard from '@/components/cards/VenueCard';
 import UserAvatar from '@/components/ui/UserAvatar';
 import CreateStoryModal from '@/components/CreateStoryModal';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -33,12 +32,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [discoverTab, setDiscoverTab] = useState<'vibes' | 'venues'>('vibes');
   const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
   const [filters, setFilters] = useState({
     category: '',
@@ -283,7 +286,7 @@ const HomePage = () => {
     return t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
-  // Combine meetups and classes into "My Vibes & Classes"
+  // Combine meetups and classes into "My Activities & Classes"
   const myVibesAndClasses = useMemo(() => {
     if (!isAuthenticated || !user) return [];
     
@@ -407,37 +410,18 @@ const HomePage = () => {
 
   return (
     <AppLayout>
-      {/* Elegant Header */}
-      <div className="sticky top-0 z-40 glass safe-top backdrop-blur-xl bg-background/80 border-b border-border/50">
-        <div className="px-4 py-4">
-          {/* Purple dashed accent line */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent border-t border-dashed border-primary/30" />
-          
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">Home</h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <motion.button
-                onClick={() => navigate('/schedule')}
-                className="p-2 rounded-xl hover:bg-muted/50 transition-colors"
-                whileTap={{ scale: 0.9 }}
-                aria-label="Schedule"
-              >
-                <Calendar className="w-5 h-5 text-foreground" />
-              </motion.button>
-              <motion.button
-                onClick={() => navigate('/discover')}
-                className="p-2 rounded-xl hover:bg-muted/50 transition-colors"
-                whileTap={{ scale: 0.9 }}
-              >
-                <Search className="w-5 h-5 text-foreground" />
-              </motion.button>
+      {/* Header - clean like reference */}
+      <div className="sticky top-0 z-40 safe-top bg-background border-b border-border/50">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-foreground">Home</h1>
+            <div className="flex items-center gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <motion.button
                     className="p-2 rounded-xl hover:bg-muted/50 transition-colors"
                     whileTap={{ scale: 0.9 }}
+                    aria-label="Add"
                   >
                     <Plus className="w-5 h-5 text-foreground" />
                   </motion.button>
@@ -453,7 +437,7 @@ const HomePage = () => {
                     <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
                       <Calendar className="w-4 h-4 text-primary" />
                     </div>
-                    <span className="font-medium">Create Vibe</span>
+                    <span className="font-medium">Create Activity</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
@@ -481,12 +465,90 @@ const HomePage = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <motion.button
+                    className="relative p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="Notifications"
+                    title="Notifications"
+                  >
+                    <Bell className="w-5 h-5 text-foreground" />
+                    {(notificationsData?.unreadCount ?? 0) > 0 && (
+                      <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-accent text-accent-foreground text-xs font-semibold">
+                        {(notificationsData?.unreadCount ?? 0) > 99 ? '99+' : notificationsData?.unreadCount}
+                      </span>
+                    )}
+                  </motion.button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80 p-0 rounded-xl" sideOffset={8}>
+                  <div className="p-3 border-b border-border flex items-center justify-between">
+                    <span className="font-semibold text-foreground">Notifications</span>
+                    {(notificationsData?.unreadCount ?? 0) > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-muted-foreground"
+                        onClick={() => navigate('/notifications')}
+                      >
+                        See all
+                      </Button>
+                    )}
+                  </div>
+                  <div className="max-h-[320px] overflow-y-auto">
+                    {!notificationsData?.data?.length ? (
+                      <div className="p-6 text-center text-sm text-muted-foreground">No notifications yet</div>
+                    ) : (
+                      notificationsData.data.slice(0, 5).map((n: { id: string; title: string; message: string; read: boolean; createdAt: string }) => (
+                        <button
+                          key={n.id}
+                          type="button"
+                          onClick={() => navigate('/notifications')}
+                          className={`w-full text-left px-3 py-3 border-b border-border/50 last:border-0 hover:bg-muted/50 transition-colors ${!n.read ? 'bg-muted/30' : ''}`}
+                        >
+                          <p className="font-medium text-foreground text-sm line-clamp-1">{n.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">{n.createdAt ? new Date(n.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : ''}</p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  {notificationsData?.data?.length > 5 && (
+                    <div className="p-2 border-t border-border">
+                      <Button variant="ghost" size="sm" className="w-full text-sm" onClick={() => navigate('/notifications')}>
+                        View all notifications
+                      </Button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+              <motion.button
+                onClick={() => navigate('/schedule')}
+                className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                whileTap={{ scale: 0.9 }}
+                aria-label="Schedule"
+              >
+                <Calendar className="w-5 h-5 text-foreground" />
+              </motion.button>
             </div>
           </div>
         </div>
       </div>
 
       <div className="px-4 pb-6 space-y-8">
+        {/* Search anything - on top of stories */}
+        <section className="pt-1">
+          <motion.button
+            type="button"
+            onClick={() => navigate('/activities')}
+            className="w-full flex items-center gap-3 h-12 pl-4 pr-4 rounded-2xl bg-muted border-0 text-left"
+            whileTap={{ scale: 0.99 }}
+          >
+            <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+            <span className="text-muted-foreground text-sm font-medium">Search anything</span>
+          </motion.button>
+        </section>
+
         {/* Stories Section */}
         <section>
           <div className="flex items-center gap-4 overflow-x-auto hide-scrollbar pb-2">
@@ -517,6 +579,31 @@ const HomePage = () => {
                 </div>
               </div>
               <span className="text-xs text-muted-foreground font-medium">Your Story</span>
+            </motion.div>
+
+            {/* Live stream - right after Your Story */}
+            <motion.div
+              className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer"
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (isAuthenticated) {
+                  navigate('/live');
+                } else {
+                  navigate('/login');
+                }
+              }}
+            >
+              <div className="relative">
+                <div className="p-0.5 rounded-full bg-red-500/90 ring-2 ring-red-400/50">
+                  <div className="p-0.5 bg-background rounded-full w-14 h-14 flex items-center justify-center">
+                    <Radio className="w-6 h-6 text-red-500" />
+                  </div>
+                </div>
+                <span className="absolute -top-0.5 -right-0.5 px-1.5 py-0.5 rounded bg-red-500 text-[10px] font-bold text-white uppercase">
+                  Live
+                </span>
+              </div>
+              <span className="text-xs text-muted-foreground font-medium">Live</span>
             </motion.div>
 
             {/* Other Stories + Sponsor ads */}
@@ -569,79 +656,16 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Classes Section - Skool style (create & discover classes) */}
+        {/* Communities Section - first after Stories (like reference) */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Classes</h2>
-              <p className="text-sm text-muted-foreground mt-1">Create or join expert-led classes</p>
-            </div>
-            <motion.button
-              onClick={() => navigate('/classes')}
-              className="text-primary text-sm font-medium flex items-center gap-1"
-              whileTap={{ scale: 0.95 }}
-            >
-              View All
-              <ChevronRight className="w-4 h-4" />
-            </motion.button>
-          </div>
-
-          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4">
-            {formattedClasses.length > 0 && formattedClasses.slice(0, 4).map((cls: any) => (
-              <motion.div
-                key={cls.id}
-                onClick={() => navigate(`/class/${cls.id}`)}
-                className="flex-shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-colors cursor-pointer active:scale-[0.98]"
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="aspect-[4/3] relative bg-muted">
-                  {cls.image ? (
-                    <img src={cls.image} alt={cls.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <GraduationCap className="w-10 h-10 text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-3">
-                  <h3 className="font-semibold text-foreground text-sm line-clamp-2">{cls.title}</h3>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                    {cls.price != null && cls.price > 0 ? (
-                      <>$$</>
-                    ) : (
-                      <>Free</>
-                    )}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-            <motion.button
-              onClick={() => (isAuthenticated ? navigate('/create-class') : navigate('/login'))}
-              className="flex-shrink-0 w-[160px] rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 min-h-[120px]"
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-primary" />
-              </div>
-              <span className="text-xs font-medium text-foreground text-center px-2">Create Class</span>
-            </motion.button>
-          </div>
-        </section>
-
-        {/* Communities Section - Skool style */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Communities</h2>
-              <p className="text-sm text-muted-foreground mt-1">Join or create communities to learn together</p>
-            </div>
+            <h2 className="text-xl font-bold text-foreground">Communities</h2>
             <motion.button
               onClick={() => navigate('/communities')}
-              className="text-primary text-sm font-medium flex items-center gap-1"
+              className="flex items-center gap-0.5 text-foreground hover:text-accent transition-colors"
               whileTap={{ scale: 0.95 }}
             >
-              View All
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </motion.button>
           </div>
 
@@ -685,110 +709,103 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Vibes Section - same style as Classes & Communities */}
+        {/* Classes Section - full-width cards with price, rating, Join Now (like reference) */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Vibes</h2>
-              <p className="text-sm text-muted-foreground mt-1">Activities & events — join or host</p>
-            </div>
+            <h2 className="text-xl font-bold text-foreground">Classes</h2>
             <motion.button
-              onClick={() => navigate('/discover')}
-              className="text-primary text-sm font-medium flex items-center gap-1"
+              onClick={() => navigate('/classes')}
+              className="flex items-center gap-0.5 text-foreground hover:text-accent transition-colors"
               whileTap={{ scale: 0.95 }}
             >
-              View All
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </motion.button>
           </div>
-
-          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4">
-            {meetupsLoading ? (
-              <div className="flex gap-3 flex-shrink-0">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex-shrink-0 w-[160px] rounded-2xl overflow-hidden bg-muted animate-pulse aspect-[4/3]" />
-                ))}
-              </div>
-            ) : (
-              <>
-                {(discoverMeetups || meetups || []).slice(0, 6).map((vibe: any) => (
-                  <motion.div
-                    key={vibe.id}
-                    onClick={() => navigate(`/meetup/${vibe.id}`)}
-                    className="flex-shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-colors cursor-pointer active:scale-[0.98]"
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="aspect-[4/3] relative bg-muted">
-                      {vibe.image ? (
-                        <img src={vibe.image} alt={vibe.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <PartyPopper className="w-10 h-10 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="absolute top-1 right-1">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${vibe.type === 'event' ? 'bg-violet-500/90 text-white' : 'bg-primary/90 text-white'}`}>
-                          {getVibeTypeLabel(vibe.type)}
-                        </span>
-                      </div>
+          <div className="space-y-4">
+            {formattedClasses.length > 0 ? formattedClasses.slice(0, 3).map((cls: any) => (
+              <motion.div
+                key={cls.id}
+                onClick={() => navigate(`/class/${cls.id}`)}
+                className="rounded-2xl overflow-hidden bg-card border border-border hover:border-accent/30 transition-colors cursor-pointer"
+                whileTap={{ scale: 0.99 }}
+              >
+                <div className="aspect-[2.2/1] relative bg-muted">
+                  {cls.image ? (
+                    <img src={cls.image} alt={cls.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <GraduationCap className="w-12 h-12 text-muted-foreground" />
                     </div>
-                    <div className="p-3">
-                      <h3 className="font-semibold text-foreground text-sm line-clamp-2">{vibe.title}</h3>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        {vibe.startTime ? formatDate(vibe.startTime) : 'TBD'}
-                        {vibe.pricePerPerson != null && vibe.pricePerPerson > 0 ? (
-                          <> · $$</>
-                        ) : (
-                          <> · Free</>
-                        )}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
-                <motion.button
-                  onClick={() => (isAuthenticated ? navigate('/create') : navigate('/login'))}
-                  className="flex-shrink-0 w-[160px] rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 min-h-[120px]"
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <PartyPopper className="w-5 h-5 text-primary" />
+                  )}
+                  <div className="absolute top-2 right-2">
+                    <span className="px-2 py-1 rounded-lg bg-emerald-500 text-white text-sm font-semibold">
+                      {cls.price != null && cls.price > 0 ? `$${cls.price}` : 'FREE'}
+                    </span>
                   </div>
-                  <span className="text-xs font-medium text-foreground text-center px-2">Create Vibe</span>
-                </motion.button>
-              </>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-foreground text-lg">{cls.title}</h3>
+                  <div className="flex items-center gap-1.5 mt-1 text-sm">
+                    <Star className="w-4 h-4 fill-emerald-500 text-emerald-500" />
+                    <span className="font-medium text-foreground">4.1</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{cls.description}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {cls.venue?.city && cls.venue?.name ? `${cls.venue.city}` : (cls.venue?.name || 'Online')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {cls.startTime ? formatDate(cls.startTime) : 'TBD'}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      {cls.startTime ? formatTime(cls.startTime) : 'TBD'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Host</span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" />
+                        {cls._count?.enrollments ?? 0}/{cls.maxStudents ?? '—'}
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl font-semibold"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/class/${cls.id}`);
+                      }}
+                    >
+                      Join Now
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )) : (
+              <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground text-sm">
+                No classes yet. <button type="button" onClick={() => navigate('/classes')} className="text-accent font-medium">Browse classes</button>
+              </div>
             )}
           </div>
         </section>
 
-        {/* Discover Section */}
+        {/* Activities Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Discover</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Expert-led classes, vibes & venues</p>
-            </div>
+            <h2 className="text-xl font-bold text-foreground">Activities</h2>
             <motion.button
-              onClick={() => navigate('/discover')}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => navigate('/activities')}
+              className="flex items-center gap-0.5 text-foreground hover:text-accent transition-colors"
               whileTap={{ scale: 0.95 }}
             >
-              <span>View All</span>
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </motion.button>
           </div>
-          
-          <Tabs value={discoverTab} onValueChange={(v) => setDiscoverTab(v as 'vibes' | 'venues')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-muted rounded-xl p-1 h-10 mb-4">
-              <TabsTrigger value="vibes" className="rounded-lg text-sm data-[state=active]:bg-card">
-                Vibes
-              </TabsTrigger>
-              <TabsTrigger value="venues" className="rounded-lg text-sm data-[state=active]:bg-card">
-                Venues
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="vibes" className="mt-0">
-              <div className="space-y-3">
+          <div className="space-y-3">
                 <AnimatePresence>
                   {meetupsLoading ? (
                     <div className="text-center py-12">
@@ -835,93 +852,92 @@ const HomePage = () => {
                           
                           {/* Content */}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium mb-1 text-primary">
+                            <p className="text-xs font-medium mb-0.5 text-muted-foreground">
                               {hostName}
                             </p>
-                            <h3 className="text-base font-bold text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+                            <h3 className="text-base font-bold text-foreground line-clamp-1 group-hover:text-accent transition-colors">
                               {meetup.title}
                             </h3>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="w-3.5 h-3.5" />
-                                  <span>{formatDate(meetup.date || meetup.startTime)}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  <span className="text-[#FF8C00] font-semibold">
-                                    {formatTime(meetup.time || meetup.startTime)}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground line-clamp-1">
-                                  {meetup.location || meetup.venue?.name || meetup.venue || 'Location TBD'}
-                                </span>
-                                <motion.button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/meetup/${meetup.id}`);
-                                  }}
-                                  className="ml-auto w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors"
-                                >
-                                  <ArrowRight className="w-3 h-3 text-primary" />
-                                </motion.button>
-                              </div>
+                            <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {formatDate(meetup.date || meetup.startTime)}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5" />
+                                {formatTime(meetup.time || meetup.startTime)}
+                              </span>
+                              <span className="flex items-center gap-1 line-clamp-1">
+                                <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                                {meetup.location || meetup.venue?.name || meetup.venue || 'Location TBD'}
+                              </span>
                             </div>
+                          </div>
+                          <div className="flex-shrink-0 text-right">
+                            <span className={`text-sm font-bold ${(meetup.pricePerPerson != null && meetup.pricePerPerson > 0) ? 'text-foreground' : 'text-emerald-600'}`}>
+                              {(meetup.pricePerPerson != null && meetup.pricePerPerson > 0) ? `$${meetup.pricePerPerson}` : 'FREE'}
+                            </span>
                           </div>
                         </motion.div>
                       );
                     })
                   ) : (
                     <div className="text-center py-12">
-                      <p className="text-muted-foreground">No vibes found. Try adjusting your filters.</p>
+                      <p className="text-muted-foreground">No activities found. Try adjusting your filters.</p>
                     </div>
                   )}
-                </AnimatePresence>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="venues" className="mt-0">
-              <div className="grid grid-cols-2 gap-3 items-stretch">
-                {venuesLoading ? (
-                  <div className="text-center py-8 col-span-2">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-8 h-8 mx-auto mb-4 rounded-full border-4 border-primary/20 border-t-primary"
-                    />
-                    <p className="text-muted-foreground">Loading venues...</p>
-                  </div>
-                ) : venues && venues.length > 0 ? (
-                  venues.slice(0, 6).map((venue: any) => (
-                    <Link
-                      key={venue.id}
-                      to={`/venue/${venue.id}`}
-                      className="block min-w-0"
-                    >
-                      <VenueCard {...venue} />
-                    </Link>
-                  ))
-                ) : (
-                  <div className="text-center py-8 col-span-2">
-                    <p className="text-muted-foreground">No venues found.</p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+            </AnimatePresence>
+          </div>
         </section>
 
-        {/* My Vibes & Classes Section */}
+        {/* Venue list Section */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-foreground">Venue list</h2>
+            <motion.button
+              onClick={() => navigate('/venues')}
+              className="flex items-center gap-0.5 text-foreground hover:text-accent transition-colors"
+              whileTap={{ scale: 0.95 }}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </motion.button>
+          </div>
+          <div className="grid grid-cols-2 gap-3 items-stretch">
+            {venuesLoading ? (
+              <div className="text-center py-8 col-span-2">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-8 h-8 mx-auto mb-4 rounded-full border-4 border-primary/20 border-t-primary"
+                />
+                <p className="text-muted-foreground">Loading venues...</p>
+              </div>
+            ) : venues && venues.length > 0 ? (
+              venues.slice(0, 6).map((venue: any) => (
+                <Link
+                  key={venue.id}
+                  to={`/venue/${venue.id}`}
+                  className="block min-w-0"
+                >
+                  <VenueCard {...venue} />
+                </Link>
+              ))
+            ) : (
+              <div className="text-center py-8 col-span-2">
+                <p className="text-muted-foreground">No venues found.</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* My Activities & Classes Section */}
         {myVibesAndClasses.length > 0 && (
           <section>
             <motion.button
               onClick={() => navigate('/my-meetups')}
               className="flex items-center justify-between w-full mb-4 group"
             >
-              <h2 className="text-xl font-bold text-foreground">My Vibes & Classes</h2>
+              <h2 className="text-xl font-bold text-foreground">My Activities & Classes</h2>
               <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
             </motion.button>
             <div className="space-y-3">

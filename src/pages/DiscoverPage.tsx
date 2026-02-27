@@ -24,7 +24,7 @@ import { usePersonalization } from '@/hooks/usePersonalization';
 import { toast } from 'sonner';
 import ClassCard from '@/components/cards/ClassCard';
 
-type DiscoverTab = 'vibes' | 'venues' | 'classes';
+type DiscoverTab = 'activities' | 'venues' | 'classes';
 
 const DiscoverPage = () => {
   const navigate = useNavigate();
@@ -42,15 +42,16 @@ const DiscoverPage = () => {
     priceFilter: 'all' as 'all' | 'free' | 'paid',
     certificateFilter: 'all' as 'all' | 'certified' | 'non-certified',
   });
-  const tabFromUrl = searchParams.get('tab') as DiscoverTab | null;
+  const tabFromUrl = searchParams.get('tab') as DiscoverTab | string | null;
+  const normalizedTab = tabFromUrl === 'vibes' ? 'activities' : (tabFromUrl as DiscoverTab);
   const [activeTab, setActiveTabState] = useState<DiscoverTab>(() =>
-    tabFromUrl === 'vibes' || tabFromUrl === 'venues' || tabFromUrl === 'classes' ? tabFromUrl : 'classes'
+    normalizedTab === 'activities' || normalizedTab === 'venues' || normalizedTab === 'classes' ? normalizedTab : 'classes'
   );
   useEffect(() => {
-    if (tabFromUrl === 'vibes' || tabFromUrl === 'venues' || tabFromUrl === 'classes') {
-      setActiveTabState(tabFromUrl);
+    if (normalizedTab === 'activities' || normalizedTab === 'venues' || normalizedTab === 'classes') {
+      setActiveTabState(normalizedTab);
     }
-  }, [tabFromUrl]);
+  }, [normalizedTab]);
   const setActiveTab = (tab: DiscoverTab) => {
     setActiveTabState(tab);
     setSearchParams({ tab }, { replace: true });
@@ -227,7 +228,7 @@ const DiscoverPage = () => {
 
   const handleJoinVibe = async (meetupId: string, meetup: any) => {
     if (!isAuthenticated) {
-      toast.error('Please login to join a vibe');
+      toast.error('Please login to join an activity');
       navigate('/login');
       return;
     }
@@ -240,9 +241,9 @@ const DiscoverPage = () => {
         trackJoin(meetup);
       }
       
-      toast.success('Joined the vibe!');
+      toast.success('Joined the activity!');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to join vibe');
+      toast.error(error.message || 'Failed to join activity');
     }
   };
 
@@ -268,7 +269,7 @@ const DiscoverPage = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search classes, vibes, or venues..."
+                placeholder="Search classes, activities, or venues..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-12 pl-12 pr-4 rounded-2xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -289,8 +290,8 @@ const DiscoverPage = () => {
       <div className="px-4 pb-4">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as DiscoverTab)} className="mt-4">
           <TabsList className="grid w-full grid-cols-3 bg-muted rounded-xl p-1 h-12">
-            <TabsTrigger value="vibes" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
-              Vibes
+            <TabsTrigger value="activities" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              Activities
             </TabsTrigger>
             <TabsTrigger value="venues" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
               Venues
@@ -300,10 +301,10 @@ const DiscoverPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="vibes" className="mt-4 space-y-4">
+          <TabsContent value="activities" className="mt-4 space-y-4">
             {meetupsLoading ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">Loading vibes...</p>
+                <p className="text-muted-foreground">Loading activities...</p>
               </div>
             ) : meetups && meetups.length > 0 ? (
               meetups.map((meetup: any) => (
@@ -317,7 +318,7 @@ const DiscoverPage = () => {
               ))
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No vibes found. Try adjusting your filters.</p>
+                <p className="text-muted-foreground">No activities found. Try adjusting your filters.</p>
               </div>
             )}
           </TabsContent>
@@ -398,7 +399,7 @@ const DiscoverPage = () => {
       <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
         <DialogContent className="max-w-md mx-4 rounded-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">Filter {activeTab === 'vibes' ? 'Vibes' : activeTab === 'venues' ? 'Venues' : 'Classes'}</DialogTitle>
+            <DialogTitle className="text-xl">Filter {activeTab === 'activities' ? 'Activities' : activeTab === 'venues' ? 'Venues' : 'Classes'}</DialogTitle>
             <DialogDescription>
               Refine your search with filters
             </DialogDescription>
@@ -406,7 +407,7 @@ const DiscoverPage = () => {
           
           <div className="space-y-6 mt-4">
             {/* Category Filter - For Vibes and Classes */}
-            {(activeTab === 'vibes' || activeTab === 'classes') && (
+            {(activeTab === 'activities' || activeTab === 'classes') && (
               <div>
                 <label className="text-sm font-semibold text-foreground mb-3 block flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-primary" />
@@ -418,7 +419,7 @@ const DiscoverPage = () => {
                   className="w-full h-12 px-4 rounded-xl bg-muted border-0 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="">All Categories</option>
-                  {activeTab === 'vibes' ? (
+                  {activeTab === 'activities' ? (
                     <>
                       <option value="coffee">Coffee</option>
                       <option value="café">Café</option>
@@ -454,7 +455,7 @@ const DiscoverPage = () => {
             )}
 
             {/* Distance Filter - For Vibes and Venues */}
-            {(activeTab === 'vibes' || activeTab === 'venues') && (
+            {(activeTab === 'activities' || activeTab === 'venues') && (
               <div>
                 <label className="text-sm font-semibold text-foreground mb-3 block flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-primary" />
@@ -475,7 +476,7 @@ const DiscoverPage = () => {
             )}
 
             {/* Price Range Filter - For Vibes */}
-            {activeTab === 'vibes' && (
+            {activeTab === 'activities' && (
               <div>
                 <label className="text-sm font-semibold text-foreground mb-3 block flex items-center gap-2">
                   <DollarSign className="w-4 h-4 text-primary" />
@@ -590,7 +591,7 @@ const DiscoverPage = () => {
             )}
 
             {/* Rating Filter - For Vibes and Venues */}
-            {(activeTab === 'vibes' || activeTab === 'venues') && (
+            {(activeTab === 'activities' || activeTab === 'venues') && (
               <div>
                 <label className="text-sm font-semibold text-foreground mb-3 block flex items-center gap-2">
                   <Star className="w-4 h-4 text-primary" />

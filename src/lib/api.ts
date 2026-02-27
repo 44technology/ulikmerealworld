@@ -14,14 +14,17 @@ const getApiBaseUrl = (): string => {
     return import.meta.env.VITE_API_URL;
   }
 
+  // In dev, use relative /api so Vite proxy forwards to backend (avoids CORS)
+  if (import.meta.env.DEV && typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return '/api';
+  }
+
   // Auto-detect based on current host
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    const port = window.location.port;
     
     // If accessing from mobile device (IP address), use same IP for backend
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      // Backend port (default 5000)
       const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
       return `http://${hostname}:${backendPort}/api`;
     }
@@ -33,8 +36,8 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-/** Base URL without /api (e.g. http://localhost:5000) for fetch() calls that add /api/... */
-export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '') || 'http://localhost:5000';
+/** Base URL without /api (e.g. http://localhost:5000). Empty in dev when using Vite proxy so fetch('/api/...') works. */
+export const API_ORIGIN = API_BASE_URL === '/api' ? '' : (API_BASE_URL.replace(/\/api\/?$/, '') || 'http://localhost:5000');
 
 export const API_ENDPOINTS = {
   // Auth

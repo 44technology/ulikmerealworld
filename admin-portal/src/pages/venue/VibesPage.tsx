@@ -200,7 +200,7 @@ export default function VibesPage() {
     setLocation('');
     setMaxParticipants('');
     setIsDialogOpen(false);
-    toast.success('Vibe created successfully!');
+    toast.success('Activity created successfully!');
   };
 
   const openApprovalDialog = (activity: PendingActivity, action: 'approve' | 'reject') => {
@@ -215,20 +215,20 @@ export default function VibesPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Vibes & Activities</h1>
-          <p className="text-muted-foreground mt-2">{isAdmin ? 'View and modify user-created vibes, approve activities' : 'Manage your vibes and approve user-created activities'}</p>
+          <h1 className="text-3xl font-bold text-foreground">Activities</h1>
+          <p className="text-muted-foreground mt-2">{isAdmin ? 'View and modify user-created activities' : 'Manage your activities'}</p>
         </div>
         {!isAdmin && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Create Vibe
+              Create Activity
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create New Vibe</DialogTitle>
+              <DialogTitle>Create New Activity</DialogTitle>
               <DialogDescription>Organize a casual meetup or social event</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -243,7 +243,7 @@ export default function VibesPage() {
               <div className="space-y-2">
                 <Label>Description</Label>
                 <Textarea
-                  placeholder="Describe your vibe..."
+                  placeholder="Describe your activity..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
@@ -285,7 +285,7 @@ export default function VibesPage() {
                 />
               </div>
               <Button onClick={handleSubmit} className="w-full">
-                Create Vibe
+                Create Activity
               </Button>
             </div>
           </DialogContent>
@@ -303,7 +303,7 @@ export default function VibesPage() {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="approved">Approved Vibes</TabsTrigger>
+          <TabsTrigger value="approved">Approved Activities</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">

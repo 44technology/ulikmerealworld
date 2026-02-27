@@ -166,7 +166,7 @@ export default function DashboardPage() {
               <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
                 <div className="flex items-center gap-3 mb-2">
                   <Sparkles className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Vibes</span>
+                  <span className="font-medium">Activities</span>
                 </div>
                 <p className="text-sm text-muted-foreground">Event management</p>
               </div>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
               <Link to="/venue/vibes" className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted transition-colors">
                 <div className="flex items-center gap-3">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">Manage Vibes</span>
+                  <span className="text-sm font-medium">Manage Activities</span>
                 </div>
                 <ArrowRight className="w-4 h-4 text-muted-foreground" />
               </Link>

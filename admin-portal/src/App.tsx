@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import LoginPage from './pages/LoginPage';
 import AdminLayout from './layouts/AdminLayout';
 import VenueLayout from './layouts/VenueLayout';
@@ -60,6 +61,7 @@ import MonetizationPayoutsPage from './pages/instructor/MonetizationPayoutsPage'
 import MonetizationAnalyticsPage from './pages/instructor/MonetizationAnalyticsPage';
 import VenueMonetizationPricingPage from './pages/venue/MonetizationPricingPage';
 import VenueSignupPage from './pages/VenueSignupPage';
+import VenueCheckinPage from './pages/venue/CheckinPage';
 
 function AppRoutes() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -91,6 +93,8 @@ function AppRoutes() {
               <Route path="/refunds" element={<RefundsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               
+              {/* Content (Admin - same as instructor content) */}
+              <Route path="/content" element={<InstructorContentPage />} />
               {/* Venue Features (Admin can access all) */}
               <Route path="/venue/content" element={<VenueContentPage />} />
               <Route path="/venue/chat" element={<VenueChatPage />} />
@@ -143,6 +147,7 @@ function AppRoutes() {
               <Route path="/vibes/:id" element={<VenueVibeDetailPage />} />
               <Route path="/events" element={<VenueEventsPage />} />
               <Route path="/events/:id" element={<VenueEventDetailPage />} />
+              <Route path="/checkin" element={<VenueCheckinPage />} />
               <Route path="/campaigns" element={<VenueCampaignsPage />} />
               <Route path="/discounts" element={<VenueDiscountsPage />} />
               
@@ -237,7 +242,9 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <LanguageProvider>
+        <AppRoutes />
+      </LanguageProvider>
     </AuthProvider>
   );
 }

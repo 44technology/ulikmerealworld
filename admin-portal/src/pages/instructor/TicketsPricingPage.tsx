@@ -51,11 +51,11 @@ export default function TicketsPricingPage() {
   const handleAddTicket = () => {
     // Ticket MUST be linked to a class or meetup
     if (!newTicket.linkedTo) {
-      toast.error('Please select whether this ticket is for a Class or Vibe/Meetup');
+      toast.error('Please select whether this ticket is for a Class or Activity/Meetup');
       return;
     }
     if (!newTicket.linkedId) {
-      toast.error(`Please select a specific ${newTicket.linkedTo === 'class' ? 'class' : 'vibe/meetup'}`);
+      toast.error(`Please select a specific ${newTicket.linkedTo === 'class' ? 'class' : 'activity/meetup'}`);
       return;
     }
     if (newTicket.type === 'paid' && (!newTicket.price || parseFloat(newTicket.price) <= 0)) {
@@ -105,7 +105,7 @@ export default function TicketsPricingPage() {
       <Card>
         <CardHeader>
           <CardTitle>Create New Ticket</CardTitle>
-          <CardDescription>Link a ticket to a class or vibe/meetup. Tickets must be linked to an event.</CardDescription>
+          <CardDescription>Link a ticket to a class or activity/meetup. Tickets must be linked to an event.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Link to Event - REQUIRED */}
@@ -130,13 +130,13 @@ export default function TicketsPricingPage() {
                 className="flex-1"
               >
                 <Calendar className="w-4 h-4 mr-2" />
-                Vibe / Meetup
+                Activity / Meetup
               </Button>
             </div>
             {!newTicket.linkedTo && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
                 <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">You must select Class or Vibe/Meetup to create a ticket</p>
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">You must select Class or Activity/Meetup to create a ticket</p>
               </div>
             )}
           </div>
@@ -145,14 +145,14 @@ export default function TicketsPricingPage() {
           {newTicket.linkedTo && (
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
-                Select {newTicket.linkedTo === 'class' ? 'Class' : 'Vibe/Meetup'} <span className="text-red-500">*</span>
+                Select {newTicket.linkedTo === 'class' ? 'Class' : 'Activity/Meetup'} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={newTicket.linkedId}
                 onValueChange={(value) => setNewTicket({ ...newTicket, linkedId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={`Select a ${newTicket.linkedTo === 'class' ? 'class' : 'vibe/meetup'}`} />
+                  <SelectValue placeholder={`Select a ${newTicket.linkedTo === 'class' ? 'class' : 'activity/meetup'}`} />
                 </SelectTrigger>
                 <SelectContent>
                   {newTicket.linkedTo === 'class' ? (
@@ -237,7 +237,7 @@ export default function TicketsPricingPage() {
                       {ticket.linkedTo === 'class' ? (
                         <><GraduationCap className="w-3 h-3 mr-1" />Class</>
                       ) : (
-                        <><Calendar className="w-3 h-3 mr-1" />Vibe</>
+                        <><Calendar className="w-3 h-3 mr-1" />Activity</>
                       )}
                     </Badge>
                   )}

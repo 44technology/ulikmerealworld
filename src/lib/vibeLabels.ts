@@ -1,6 +1,5 @@
 /**
- * Vibe type labels: use "Activity" or "Event" for the specific type.
- * For marketing, the main term is always "vibe" (e.g. "Join vibe", "Create Vibe").
+ * Activity type labels: "Activity" or "Event" for the specific type.
  */
 export type VibeType = 'activity' | 'event';
 
@@ -9,4 +8,4 @@ export function getVibeTypeLabel(type?: VibeType | string | null): 'Activity' | 
 }
 
 /** Marketing term for the product - use in CTAs and copy */
-export const VIBE_MARKETING_TERM = 'vibe' as const;
+export const VIBE_MARKETING_TERM = 'activity' as const;

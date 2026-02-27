@@ -45,7 +45,7 @@ const navigation: Array<{
   { name: 'Posts & Stories', href: '/content', icon: Image },
   { name: 'Live Streaming', href: '/streaming', icon: Video },
   { name: 'Classes', href: '/classes', icon: GraduationCap },
-  { name: 'Vibes', href: '/vibes', icon: Users },
+  { name: 'Activities', href: '/vibes', icon: Users },
   { name: 'Events', href: '/events', icon: Calendar },
   {
     name: 'Production',

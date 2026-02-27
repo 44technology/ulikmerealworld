@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, MessageCircle, Share2, MoreHorizontal, MapPin, Plus, Camera, Image, X, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, Share2, MoreHorizontal, MapPin, Plus, Camera, Image, X, ExternalLink, Radio } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
@@ -73,13 +73,13 @@ const SocialFeedPage = () => {
 
   // Stories with sponsor slots (every 3 stories)
   const storiesWithSponsors = useMemo(() => {
-    if (user?.adFree) return stories;
+    if (user?.adFree || !Array.isArray(SPONSOR_STORIES) || SPONSOR_STORIES.length === 0) return stories;
     const mixed: any[] = [];
     stories.forEach((s, i) => {
       mixed.push(s);
       if ((i + 1) % 3 === 0 && mixed.length < 12) {
         const sponsor = SPONSOR_STORIES[(i / 3) % SPONSOR_STORIES.length];
-        mixed.push({ id: `sponsor-${sponsor.id}`, type: 'sponsor', ...sponsor });
+        if (sponsor?.id) mixed.push({ id: `sponsor-${sponsor.id}`, type: 'sponsor', ...sponsor });
       }
     });
     return mixed;
@@ -87,14 +87,17 @@ const SocialFeedPage = () => {
 
   // Posts with sponsor cards every 2 posts
   const postsWithSponsors = useMemo(() => {
-    if (user?.adFree) return posts;
+    if (user?.adFree || !Array.isArray(SPONSOR_POSTS) || SPONSOR_POSTS.length === 0) return posts;
     const mixed: any[] = [];
     let sponsorIdx = 0;
     posts.forEach((p, i) => {
       mixed.push(p);
-      if ((i + 1) % 2 === 0 && sponsorIdx < SPONSOR_POSTS.length) {
-        mixed.push({ ...SPONSOR_POSTS[sponsorIdx % SPONSOR_POSTS.length], id: `sponsor-post-${sponsorIdx}` });
-        sponsorIdx++;
+      if ((i + 1) % 2 === 0) {
+        const sponsor = SPONSOR_POSTS[sponsorIdx % SPONSOR_POSTS.length];
+        if (sponsor?.id) {
+          mixed.push({ ...sponsor, id: `sponsor-post-${sponsorIdx}` });
+          sponsorIdx++;
+        }
       }
     });
     return mixed;
@@ -116,7 +119,7 @@ const SocialFeedPage = () => {
           >
             <ArrowLeft className="w-6 h-6 text-foreground" />
           </motion.button>
-          <h1 className="text-xl font-bold text-foreground flex-1 truncate text-center">Social</h1>
+          <h1 className="text-xl font-bold text-foreground flex-1 truncate text-center">Feed</h1>
           <motion.button
             onClick={() => setShowNewPost(true)}
             className="p-2 rounded-full bg-primary text-primary-foreground shrink-0"
@@ -127,49 +130,103 @@ const SocialFeedPage = () => {
         </div>
       </div>
 
-      {/* Stories + Sponsor ads */}
+      {/* Stories + Live + Sponsor ads */}
       <div className="px-4 py-3">
         <div className="flex gap-4 overflow-x-auto hide-scrollbar">
-          {storiesWithSponsors.map((story: any) => {
-            if (story.type === 'sponsor') {
-              return (
+          {storiesWithSponsors.length > 0 && (() => {
+            const first = storiesWithSponsors[0];
+            const rest = storiesWithSponsors.slice(1);
+            return (
+              <>
+                {first.type === 'sponsor' ? (
+                  <motion.div
+                    className="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer"
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => first.link && window.open(first.link, '_blank')}
+                  >
+                    <div className="p-0.5 rounded-full bg-amber-500/30 border border-amber-500/50">
+                      <div className="p-0.5 bg-background rounded-full">
+                        <UserAvatar src={first.avatar} alt={first.name} size="lg" />
+                      </div>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Sponsored</span>
+                  </motion.div>
+                ) : (
+                  <motion.div className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <div className={`p-0.5 rounded-full ${first.hasStory ? 'bg-gradient-to-br from-primary to-secondary' : first.isUser ? 'bg-muted' : ''}`}>
+                      <div className="p-0.5 bg-background rounded-full">
+                        <div className="relative">
+                          <UserAvatar src={first.avatar} alt={first.name} size="lg" />
+                          {first.isUser && (
+                            <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
+                              <Plus className="w-3 h-3 text-primary-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{first.name}</span>
+                  </motion.div>
+                )}
+                {/* Live - right after first story */}
                 <motion.div
-                  key={story.id}
                   className="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer"
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => story.link && window.open(story.link, '_blank')}
+                  onClick={() => navigate('/live')}
                 >
-                  <div className="p-0.5 rounded-full bg-amber-500/30 border border-amber-500/50">
-                    <div className="p-0.5 bg-background rounded-full">
-                      <UserAvatar src={story.avatar} alt={story.name} size="lg" />
+                  <div className="relative">
+                    <div className="p-0.5 rounded-full bg-red-500/90 ring-2 ring-red-400/50">
+                      <div className="p-0.5 bg-background rounded-full w-14 h-14 flex items-center justify-center">
+                        <Radio className="w-6 h-6 text-red-500" />
+                      </div>
                     </div>
+                    <span className="absolute -top-0.5 -right-0.5 px-1.5 py-0.5 rounded bg-red-500 text-[10px] font-bold text-white uppercase">Live</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">Sponsored</span>
+                  <span className="text-xs text-muted-foreground">Live</span>
                 </motion.div>
-              );
-            }
-            return (
-              <motion.div
-                key={story.id}
-                className="flex flex-col items-center gap-1 flex-shrink-0"
-                whileTap={{ scale: 0.95 }}
-              >
-                <div className={`p-0.5 rounded-full ${story.hasStory ? 'bg-gradient-to-br from-primary to-secondary' : story.isUser ? 'bg-muted' : ''}`}>
-                  <div className="p-0.5 bg-background rounded-full">
-                    <div className="relative">
-                      <UserAvatar src={story.avatar} alt={story.name} size="lg" />
-                      {story.isUser && (
-                        <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                          <Plus className="w-3 h-3 text-primary-foreground" />
+                {rest.map((story: any) => {
+                  if (story.type === 'sponsor') {
+                    return (
+                      <motion.div
+                        key={story.id}
+                        className="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer"
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => story.link && window.open(story.link, '_blank')}
+                      >
+                        <div className="p-0.5 rounded-full bg-amber-500/30 border border-amber-500/50">
+                          <div className="p-0.5 bg-background rounded-full">
+                            <UserAvatar src={story.avatar} alt={story.name} size="lg" />
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <span className="text-xs text-muted-foreground">{story.name}</span>
-              </motion.div>
+                        <span className="text-xs text-muted-foreground">Sponsored</span>
+                      </motion.div>
+                    );
+                  }
+                  return (
+                    <motion.div
+                      key={story.id}
+                      className="flex flex-col items-center gap-1 flex-shrink-0"
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div className={`p-0.5 rounded-full ${story.hasStory ? 'bg-gradient-to-br from-primary to-secondary' : story.isUser ? 'bg-muted' : ''}`}>
+                        <div className="p-0.5 bg-background rounded-full">
+                          <div className="relative">
+                            <UserAvatar src={story.avatar} alt={story.name} size="lg" />
+                            {story.isUser && (
+                              <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
+                                <Plus className="w-3 h-3 text-primary-foreground" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{story.name}</span>
+                    </motion.div>
+                  );
+                })}
+              </>
             );
-          })}
+          })()}
         </div>
       </div>
 
