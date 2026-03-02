@@ -298,7 +298,7 @@ export default function ClassesPage() {
                     }}
                   />
                   {price && parseFloat(price) > 0 && (
-                    <p className="text-xs text-muted-foreground">+5% processing fee applies</p>
+                    <p className="text-xs text-muted-foreground">No platform commission — payment goes directly to you</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -574,7 +574,7 @@ export default function ClassesPage() {
                 <DollarSign className="w-4 h-4" />
                 <span>${cls.price}</span>
                 {parseFloat(price) > 0 && (
-                  <span className="text-xs text-muted-foreground">(+3% platform fee)</span>
+                  <span className="text-xs text-muted-foreground">(no platform fee)</span>
                 )}
               </CardDescription>
               {'isPopular' in cls && cls.isPopular && 'recentEnrollments' in cls && cls.recentEnrollments > 0 && (

@@ -55,20 +55,20 @@ const BottomNav = () => {
               <div className="relative">
                 <Icon
                   className={`w-6 h-6 transition-colors ${
-                    isActive ? 'text-accent' : 'text-muted-foreground'
+                    isActive ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 />
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
+                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 )}
               </div>
               <span
-                className={`text-xs font-medium truncate w-full text-center ${
-                  isActive ? 'text-accent' : 'text-muted-foreground'
+                className={`text-xs font-medium truncate w-full text-center transition-colors ${
+                  isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
                 {item.label}

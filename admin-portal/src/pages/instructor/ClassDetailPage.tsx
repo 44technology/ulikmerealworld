@@ -1328,7 +1328,7 @@ export default function ClassDetailPage() {
                 <DollarSign className="w-6 h-6 text-primary" />
                 <div>
                   <p className="font-semibold text-foreground">Processing Fee</p>
-                  <p className="text-sm text-muted-foreground">Ulikme charges a 5% processing fee on all paid classes</p>
+                  <p className="text-sm text-muted-foreground">No platform commission — student payments go directly to you (payment processing fees may apply).</p>
                 </div>
               </div>
             </CardContent>

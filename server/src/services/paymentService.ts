@@ -1,13 +1,13 @@
 /**
  * Payment Service
- * Handles payment processing, commission calculations, and payouts.
- * Revenue split: Venue rent (per 30 min, for now $0), Ulikme commission %, Stripe fee.
+ * Handles payment processing and payouts.
+ * No Ulikme commission: payment goes directly to instructor/host. Only Stripe fee (and optional venue rent) is deducted.
  */
 
 import type { PrismaClient } from '@prisma/client';
 
-const STRIPE_FEE_PERCENTAGE = 0.03; // 3% Stripe processing fee
-const COMMISSION_KEY = 'ulikme_commission_percent';
+const STRIPE_FEE_PERCENTAGE = 0.029; // Stripe ~2.9%
+const STRIPE_FEE_FIXED_CENTS = 30;   // Stripe $0.30 per transaction
 
 export interface PaymentCalculation {
   grossAmount: number;
@@ -29,10 +29,10 @@ export interface PaymentBreakdownDisplay {
 
 /**
  * Get payment breakdown for display and creation.
- * Venue rent is $0 for now (half-hour rent).
+ * No Ulikme commission: full amount goes to instructor/host after Stripe fee (and optional venue rent).
  */
 export async function getPaymentBreakdown(
-  prisma: PrismaClient,
+  _prisma: PrismaClient,
   opts: { grossAmount: number; classId?: string; meetupId?: string }
 ): Promise<PaymentBreakdownDisplay & PaymentCalculation> {
   const { grossAmount } = opts;
@@ -42,19 +42,11 @@ export async function getPaymentBreakdown(
   const venueRent = 0;
   const venueRentLabel = '$0 per 30 min';
 
-  // Ulikme commission % from platform settings (default 5)
-  let ulikmeCommissionPercent = 5;
-  try {
-    const setting = await prisma.platformSetting.findUnique({
-      where: { key: COMMISSION_KEY },
-    });
-    if (setting?.value) ulikmeCommissionPercent = Number(setting.value) || 5;
-  } catch {
-    // keep default
-  }
-  const ulikmeCommission = Math.round((roundedGross * (ulikmeCommissionPercent / 100)) * 100) / 100;
+  // No Ulikme commission — payment goes directly to instructor/host
+  const ulikmeCommissionPercent = 0;
+  const ulikmeCommission = 0;
 
-  const stripeFee = Math.round(roundedGross * STRIPE_FEE_PERCENTAGE * 100) / 100;
+  const stripeFee = Math.round((roundedGross * STRIPE_FEE_PERCENTAGE + STRIPE_FEE_FIXED_CENTS / 100) * 100) / 100;
   const netAmount = Math.round((roundedGross - stripeFee) * 100) / 100;
   const payoutAmount = Math.round((roundedGross - stripeFee - ulikmeCommission - venueRent) * 100) / 100;
 
@@ -72,18 +64,17 @@ export async function getPaymentBreakdown(
 }
 
 /**
- * Calculate payment breakdown (sync fallback using default commission %).
- * Prefer getPaymentBreakdown when you have prisma for platform settings.
+ * Calculate payment breakdown (sync fallback). No Ulikme commission.
  */
 export function calculatePaymentBreakdown(grossAmount: number): PaymentCalculation {
-  const stripeFee = Math.round(grossAmount * STRIPE_FEE_PERCENTAGE * 100) / 100;
-  const netAmount = Math.round((grossAmount - stripeFee) * 100) / 100;
-  const ulikmeCommissionPercent = 5;
-  const platformFee = Math.round(grossAmount * (ulikmeCommissionPercent / 100) * 100) / 100;
+  const roundedGross = Math.round(grossAmount * 100) / 100;
+  const stripeFee = Math.round((roundedGross * STRIPE_FEE_PERCENTAGE + STRIPE_FEE_FIXED_CENTS / 100) * 100) / 100;
+  const netAmount = Math.round((roundedGross - stripeFee) * 100) / 100;
+  const platformFee = 0; // No Ulikme commission
   const venueRent = 0;
-  const payoutAmount = Math.round((grossAmount - stripeFee - platformFee - venueRent) * 100) / 100;
+  const payoutAmount = Math.round((roundedGross - stripeFee - platformFee - venueRent) * 100) / 100;
   return {
-    grossAmount: Math.round(grossAmount * 100) / 100,
+    grossAmount: roundedGross,
     stripeFee,
     netAmount,
     platformFee,

@@ -77,14 +77,15 @@ const ClassDetailPage = () => {
       ? { classId: id, grossAmount }
       : null;
   const { data: paymentBreakdown } = usePaymentBreakdown(paymentBreakdownOpts);
+  // No Ulikme commission: payment goes directly to instructor; only Stripe fee may apply
   const breakdown = paymentBreakdown ?? (grossAmount > 0 ? {
     venueRent: 0,
     venueRentLabel: '$0 per 30 min',
-    ulikmeCommissionPercent: 5,
-    ulikmeCommission: Math.round(grossAmount * 0.05 * 100) / 100,
-    stripeFee: Math.round(grossAmount * 0.03 * 100) / 100,
+    ulikmeCommissionPercent: 0,
+    ulikmeCommission: 0,
+    stripeFee: Math.round(grossAmount * 0.029 * 100) / 100 + 30 / 100, // Stripe ~2.9% + $0.30
     grossAmount,
-    payoutAmount: grossAmount - Math.round(grossAmount * 0.05 * 100) / 100 - Math.round(grossAmount * 0.03 * 100) / 100,
+    payoutAmount: grossAmount - (Math.round(grossAmount * 0.029 * 100) / 100 + 30 / 100),
   } : null);
 
   // When payment dialog opens, default to first saved card if any
@@ -1200,17 +1201,26 @@ const ClassDetailPage = () => {
                 </label>
               )}
 
-              {/* Revenue split breakdown */}
+              {/* Payment breakdown — no platform commission; payment goes directly to instructor */}
               {breakdown && (
                 <div className="space-y-2 rounded-xl bg-muted/50 p-3 text-sm">
-                  <div className="flex items-center justify-between text-muted-foreground">
-                    <span>Venue rent (30 min)</span>
-                    <span>{breakdown.venueRentLabel}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-muted-foreground">
-                    <span>Ulikme commission ({breakdown.ulikmeCommissionPercent}%)</span>
-                    <span>−${breakdown.ulikmeCommission.toFixed(2)}</span>
-                  </div>
+                  {breakdown.venueRent > 0 && (
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Venue rent (30 min)</span>
+                      <span>{breakdown.venueRentLabel}</span>
+                    </div>
+                  )}
+                  {breakdown.ulikmeCommission > 0 ? (
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Ulikme commission ({breakdown.ulikmeCommissionPercent}%)</span>
+                      <span>−${breakdown.ulikmeCommission.toFixed(2)}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Platform commission</span>
+                      <span className="text-green-600 dark:text-green-400 font-medium">None — paid directly to instructor</span>
+                    </div>
+                  )}
                 </div>
               )}
 

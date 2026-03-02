@@ -1,12 +1,27 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Search, Users, MoreVertical, Check, ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { Plus, Search, Users, MoreVertical, Check, ArrowLeft, Calendar, Clock, Filter } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCommunities, getUserCommunityIds, hasUserRequestedCommunity, getCommunityIdsWithPendingRequest } from '@/hooks/useCommunities';
+import type { Community } from '@/hooks/useCommunities';
 
 type FilterTab = 'all' | 'joined' | 'pending';
 
@@ -16,8 +31,27 @@ export default function CommunitiesPage() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
+  const [languageFilter, setLanguageFilter] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
 
   const { data: communities = [], isLoading } = useCommunities();
+
+  const uniqueLanguages = useMemo(() => {
+    const set = new Set<string>();
+    communities.forEach((c: Community) => {
+      if (c.language && c.language.trim()) set.add(c.language.trim());
+    });
+    return Array.from(set).sort();
+  }, [communities]);
+
+  const uniqueCategories = useMemo(() => {
+    const set = new Set<string>();
+    communities.forEach((c: Community) => {
+      if (c.category && c.category.trim()) set.add(c.category.trim());
+    });
+    return Array.from(set).sort();
+  }, [communities]);
 
   // Redirect old Socialize tab URL to plain /communities
   useEffect(() => {
@@ -42,11 +76,21 @@ export default function CommunitiesPage() {
     [communities, searchQuery]
   );
 
+  const filteredByFilters = useMemo(
+    () =>
+      filteredBySearch.filter(c => {
+        if (languageFilter && (c.language ?? '').trim() !== languageFilter) return false;
+        if (categoryFilter && (c.category ?? '').trim() !== categoryFilter) return false;
+        return true;
+      }),
+    [filteredBySearch, languageFilter, categoryFilter]
+  );
+
   const filteredCommunities = useMemo(() => {
-    if (filterTab === 'joined') return filteredBySearch.filter(c => myCommunityIds.has(c.id));
-    if (filterTab === 'pending') return filteredBySearch.filter(c => pendingRequestCommunityIds.has(c.id));
-    return filteredBySearch;
-  }, [filterTab, filteredBySearch, myCommunityIds, pendingRequestCommunityIds]);
+    if (filterTab === 'joined') return filteredByFilters.filter(c => myCommunityIds.has(c.id));
+    if (filterTab === 'pending') return filteredByFilters.filter(c => pendingRequestCommunityIds.has(c.id));
+    return filteredByFilters;
+  }, [filterTab, filteredByFilters, myCommunityIds, pendingRequestCommunityIds]);
 
   return (
     <AppLayout>
@@ -82,13 +126,23 @@ export default function CommunitiesPage() {
                 ? `${filteredCommunities.length} pending approval`
                 : `${filteredCommunities.length} communities`}
           </p>
-          <motion.button
-            onClick={() => navigate('/discover-communities')}
-            className="text-sm font-medium text-primary hover:underline shrink-0"
-            whileTap={{ scale: 0.98 }}
-          >
-            Discover
-          </motion.button>
+          <div className="flex items-center gap-2 shrink-0">
+            <motion.button
+              onClick={() => setShowFilterDialog(true)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${languageFilter || categoryFilter ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Filter className="w-4 h-4" />
+              Filter
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/discover-communities')}
+              className="text-sm font-medium text-primary hover:underline shrink-0"
+              whileTap={{ scale: 0.98 }}
+            >
+              Discover
+            </motion.button>
+          </div>
         </div>
         <div className="px-4 pb-2">
           <div className="relative">
@@ -208,6 +262,63 @@ export default function CommunitiesPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
+        <DialogContent className="rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filter communities</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Language</label>
+              <Select value={languageFilter || 'all'} onValueChange={v => setLanguageFilter(v === 'all' ? '' : v)}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="All languages" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All languages</SelectItem>
+                  {uniqueLanguages.map(lang => (
+                    <SelectItem key={lang} value={lang}>
+                      {lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Category</label>
+              <Select value={categoryFilter || 'all'} onValueChange={v => setCategoryFilter(v === 'all' ? '' : v)}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {uniqueCategories.map(cat => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setLanguageFilter('');
+                setCategoryFilter('');
+              }}
+              className="rounded-xl"
+            >
+              Clear filters
+            </Button>
+            <Button onClick={() => setShowFilterDialog(false)} className="rounded-xl">
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </AppLayout>

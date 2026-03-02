@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Search, Filter, Star, MapPin, Clock, DollarSign, GraduationCap, Send, X, Monitor, Building2, Users, Award, Tag, Circle, CheckCircle2, Crown, Lock, Plus, Calendar } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Star, MapPin, Clock, DollarSign, GraduationCap, Send, X, Monitor, Building2, Users, Award, Tag, Circle, CheckCircle2, Crown, Lock, Plus, Calendar, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
@@ -8,6 +8,13 @@ import UserAvatar from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { apiRequest, API_ENDPOINTS } from '@/lib/api';
 import { toast } from 'sonner';
 import { useClasses } from '@/hooks/useClasses';
@@ -559,6 +566,7 @@ const ClassesPage = () => {
   const [showEnrolledOnly, setShowEnrolledOnly] = useState(false);
   const [priceFilter, setPriceFilter] = useState<'all' | 'free' | 'paid'>('all');
   const [certificateFilter, setCertificateFilter] = useState<'all' | 'certified' | 'non-certified'>('all');
+  const [languageFilter, setLanguageFilter] = useState<string>('');
 
   // Fetch classes from backend
   const { data: backendClasses, isLoading } = useClasses(
@@ -614,6 +622,7 @@ const ClassesPage = () => {
           isEnrolled,
           isPaid,
           _count: c._count || { enrollments: 0 },
+          language: (c as any).language,
         };
       })
     : classes.map(c => ({
@@ -625,6 +634,7 @@ const ClassesPage = () => {
         mentor: undefined,
         isEnrolled: false,
         isPaid: false,
+        language: (c as any).language,
       }));
 
   // Convert mentors to class format (mentors can offer mentorship classes)
@@ -651,6 +661,7 @@ const ClassesPage = () => {
       isMentor: true,
       mentor: mentor,
       hasCertificate: false,
+      language: (mentor as any).language,
     }));
   }, [mentors]);
 
@@ -667,10 +678,11 @@ const ClassesPage = () => {
       const matchesSearch = !searchQuery.trim() || 
         c.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
         (c.host || (c as any).instructor)?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+      const matchesLanguage = !languageFilter || (c as any).language === languageFilter;
+      return matchesCategory && matchesSearch && matchesLanguage;
     });
     return filtered;
-  }, [allClasses, selectedCategory, searchQuery]);
+  }, [allClasses, selectedCategory, searchQuery, languageFilter]);
 
   const hasResults = filteredClasses.length > 0;
   const hasSearchQuery = searchQuery.trim().length > 0;
@@ -759,14 +771,14 @@ const ClassesPage = () => {
           <motion.button 
             onClick={() => setShowFilterDialog(true)}
             className={`h-12 w-12 rounded-2xl flex items-center justify-center relative ${
-              (showEnrolledOnly || priceFilter !== 'all' || certificateFilter !== 'all') 
+              (showEnrolledOnly || priceFilter !== 'all' || certificateFilter !== 'all' || languageFilter)
                 ? 'bg-primary text-primary-foreground' 
                 : 'bg-muted text-foreground'
             }`}
             whileTap={{ scale: 0.95 }}
           >
             <Filter className="w-5 h-5" />
-            {(priceFilter !== 'all' || certificateFilter !== 'all') && (
+            {(priceFilter !== 'all' || certificateFilter !== 'all' || languageFilter) && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background" />
             )}
           </motion.button>
@@ -995,6 +1007,29 @@ const ClassesPage = () => {
               </div>
             </div>
 
+            {/* Language Filter */}
+            <div>
+              <label className="text-sm font-semibold text-foreground mb-3 block flex items-center gap-2">
+                <Languages className="w-4 h-4 text-primary" />
+                Language
+              </label>
+              <Select value={languageFilter || 'all'} onValueChange={v => setLanguageFilter(v === 'all' ? '' : v)}>
+                <SelectTrigger className="rounded-xl w-full">
+                  <SelectValue placeholder="All languages" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All languages</SelectItem>
+                  <SelectItem value="English">English</SelectItem>
+                  <SelectItem value="Spanish">Spanish</SelectItem>
+                  <SelectItem value="Turkish">Turkish</SelectItem>
+                  <SelectItem value="French">French</SelectItem>
+                  <SelectItem value="German">German</SelectItem>
+                  <SelectItem value="Portuguese">Portuguese</SelectItem>
+                  <SelectItem value="Italian">Italian</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Price Filter */}
             <div>
               <label className="text-sm font-semibold text-foreground mb-3 block flex items-center gap-2">
@@ -1093,6 +1128,7 @@ const ClassesPage = () => {
                 setShowEnrolledOnly(false);
                 setPriceFilter('all');
                 setCertificateFilter('all');
+                setLanguageFilter('');
               }}
               className="flex-1"
             >

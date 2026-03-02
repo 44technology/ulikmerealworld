@@ -158,7 +158,7 @@ export default function DashboardPage() {
             <Sparkles className="w-6 h-6 text-primary" />
             <div>
               <p className="font-semibold text-foreground">Ulikme Platform</p>
-              <p className="text-sm text-muted-foreground">3% platform fee applies to all paid classes. Low friction, high volume, scalable.</p>
+              <p className="text-sm text-muted-foreground">No platform commission — payments go directly to you. Payment processing fees may apply.</p>
             </div>
           </div>
         </CardContent>
