@@ -2083,6 +2083,20 @@ export const mockApiRequest = async <T = any>(
       } as T;
     }
 
+    if (method === 'PATCH') {
+      const pathParts = pathname.split('/').filter((p: string) => p);
+      const classId = pathParts[pathParts.length - 1];
+      if (!classId || classId === 'classes') throw new Error('Class ID required');
+      const idx = classes.findIndex((c: any) => c.id === classId);
+      if (idx === -1) throw new Error('Class not found');
+      const creatorId = classes[idx].creatorId || classes[idx].creator?.id;
+      if (currentUserId && creatorId !== currentUserId) throw new Error('Only the creator can update this class');
+      const updated = { ...classes[idx], ...body, id: classes[idx].id, creatorId: classes[idx].creatorId || creatorId };
+      classes[idx] = updated;
+      setStorage(CLASS_STORAGE_KEY, classes);
+      return { success: true, data: updated } as T;
+    }
+
     if (pathname.includes('/enroll')) {
       if (!currentUserId) throw new Error('Unauthorized');
       const classId = pathname.split('/')[pathname.split('/').length - 2];

@@ -4,6 +4,7 @@ import { AppError } from '../middleware/errorHandler.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { uploadToCloudinary } from '../utils/upload.js';
 import { getBoundingBox, calculateDistance } from '../utils/geolocation.js';
+import { getPaymentSettings } from '../services/paymentService.js';
 
 export const createClass = async (
   req: AuthRequest,
@@ -25,6 +26,18 @@ export const createClass = async (
       latitude,
       longitude,
     } = req.body;
+
+    // 4.7: Paid activities disabled initially; only free classes allowed until paid mode is enabled
+    const priceNum = price != null ? parseFloat(price) : null;
+    if (priceNum != null && !isNaN(priceNum) && priceNum > 0) {
+      const { paidActivitiesEnabled } = await getPaymentSettings(prisma);
+      if (!paidActivitiesEnabled) {
+        throw new AppError(
+          'Paid classes are not enabled yet. Please set price to free. Paid activities will be available soon.',
+          400
+        );
+      }
+    }
 
     let venue: { latitude: number | null; longitude: number | null } | null = null;
     if (venueId) {

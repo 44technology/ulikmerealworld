@@ -116,6 +116,8 @@ const CreateVibePage = () => {
   const [visibility, setVisibility] = useState('public');
   const [pricing, setPricing] = useState('free');
   const [pricePerPerson, setPricePerPerson] = useState('');
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountedPricePerPerson, setDiscountedPricePerPerson] = useState('');
   const [searchVenue, setSearchVenue] = useState('');
   const [showVenueDetail, setShowVenueDetail] = useState(false);
   const [selectedVenueDetail, setSelectedVenueDetail] = useState<any>(null);
@@ -286,6 +288,27 @@ const CreateVibePage = () => {
           return;
         }
         meetupData.pricePerPerson = price;
+
+        const discountedPriceNum =
+          discountedPricePerPerson === '' || discountedPricePerPerson === undefined
+            ? undefined
+            : parseFloat(discountedPricePerPerson);
+        if (discountedPriceNum !== undefined && !isNaN(discountedPriceNum)) {
+          if (discountedPriceNum < 0) {
+            toast.error('Discounted price cannot be negative');
+            return;
+          }
+          if (discountedPriceNum >= price) {
+            toast.error('Discounted price must be less than regular price');
+            return;
+          }
+          if (discountedPriceNum > 0 && discountedPriceNum < 10) {
+            toast.error('Discounted price must be at least $10');
+            return;
+          }
+          meetupData.discountCode = discountCode?.trim() || undefined;
+          meetupData.discountedPricePerPerson = discountedPriceNum;
+        }
       }
       
       // Only add venueId if it's a valid UUID format
@@ -314,6 +337,8 @@ const CreateVibePage = () => {
       } else {
         navigate('/my-meetups');
       }
+      setDiscountCode('');
+      setDiscountedPricePerPerson('');
     } catch (error: any) {
       console.error('Create vibe error:', error);
       // Try to get detailed error message
@@ -559,24 +584,71 @@ const CreateVibePage = () => {
               </Button>
             </div>
             {pricing === 'paid' && (
-              <div className="flex items-center justify-between gap-4">
-                <label className="text-sm font-medium text-foreground">Joining Fee (If Paid)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                  <Input
-                    type="number"
-                    placeholder="eg., 10"
-                    min={0}
-                    value={pricePerPerson}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (v === '' || v === '.') setPricePerPerson(v);
-                      else { const n = parseFloat(v); if (!isNaN(n) && n < 0) setPricePerPerson('0'); else setPricePerPerson(v); }
-                    }}
-                    className="h-10 w-24 rounded-xl pl-6 text-right"
-                  />
+              <>
+                <div className="flex items-center justify-between gap-4">
+                  <label className="text-sm font-medium text-foreground">Joining Fee (If Paid)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input
+                      type="number"
+                      placeholder="eg., 10"
+                      min={0}
+                      value={pricePerPerson}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || v === '.') setPricePerPerson(v);
+                        else {
+                          const n = parseFloat(v);
+                          if (!isNaN(n) && n < 0) setPricePerPerson('0');
+                          else setPricePerPerson(v);
+                        }
+                      }}
+                      className="h-10 w-24 rounded-xl pl-6 text-right"
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="space-y-2 mt-2">
+                  <label className="text-sm font-medium text-foreground">Optional discount</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Discount code</label>
+                      <Input
+                        placeholder="e.g., FRIEND10"
+                        value={discountCode}
+                        onChange={(e) => setDiscountCode(e.target.value)}
+                        className="h-10 rounded-xl text-sm"
+                      />
+                    </div>
+                    <div className="relative">
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Discounted price
+                      </label>
+                      <span className="absolute left-3 top-[30px] text-muted-foreground text-xs">
+                        $
+                      </span>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="e.g., 40"
+                        value={discountedPricePerPerson}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === '' || v === '.') setDiscountedPricePerPerson(v);
+                          else {
+                            const n = parseFloat(v);
+                            if (!isNaN(n) && n < 0) setDiscountedPricePerPerson('0');
+                            else setDiscountedPricePerPerson(v);
+                          }
+                        }}
+                        className="h-10 rounded-xl pl-6 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Örnek: Normal fiyat $55, indirim kodu ile $40 (kod: FRIEND10).
+                  </p>
+                </div>
+              </>
             )}
             <div className="flex items-center justify-between gap-4">
               <label className="text-sm font-medium text-foreground">Required Skill Level</label>
@@ -847,37 +919,32 @@ const CreateVibePage = () => {
                               key={item.id}
                               className="border-b border-border pb-4 last:border-0 last:pb-0"
                             >
-                              <div className="flex gap-4">
-                                <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-                                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between mb-1">
+                                  <div>
+                                    <h4 className="font-semibold text-foreground">{item.name}</h4>
+                                    <p className="text-xs text-muted-foreground">{item.category}</p>
+                                  </div>
+                                  <span className="text-lg font-bold text-primary">${item.price}</span>
                                 </div>
-                                <div className="flex-1">
-                                  <div className="flex items-start justify-between mb-1">
-                                    <div>
-                                      <h4 className="font-semibold text-foreground">{item.name}</h4>
-                                      <p className="text-xs text-muted-foreground">{item.category}</p>
-                                    </div>
-                                    <span className="text-lg font-bold text-primary">${item.price}</span>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
-                                  
-                                  {/* Ingredients */}
-                                  <div className="flex flex-wrap gap-1 mb-2">
-                                    {item.ingredients.map((ingredient, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="px-2 py-0.5 rounded-full bg-muted text-xs text-foreground"
-                                      >
-                                        {ingredient}
-                                      </span>
-                                    ))}
-                                  </div>
+                                <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                                
+                                {/* Ingredients */}
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                  {item.ingredients.map((ingredient, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="px-2 py-0.5 rounded-full bg-muted text-xs text-foreground"
+                                    >
+                                      {ingredient}
+                                    </span>
+                                  ))}
+                                </div>
 
-                                  {/* Calories */}
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-muted-foreground">Calories:</span>
-                                    <span className="text-xs font-medium text-foreground">{item.calories} kcal</span>
-                                  </div>
+                                {/* Calories */}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">Calories:</span>
+                                  <span className="text-xs font-medium text-foreground">{item.calories} kcal</span>
                                 </div>
                               </div>
                             </div>

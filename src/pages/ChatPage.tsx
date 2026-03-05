@@ -83,77 +83,19 @@ const COMMUNITY_MEMBERS = [
   { id: 'm7', displayName: 'Jamie Rivera', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150' },
 ];
 
-// Sample menu items for restaurants
-const sampleMenuItems = [
-  {
-    id: '1',
-    name: 'Grilled Salmon',
-    description: 'Fresh Atlantic salmon with lemon butter sauce',
-    price: 28,
-    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400',
-    ingredients: ['Salmon', 'Lemon', 'Butter', 'Herbs', 'Olive Oil'],
-    calories: 420,
-    category: 'Main Course',
-  },
-  {
-    id: '2',
-    name: 'Caesar Salad',
-    description: 'Crisp romaine lettuce with parmesan and croutons',
-    price: 16,
-    image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400',
-    ingredients: ['Romaine Lettuce', 'Parmesan', 'Croutons', 'Caesar Dressing'],
-    calories: 280,
-    category: 'Salad',
-  },
-  {
-    id: '3',
-    name: 'Chocolate Lava Cake',
-    description: 'Warm chocolate cake with molten center',
-    price: 12,
-    image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400',
-    ingredients: ['Dark Chocolate', 'Butter', 'Eggs', 'Sugar', 'Flour'],
-    calories: 450,
-    category: 'Dessert',
-  },
-  {
-    id: '4',
-    name: 'Margherita Pizza',
-    description: 'Classic Italian pizza with fresh mozzarella and basil',
-    price: 18,
-    image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400',
-    ingredients: ['Mozzarella', 'Tomato Sauce', 'Basil', 'Olive Oil'],
-    calories: 320,
-    category: 'Main Course',
-  },
-  {
-    id: '5',
-    name: 'Beef Burger',
-    description: 'Juicy beef patty with lettuce, tomato, and special sauce',
-    price: 22,
-    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
-    ingredients: ['Beef Patty', 'Lettuce', 'Tomato', 'Onion', 'Special Sauce'],
-    calories: 580,
-    category: 'Main Course',
-  },
-];
-
 const ChatPage = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [showReadyToMeet, setShowReadyToMeet] = useState(false);
-  const [meetStep, setMeetStep] = useState<'datetime' | 'venuetype' | 'venue'>('datetime');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
+  const [meetStep, setMeetStep] = useState<'venuetype' | 'venue'>('venuetype');
   const [selectedVenueType, setSelectedVenueType] = useState('');
   const [selectedVenue, setSelectedVenue] = useState<string | null>(null);
   const [showCreateCommunity, setShowCreateCommunity] = useState(false);
   const [communityName, setCommunityName] = useState('');
   const [communityDescription, setCommunityDescription] = useState('');
   const [assistantMessages, setAssistantMessages] = useState<Array<{id: string; content: string; actionButton?: any}>>([]);
-  const [showMenuModal, setShowMenuModal] = useState(false);
-  const [selectedMenuItem, setSelectedMenuItem] = useState<typeof sampleMenuItems[0] | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
@@ -799,7 +741,6 @@ const ChatPage = () => {
                     <div>
                       <h2 className="text-white text-xl font-bold">Ready to Meet</h2>
                       <p className="text-white/80 text-sm">
-                        {meetStep === 'datetime' && 'Plan your meetup'}
                         {meetStep === 'venuetype' && 'Choose venue type'}
                         {meetStep === 'venue' && 'Select location'}
                       </p>
@@ -814,13 +755,10 @@ const ChatPage = () => {
                   </motion.button>
                 </div>
                 
-                {/* Progress Indicator */}
+                {/* Progress Indicator (2 steps: venue type → venue) */}
                 <div className="mt-4 flex gap-2">
                   <div className={`h-1.5 rounded-full flex-1 transition-all ${
-                    meetStep === 'datetime' ? 'bg-white' : 'bg-white/30'
-                  }`} />
-                  <div className={`h-1.5 rounded-full flex-1 transition-all ${
-                    meetStep === 'venuetype' ? 'bg-white' : meetStep === 'venue' ? 'bg-white/50' : 'bg-white/30'
+                    meetStep === 'venuetype' ? 'bg-white' : 'bg-white/50'
                   }`} />
                   <div className={`h-1.5 rounded-full flex-1 transition-all ${
                     meetStep === 'venue' ? 'bg-white' : 'bg-white/30'
@@ -832,67 +770,6 @@ const ChatPage = () => {
             <div className="p-6">
 
             <AnimatePresence mode="wait">
-              {meetStep === 'datetime' && (
-                <motion.div
-                  key="datetime"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-primary" />
-                        Select Date
-                      </label>
-                      <Input
-                        type="date"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                        className="h-14 rounded-xl bg-muted border-2 border-border focus:border-primary transition-colors text-base"
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-primary" />
-                        Select Time
-                      </label>
-                      <Input
-                        type="time"
-                        value={selectedTime}
-                        onChange={(e) => setSelectedTime(e.target.value)}
-                        className="h-14 rounded-xl bg-muted border-2 border-border focus:border-primary transition-colors text-base"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-3 pt-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowReadyToMeet(false)}
-                      className="flex-1 h-12 rounded-xl"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        if (selectedDate && selectedTime) {
-                          setMeetStep('venuetype');
-                        } else {
-                          toast.error('Please select both date and time');
-                        }
-                      }}
-                      disabled={!selectedDate || !selectedTime}
-                      className="flex-1 h-12 rounded-xl bg-gradient-primary text-primary-foreground shadow-lg"
-                    >
-                      Continue <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-
               {meetStep === 'venuetype' && (
                 <motion.div
                   key="venuetype"
@@ -928,14 +805,6 @@ const ChatPage = () => {
                     </div>
                   </div>
                   <div className="flex gap-3 pt-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => setMeetStep('datetime')}
-                      className="flex-1 h-12 rounded-xl"
-                    >
-                      <ChevronRight className="w-4 h-4 mr-2 rotate-180" />
-                      Back
-                    </Button>
                     <Button
                       variant="outline"
                       onClick={() => setShowReadyToMeet(false)}
@@ -1021,24 +890,6 @@ const ChatPage = () => {
                     </div>
                   )}
                   
-                  {/* View Menu Button for Restaurants */}
-                  {selectedVenue && selectedVenueType === 'restaurant' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="pt-2"
-                    >
-                      <Button
-                        onClick={() => setShowMenuModal(true)}
-                        variant="outline"
-                        className="w-full h-12 rounded-xl border-2 border-primary/50 bg-primary/5 hover:bg-primary/10"
-                      >
-                        <UtensilsCrossed className="w-4 h-4 mr-2 text-primary" />
-                        View Menu
-                      </Button>
-                    </motion.div>
-                  )}
-                  
                   <div className="flex gap-3 pt-4">
                     <Button
                       variant="outline"
@@ -1055,26 +906,17 @@ const ChatPage = () => {
                       onClick={async () => {
                         if (selectedVenue && selectedChat && !hasPendingRequest) {
                           const venue = venues.find(v => v.id === selectedVenue);
-                          const dateTime = new Date(`${selectedDate}T${selectedTime}`);
-                          
-                          // Create meetup request message
-                          const requestMessage = `📍 Meetup Request:\n\n${venue?.name}\n📅 ${new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}\n🕐 ${selectedTime}\n\nWould you like to meet here?`;
-                          
+                          const requestMessage = `📍 Meetup Request:\n\n${venue?.name}\n\nWould you like to meet here?`;
                           try {
-                            // Send request as a message in the chat
                             await sendMessageMutation.mutateAsync({
                               chatId: selectedChat,
                               content: requestMessage,
                             });
-                            
                             toast.success(`Meetup request sent to ${currentChat?.name}!`, {
-                              description: `${venue?.name} on ${new Date(selectedDate).toLocaleDateString()} at ${selectedTime}`
+                              description: venue?.name,
                             });
-                            
                             setShowReadyToMeet(false);
-                            setMeetStep('datetime');
-                            setSelectedDate('');
-                            setSelectedTime('');
+                            setMeetStep('venuetype');
                             setSelectedVenueType('');
                             setSelectedVenue(null);
                           } catch (error: any) {
@@ -1100,149 +942,6 @@ const ChatPage = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Menu Modal */}
-        <Dialog open={showMenuModal} onOpenChange={setShowMenuModal}>
-          <DialogContent className="max-w-md mx-4 rounded-3xl max-h-[90vh] overflow-y-auto p-0 border-0 shadow-2xl">
-            {/* Header */}
-            <div className="relative bg-gradient-to-br from-primary via-secondary to-primary p-6 rounded-t-3xl">
-              <div className="absolute inset-0 bg-black/10 rounded-t-3xl" />
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <UtensilsCrossed className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-white text-xl font-bold">Menu</h2>
-                    <p className="text-white/80 text-sm">Browse our delicious offerings</p>
-                  </div>
-                </div>
-                <motion.button
-                  onClick={() => setShowMenuModal(false)}
-                  className="p-2 rounded-xl bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <X className="w-5 h-5 text-white" />
-                </motion.button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {sampleMenuItems.map((item) => (
-                <motion.button
-                  key={item.id}
-                  onClick={() => setSelectedMenuItem(item)}
-                  className="w-full text-left border-b border-border pb-4 last:border-0 last:pb-0"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex gap-4">
-                    <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-1">
-                        <div>
-                          <h4 className="font-semibold text-foreground">{item.name}</h4>
-                          <p className="text-xs text-muted-foreground">{item.category}</p>
-                        </div>
-                        <span className="text-lg font-bold text-primary">${item.price}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{item.description}</p>
-                      
-                      {/* Ingredients */}
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {item.ingredients.slice(0, 3).map((ingredient, idx) => (
-                          <span
-                            key={idx}
-                            className="px-2 py-0.5 rounded-full bg-muted text-xs text-foreground"
-                          >
-                            {ingredient}
-                          </span>
-                        ))}
-                        {item.ingredients.length > 3 && (
-                          <span className="px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
-                            +{item.ingredients.length - 3} more
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Calories */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Calories:</span>
-                        <span className="text-xs font-medium text-foreground">{item.calories} kcal</span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Menu Item Detail Modal */}
-        <AnimatePresence>
-          {selectedMenuItem && (
-            <Dialog open={!!selectedMenuItem} onOpenChange={() => setSelectedMenuItem(null)}>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
-                <DialogHeader className="px-6 pt-6 pb-4">
-                  <div className="flex items-center justify-between">
-                    <DialogTitle className="text-2xl font-bold">{selectedMenuItem.name}</DialogTitle>
-                    <button
-                      onClick={() => setSelectedMenuItem(null)}
-                      className="p-2 rounded-full bg-muted hover:bg-accent transition-colors"
-                    >
-                      <X className="w-5 h-5 text-foreground" />
-                    </button>
-                  </div>
-                </DialogHeader>
-
-                <div className="px-6 pb-6 space-y-4">
-                  <div className="relative aspect-video rounded-xl overflow-hidden">
-                    <img
-                      src={selectedMenuItem.image}
-                      alt={selectedMenuItem.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-xl font-bold text-foreground">{selectedMenuItem.name}</h3>
-                        <p className="text-sm text-muted-foreground">{selectedMenuItem.category}</p>
-                      </div>
-                      <span className="text-2xl font-bold text-primary">${selectedMenuItem.price}</span>
-                    </div>
-
-                    <p className="text-foreground">{selectedMenuItem.description}</p>
-
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-2">Ingredients</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedMenuItem.ingredients.map((ingredient: string, idx: number) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1 rounded-full bg-muted text-sm text-foreground"
-                          >
-                            {ingredient}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-muted">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Calories</span>
-                        <span className="text-sm font-semibold text-foreground">{selectedMenuItem.calories} kcal</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
-        </AnimatePresence>
       </AppLayout>
     );
   }

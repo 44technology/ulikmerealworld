@@ -1,4 +1,4 @@
-import { Users, Building2, Calendar, AlertCircle, Image, MessageCircle, MessageSquare, Megaphone, Sparkles, Percent, Camera, BookOpen, Video, Ticket, QrCode, TrendingUp, Star, MapPin, DollarSign, PieChart, Wallet, BarChart3, Shield, ArrowRight } from 'lucide-react';
+import { Users, Building2, Calendar, AlertCircle, BookOpen, Sparkles, Ticket, QrCode, TrendingUp, PieChart, Wallet, BarChart3, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Link } from 'react-router-dom';
@@ -123,75 +123,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Admin Quick Access - Venue Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5" />
-            Venue Management
-          </CardTitle>
-          <CardDescription>Manage venue content, campaigns, and interactions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link to="/venue/content" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <Image className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Content</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Posts, Stories, Reels</p>
-              </div>
-            </Link>
-            <Link to="/venue/chat" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <MessageSquare className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Chat</span>
-                </div>
-                <p className="text-sm text-muted-foreground">User conversations</p>
-              </div>
-            </Link>
-            <Link to="/venue/campaigns" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <Megaphone className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Campaigns</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Marketing campaigns</p>
-              </div>
-            </Link>
-            <Link to="/venue/vibes" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Activities</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Event management</p>
-              </div>
-            </Link>
-            <Link to="/venue/discounts" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <Percent className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Discounts</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Promotional offers</p>
-              </div>
-            </Link>
-            <Link to="/venue/ads" className="group">
-              <div className="p-4 rounded-lg border border-border hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3 mb-2">
-                  <Camera className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Ads</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Advertisement management</p>
-              </div>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Admin Quick Access - Production, Tickets, Visibility, Monetization */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -13,6 +13,9 @@ export interface Class {
   status: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
   maxStudents?: number;
   price?: number;
+  /** Optional: discount code and discounted price configured by instructor */
+  discountCode?: string;
+  discountedPrice?: number;
   schedule?: string;
   latitude?: number;
   longitude?: number;
@@ -42,6 +45,15 @@ export interface Class {
   /** Optional: class can belong to a community */
   communityId?: string;
   community?: { id: string; name: string };
+  /** Syllabus (modules + lessons) for progress and manage view */
+  syllabus?: Array<{
+    id?: string;
+    title?: string;
+    description?: string;
+    lessons?: Array<{ id?: string; title?: string; description?: string; duration?: string }>;
+  }>;
+  creator?: { id: string; firstName?: string; lastName?: string; displayName?: string; avatar?: string };
+  creatorId?: string;
 }
 
 export const useClasses = (
@@ -137,6 +149,29 @@ export const useCancelEnrollment = () => {
     onSuccess: (_, classId) => {
       queryClient.invalidateQueries({ queryKey: ['class', classId] });
       queryClient.invalidateQueries({ queryKey: ['classes'] });
+    },
+  });
+};
+
+export const useUpdateClass = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Class> }) => {
+      const response = await apiRequest<{ success: boolean; data: Class }>(
+        API_ENDPOINTS.CLASSES.UPDATE(id),
+        {
+          method: 'PATCH',
+          body: JSON.stringify(data),
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (updated) => {
+      if (updated?.id) {
+        queryClient.invalidateQueries({ queryKey: ['class', updated.id] });
+        queryClient.invalidateQueries({ queryKey: ['classes'] });
+      }
     },
   });
 };

@@ -1,13 +1,24 @@
 /**
- * Payment Service
+ * Payment Service (4.7)
  * Handles payment processing and payouts.
- * No Ulikme commission: payment goes directly to instructor/host. Only Stripe fee (and optional venue rent) is deducted.
+ * - Ulikme takes 5% commission on paid class/activity/community activities.
+ * - Initially paid_activities_enabled is false (everything free); when enabled, commission applies.
+ * - Example: $50 payment → $2.50 Ulikme, remainder to venue/instructor after Stripe fee.
  */
 
 import type { PrismaClient } from '@prisma/client';
 
 const STRIPE_FEE_PERCENTAGE = 0.029; // Stripe ~2.9%
 const STRIPE_FEE_FIXED_CENTS = 30;   // Stripe $0.30 per transaction
+
+export const ULIKME_COMMISSION_PERCENT_DEFAULT = 5;
+export const PAID_ACTIVITIES_ENABLED_KEY = 'paid_activities_enabled';
+export const ULIKME_COMMISSION_PERCENT_KEY = 'ulikme_commission_percent';
+
+export interface PaymentSettings {
+  ulikmeCommissionPercent: number;
+  paidActivitiesEnabled: boolean;
+}
 
 export interface PaymentCalculation {
   grossAmount: number;
@@ -28,23 +39,42 @@ export interface PaymentBreakdownDisplay {
 }
 
 /**
+ * Get platform payment settings from DB (commission %, paid mode on/off).
+ */
+export async function getPaymentSettings(prisma: PrismaClient): Promise<PaymentSettings> {
+  const [commissionSetting, paidSetting] = await Promise.all([
+    prisma.platformSetting.findUnique({ where: { key: ULIKME_COMMISSION_PERCENT_KEY } }),
+    prisma.platformSetting.findUnique({ where: { key: PAID_ACTIVITIES_ENABLED_KEY } }),
+  ]);
+  const ulikmeCommissionPercent = commissionSetting
+    ? Number(commissionSetting.value)
+    : ULIKME_COMMISSION_PERCENT_DEFAULT;
+  const paidActivitiesEnabled =
+    paidSetting?.value === 'true' || paidSetting?.value === '1';
+  return { ulikmeCommissionPercent, paidActivitiesEnabled };
+}
+
+/**
  * Get payment breakdown for display and creation.
- * No Ulikme commission: full amount goes to instructor/host after Stripe fee (and optional venue rent).
+ * Ulikme commission: configurable % (default 5%) of gross. Rest goes to venue/instructor after Stripe.
  */
 export async function getPaymentBreakdown(
-  _prisma: PrismaClient,
+  prisma: PrismaClient,
   opts: { grossAmount: number; classId?: string; meetupId?: string }
 ): Promise<PaymentBreakdownDisplay & PaymentCalculation> {
   const { grossAmount } = opts;
   const roundedGross = Math.round(grossAmount * 100) / 100;
 
+  const { ulikmeCommissionPercent } = await getPaymentSettings(prisma);
+
   // Venue rent: for now always $0 per 30 min
   const venueRent = 0;
   const venueRentLabel = '$0 per 30 min';
 
-  // No Ulikme commission — payment goes directly to instructor/host
-  const ulikmeCommissionPercent = 0;
-  const ulikmeCommission = 0;
+  // Ulikme commission: e.g. 5% of gross → $50 → $2.50
+  const ulikmeCommission = Math.round(
+    (roundedGross * (ulikmeCommissionPercent / 100)) * 100
+  ) / 100;
 
   const stripeFee = Math.round((roundedGross * STRIPE_FEE_PERCENTAGE + STRIPE_FEE_FIXED_CENTS / 100) * 100) / 100;
   const netAmount = Math.round((roundedGross - stripeFee) * 100) / 100;
@@ -64,13 +94,15 @@ export async function getPaymentBreakdown(
 }
 
 /**
- * Calculate payment breakdown (sync fallback). No Ulikme commission.
+ * Calculate payment breakdown (sync fallback). Uses default 5% Ulikme commission.
  */
 export function calculatePaymentBreakdown(grossAmount: number): PaymentCalculation {
   const roundedGross = Math.round(grossAmount * 100) / 100;
   const stripeFee = Math.round((roundedGross * STRIPE_FEE_PERCENTAGE + STRIPE_FEE_FIXED_CENTS / 100) * 100) / 100;
   const netAmount = Math.round((roundedGross - stripeFee) * 100) / 100;
-  const platformFee = 0; // No Ulikme commission
+  const platformFee = Math.round(
+    (roundedGross * (ULIKME_COMMISSION_PERCENT_DEFAULT / 100)) * 100
+  ) / 100;
   const venueRent = 0;
   const payoutAmount = Math.round((roundedGross - stripeFee - platformFee - venueRent) * 100) / 100;
   return {
@@ -111,15 +143,7 @@ export function formatAmount(amount: number, currency: string = 'USD'): string {
 }
 
 /**
- * Example usage:
- * 
- * const breakdown = calculatePaymentBreakdown(100);
- * console.log(breakdown);
- * // {
- * //   grossAmount: 100,
- * //   stripeFee: 3,
- * //   netAmount: 97,
- * //   platformFee: 2.91,
- * //   payoutAmount: 94.09
- * // }
+ * Example (5% commission):
+ * calculatePaymentBreakdown(50) →
+ *   grossAmount: 50, platformFee: 2.50 (5%), payoutAmount: ~46.05 (after Stripe)
  */

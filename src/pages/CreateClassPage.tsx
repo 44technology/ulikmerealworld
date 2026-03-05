@@ -20,6 +20,7 @@ import { useCommunities } from '@/hooks/useCommunities';
 import { toast } from 'sonner';
 import { apiRequest, API_ENDPOINTS, apiUpload, getAuthToken } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useClass } from '@/hooks/useClasses';
 import {
   Dialog,
   DialogContent,
@@ -64,7 +65,9 @@ const CreateClassPage = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const communityIdFromQuery = searchParams.get('communityId') || undefined;
+  const editId = searchParams.get('id') || undefined;
   const { isAuthenticated, user, updateUser } = useAuth();
+  const { data: editClassData } = useClass(editId || '');
   const { data: venues = [] } = useVenues();
   const { data: communities = [] } = useCommunities();
   const [communityId, setCommunityId] = useState<string>(communityIdFromQuery || '');
@@ -152,6 +155,8 @@ const CreateClassPage = () => {
   const [endTimeOnly, setEndTimeOnly] = useState('');
   const [maxStudents, setMaxStudents] = useState('');
   const [price, setPrice] = useState('');
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountedPrice, setDiscountedPrice] = useState('');
   const [schedule, setSchedule] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [isPremium, setIsPremium] = useState(false);
@@ -252,6 +257,45 @@ const CreateClassPage = () => {
   const classMaterialInputRef = useRef<HTMLInputElement>(null);
   const lessonMaterialInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  // Pre-fill form when editing an existing class
+  useEffect(() => {
+    if (!editId || !editClassData) return;
+    const c = editClassData as any;
+    setTitle(c.title || '');
+    setDescription(c.description || '');
+    setSkill(c.skill || '');
+    setCategory(c.category && c.category !== 'other' ? c.category : '');
+    setCategoryOtherText(c.category === 'other' ? c.category : '');
+    if (c.venue?.id) {
+      setVenueId(c.venue.id);
+      setSelectedVenueDisplay({ id: c.venue.id, name: c.venue.name || '' });
+    }
+    if (c.startTime) setStartTime(c.startTime.slice(0, 16));
+    if (c.endTime) setEndTime(c.endTime.slice(0, 16));
+    setMaxStudents(c.maxStudents != null ? String(c.maxStudents) : '');
+    setPrice(c.price != null ? String(c.price) : '');
+    setDiscountCode(c.discountCode || '');
+    setDiscountedPrice(c.discountedPrice != null ? String(c.discountedPrice) : '');
+    setSchedule(c.schedule || '');
+    if (c.communityId) setCommunityId(c.communityId);
+    if (c.type) setType(c.type);
+    if (c.meetingPlatform) setMeetingPlatform(c.meetingPlatform);
+    if (c.meetingLink) setMeetingLink(c.meetingLink);
+    if (c.customPlatformName) setCustomPlatformName(c.customPlatformName);
+    if (c.physicalLocation) setPhysicalLocation(c.physicalLocation);
+    if (c.syllabus && Array.isArray(c.syllabus) && c.syllabus.length > 0) {
+      setSyllabus(c.syllabus.map((m: any, i: number) => ({
+        id: m.id || `mod-${i}`,
+        title: m.title || '',
+        lessons: (m.lessons || []).map((l: any, j: number) => ({
+          id: l.id || `les-${i}-${j}`,
+          title: l.title || '',
+          description: l.description || '',
+        })),
+      })));
+    }
+  }, [editId, editClassData]);
+
   const handleAddClassMaterials = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
@@ -315,10 +359,33 @@ const CreateClassPage = () => {
           toast.error('Price cannot be negative');
           return;
         }
-      if (priceNum > 0 && priceNum < 10) {
-        toast.error('Paid classes must be at least $10');
-        return;
+        if (priceNum > 0 && priceNum < 10) {
+          toast.error('Paid classes must be at least $10');
+          return;
+        }
       }
+
+      const discountedPriceNum =
+        discountedPrice === '' || discountedPrice === undefined
+          ? undefined
+          : parseFloat(discountedPrice);
+      if (discountedPriceNum !== undefined && !isNaN(discountedPriceNum)) {
+        if (discountedPriceNum < 0) {
+          toast.error('Discounted price cannot be negative');
+          return;
+        }
+        if (priceNum === undefined || isNaN(priceNum) || priceNum <= 0) {
+          toast.error('Set a regular paid price before adding a discounted price');
+          return;
+        }
+        if (discountedPriceNum >= priceNum) {
+          toast.error('Discounted price must be less than regular price');
+          return;
+        }
+        if (discountedPriceNum > 0 && discountedPriceNum < 10) {
+          toast.error('Discounted price must be at least $10');
+          return;
+        }
       }
 
       if (type === 'onsite' && venueId && venueDetails?.businessHours) {
@@ -356,13 +423,26 @@ const CreateClassPage = () => {
         })(),
         maxStudents: maxStudents ? parseInt(maxStudents) : undefined,
         price: priceNum !== undefined && !isNaN(priceNum) ? priceNum : undefined,
+        discountCode: discountCode?.trim() || undefined,
+        discountedPrice:
+          discountedPriceNum !== undefined && !isNaN(discountedPriceNum)
+            ? discountedPriceNum
+            : undefined,
         schedule: schedule || undefined,
         lessons: lessons.map((l) => ({ day: l.day, time: l.time, title: l.title })),
         syllabus: syllabus.length > 0 ? syllabus.map((m) => ({ title: m.title, lessons: m.lessons.map((l) => ({ title: l.title, description: l.description || undefined })) })) : undefined,
       };
 
       const hasMaterials = image || classMaterials.length > 0 || lessons.some((l) => l.materials.length > 0);
-      if (hasMaterials) {
+      if (editId) {
+        // Update existing class (JSON only; no new file uploads in this flow)
+        await apiRequest(API_ENDPOINTS.CLASSES.UPDATE(editId), {
+          method: 'PATCH',
+          body: JSON.stringify(classData),
+        });
+        toast.success('Class updated successfully!');
+        navigate(`/class/${editId}/manage`);
+      } else if (hasMaterials) {
         const formData = new FormData();
         if (image) formData.append('image', image);
         formData.append('data', JSON.stringify(classData));
@@ -387,11 +467,16 @@ const CreateClassPage = () => {
         });
       }
 
-      toast.success('Class created successfully!');
-      if (communityId) {
-        navigate(`/community/${communityId}`);
-      } else {
-        navigate('/activities');
+      if (!editId) {
+        toast.success('Class created successfully!');
+        if (communityId) {
+          navigate(`/community/${communityId}`);
+        } else {
+          navigate('/activities');
+        }
+        setPrice('');
+        setDiscountCode('');
+        setDiscountedPrice('');
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to create class');
@@ -420,7 +505,7 @@ const CreateClassPage = () => {
             >
               <X className="w-6 h-6 text-foreground" />
             </motion.button>
-            <h1 className="font-bold text-foreground">Create Class</h1>
+            <h1 className="font-bold text-foreground">{editId ? 'Edit Class' : 'Create Class'}</h1>
             <div className="w-10" />
           </div>
         </div>
@@ -1050,6 +1135,56 @@ const CreateClassPage = () => {
                 )}
               </div>
             </div>
+
+            {/* Optional discount configuration */}
+            {price && parseFloat(price) > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground mb-1 block">
+                  Optional discount for students
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      Discount code
+                    </label>
+                    <Input
+                      placeholder="e.g., FRIEND10"
+                      value={discountCode}
+                      onChange={(e) => setDiscountCode(e.target.value)}
+                      className="h-10 rounded-xl text-sm"
+                    />
+                  </div>
+                  <div className="relative">
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      Discounted price
+                    </label>
+                    <span className="absolute left-3 top-[30px] text-muted-foreground text-xs">
+                      $
+                    </span>
+                    <Input
+                      type="number"
+                      min={0}
+                      step={1}
+                      placeholder="e.g., 40"
+                      value={discountedPrice}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || v === '.') setDiscountedPrice(v);
+                        else {
+                          const n = parseFloat(v);
+                          if (!isNaN(n) && n < 0) setDiscountedPrice('0');
+                          else setDiscountedPrice(v);
+                        }
+                      }}
+                      className="h-10 rounded-xl pl-6 text-sm"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Örnek: Normal fiyat $55, indirim kodu ile $40 (kod: FRIEND10).
+                </p>
+              </div>
+            )}
             
             {/* Free classes: ads always on; viewers can go ad-free via one-time fee in Settings */}
             {(!price || parseFloat(price) === 0) && (
@@ -1131,7 +1266,7 @@ const CreateClassPage = () => {
             disabled={!title || !description || !skill || !startTime || loading || (type === 'onsite' && !venueId) || ((type === 'online' || type === 'hybrid') && (!meetingPlatform || !meetingLink)) || (type === 'hybrid' && !physicalLocation.trim()) || (meetingPlatform === 'custom' && !customPlatformName.trim()) || (frequency === 'custom' && (selectedDays.length === 0 || lessons.length === 0))}
             className="w-full h-12 rounded-xl bg-gradient-primary"
           >
-            {loading ? 'Creating...' : 'Create Class'}
+            {loading ? (editId ? 'Updating...' : 'Creating...') : (editId ? 'Update Class' : 'Create Class')}
           </Button>
         </div>
       </div>

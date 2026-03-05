@@ -2,12 +2,17 @@ import { Response, NextFunction } from 'express';
 import prisma from '../config/database.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { AuthRequest } from '../middleware/auth.js';
-
-const COMMISSION_KEY = 'ulikme_commission_percent';
+import {
+  ULIKME_COMMISSION_PERCENT_KEY,
+  PAID_ACTIVITIES_ENABLED_KEY,
+  ULIKME_COMMISSION_PERCENT_DEFAULT,
+  getPaymentSettings,
+} from '../services/paymentService.js';
 
 /**
  * GET /api/settings/platform
- * Returns platform-wide settings (e.g. Ulikme commission %). Used by app and admin.
+ * Returns platform-wide settings: Ulikme commission %, paid activities enabled (4.7).
+ * Initially paidActivitiesEnabled is false (everything free); when true, 5% commission applies.
  */
 export const getPlatformSettings = async (
   req: AuthRequest,
@@ -15,22 +20,29 @@ export const getPlatformSettings = async (
   next: NextFunction
 ) => {
   try {
-    const setting = await prisma.platformSetting.findUnique({
-      where: { key: COMMISSION_KEY },
-    });
-    const ulikmeCommissionPercent = setting ? Number(setting.value) : 5;
+    const settings = await getPaymentSettings(prisma);
     res.json({
       success: true,
-      data: { ulikmeCommissionPercent },
+      data: {
+        ulikmeCommissionPercent: settings.ulikmeCommissionPercent,
+        paidActivitiesEnabled: settings.paidActivitiesEnabled,
+      },
     });
   } catch (error) {
     next(error);
   }
 };
 
+type UpdateBody = {
+  ulikmeCommissionPercent?: number;
+  paidActivitiesEnabled?: boolean;
+};
+
 /**
  * PATCH /api/settings/platform
- * Update platform settings (admin). E.g. { ulikmeCommissionPercent: 4 }
+ * Update platform settings (admin).
+ * - ulikmeCommissionPercent: 0–100 (default 5)
+ * - paidActivitiesEnabled: when false, all activities/classes/communities are free; when true, paid + 5% commission
  */
 export const updatePlatformSettings = async (
   req: AuthRequest,
@@ -38,22 +50,41 @@ export const updatePlatformSettings = async (
   next: NextFunction
 ) => {
   try {
-    const { ulikmeCommissionPercent } = req.body as { ulikmeCommissionPercent?: number };
-    if (ulikmeCommissionPercent == null || typeof ulikmeCommissionPercent !== 'number') {
-      throw new AppError('ulikmeCommissionPercent (number) is required', 400);
+    const body = req.body as UpdateBody;
+    const updates: { ulikmeCommissionPercent?: number; paidActivitiesEnabled?: boolean } = {};
+
+    if (body.ulikmeCommissionPercent != null) {
+      if (typeof body.ulikmeCommissionPercent !== 'number') {
+        throw new AppError('ulikmeCommissionPercent must be a number', 400);
+      }
+      if (body.ulikmeCommissionPercent < 0 || body.ulikmeCommissionPercent > 100) {
+        throw new AppError('ulikmeCommissionPercent must be between 0 and 100', 400);
+      }
+      await prisma.platformSetting.upsert({
+        where: { key: ULIKME_COMMISSION_PERCENT_KEY },
+        create: { key: ULIKME_COMMISSION_PERCENT_KEY, value: String(body.ulikmeCommissionPercent) },
+        update: { value: String(body.ulikmeCommissionPercent) },
+      });
+      updates.ulikmeCommissionPercent = body.ulikmeCommissionPercent;
     }
-    if (ulikmeCommissionPercent < 0 || ulikmeCommissionPercent > 100) {
-      throw new AppError('ulikmeCommissionPercent must be between 0 and 100', 400);
+
+    if (body.paidActivitiesEnabled !== undefined) {
+      const value = body.paidActivitiesEnabled === true ? 'true' : 'false';
+      await prisma.platformSetting.upsert({
+        where: { key: PAID_ACTIVITIES_ENABLED_KEY },
+        create: { key: PAID_ACTIVITIES_ENABLED_KEY, value },
+        update: { value },
+      });
+      updates.paidActivitiesEnabled = body.paidActivitiesEnabled;
     }
-    const value = String(ulikmeCommissionPercent);
-    await prisma.platformSetting.upsert({
-      where: { key: COMMISSION_KEY },
-      create: { key: COMMISSION_KEY, value },
-      update: { value },
-    });
+
+    const settings = await getPaymentSettings(prisma);
     res.json({
       success: true,
-      data: { ulikmeCommissionPercent: Number(value) },
+      data: {
+        ulikmeCommissionPercent: updates.ulikmeCommissionPercent ?? settings.ulikmeCommissionPercent,
+        paidActivitiesEnabled: updates.paidActivitiesEnabled ?? settings.paidActivitiesEnabled,
+      },
     });
   } catch (error) {
     next(error);

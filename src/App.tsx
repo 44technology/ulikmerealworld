@@ -16,12 +16,14 @@ import CreateVibePage from "./pages/CreateVibePage";
 import CreateClassPage from "./pages/CreateClassPage";
 import EventsPage from "./pages/EventsPage";
 import ChatPage from "./pages/ChatPage";
+import ManageMeetupRequestsPage from "./pages/ManageMeetupRequestsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ConnectionsPage from "./pages/ConnectionsPage";
 import MyMeetupsPage from "./pages/MyMeetupsPage";
 import BadgesPage from "./pages/BadgesPage";
 import ClassesPage from "./pages/ClassesPage";
 import ClassDetailPage from "./pages/ClassDetailPage";
+import ManageClassPage from "./pages/ManageClassPage";
 import MyClassesPage from "./pages/MyClassesPage";
 import SettingsPage from "./pages/SettingsPage";
 import MeetupDetailPage from "./pages/MeetupDetailPage";
@@ -74,13 +76,15 @@ const App = () => (
             <Route path="/select-venue" element={<SelectVenuePage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/chat" element={<ChatPage />} />
+            <Route path="/manage-meetups" element={<ManageMeetupRequestsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/connections" element={<ConnectionsPage />} />
             <Route path="/my-meetups" element={<MyMeetupsPage />} />
           <Route path="/badges" element={<BadgesPage />} />
           <Route path="/classes" element={<ClassesPage />} />
-          <Route path="/class/:id" element={<ClassDetailPage />} />
-          <Route path="/my-classes" element={<MyClassesPage />} />
+<Route path="/class/:id" element={<ClassDetailPage />} />
+            <Route path="/class/:id/manage" element={<ManageClassPage />} />
+            <Route path="/my-classes" element={<MyClassesPage />} />
 <Route path="/social" element={<Navigate to="/communities" replace />} />
             <Route path="/feed" element={<Navigate to="/communities" replace />} />
             <Route path="/settings" element={<SettingsPage />} />

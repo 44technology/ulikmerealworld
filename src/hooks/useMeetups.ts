@@ -17,6 +17,9 @@ export interface Meetup {
   longitude?: number;
   isFree?: boolean;
   pricePerPerson?: number;
+  /** Optional: discount code and discounted price per person configured by host */
+  discountCode?: string;
+  discountedPricePerPerson?: number;
   isBlindMeet?: boolean;
   host?: {
     id: string;

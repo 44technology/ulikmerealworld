@@ -415,11 +415,11 @@ const HomePage = () => {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-foreground">Home</h1>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 justify-end">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <motion.button
-                    className="p-2 rounded-xl hover:bg-muted/50 transition-colors"
+                    className="px-4 py-2 rounded-full bg-muted/60 hover:bg-muted transition-colors"
                     whileTap={{ scale: 0.9 }}
                     aria-label="Add"
                   >
@@ -468,14 +468,14 @@ const HomePage = () => {
               <Popover>
                 <PopoverTrigger asChild>
                   <motion.button
-                    className="relative p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="relative px-4 py-2 rounded-full bg-muted/60 hover:bg-muted transition-colors"
                     whileTap={{ scale: 0.9 }}
                     aria-label="Notifications"
                     title="Notifications"
                   >
                     <Bell className="w-5 h-5 text-foreground" />
                     {(notificationsData?.unreadCount ?? 0) > 0 && (
-                      <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-accent text-accent-foreground text-xs font-semibold">
+                      <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-accent text-accent-foreground text-xs font-semibold">
                         {(notificationsData?.unreadCount ?? 0) > 99 ? '99+' : notificationsData?.unreadCount}
                       </span>
                     )}
@@ -524,7 +524,7 @@ const HomePage = () => {
               </Popover>
               <motion.button
                 onClick={() => navigate('/schedule')}
-                className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                className="px-4 py-2 rounded-full bg-muted/60 hover:bg-muted transition-colors"
                 whileTap={{ scale: 0.9 }}
                 aria-label="Schedule"
               >
@@ -658,17 +658,18 @@ const HomePage = () => {
 
         {/* Communities Section - first after Stories (like reference) */}
         <section>
-          <div className="mb-1">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <h2 className="text-xl font-bold text-foreground">Communities</h2>
+            <motion.button
+              type="button"
+              onClick={() => navigate('/communities')}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0"
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="font-medium text-sm whitespace-nowrap">Browse all</span>
+              <ArrowRight className="w-4 h-4 text-primary-foreground" />
+            </motion.button>
           </div>
-          <motion.button
-            type="button"
-            onClick={() => navigate('/communities')}
-            className="w-full flex items-center justify-center gap-3 h-11 px-4 rounded-xl bg-muted/80 hover:bg-muted border border-border/50 hover:border-primary/20 transition-all mb-4"
-            whileTap={{ scale: 0.99 }}
-          >
-            <span className="font-medium text-foreground text-sm">Browse all</span>
-          </motion.button>
 
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4">
             {communitiesList.slice(0, 8).map((community: any) => (
@@ -712,17 +713,18 @@ const HomePage = () => {
 
         {/* Classes Section - full-width cards with price, rating, Join Now (like reference) */}
         <section>
-          <div className="mb-1">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <h2 className="text-xl font-bold text-foreground">Classes</h2>
+            <motion.button
+              type="button"
+              onClick={() => navigate('/classes')}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0"
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="font-medium text-sm whitespace-nowrap">Find a class</span>
+              <ArrowRight className="w-4 h-4 text-primary-foreground" />
+            </motion.button>
           </div>
-          <motion.button
-            type="button"
-            onClick={() => navigate('/classes')}
-            className="w-full flex items-center justify-center gap-3 h-11 px-4 rounded-xl bg-muted/80 hover:bg-muted border border-border/50 hover:border-primary/20 transition-all mb-4"
-            whileTap={{ scale: 0.99 }}
-          >
-            <span className="font-medium text-foreground text-sm">Find a class</span>
-          </motion.button>
           <div className="space-y-4">
             {formattedClasses.length > 0 ? formattedClasses.slice(0, 3).map((cls: any) => (
               <motion.div
@@ -797,17 +799,18 @@ const HomePage = () => {
 
         {/* Activities Section */}
         <section>
-          <div className="mb-1">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <h2 className="text-xl font-bold text-foreground">Activities</h2>
+            <motion.button
+              type="button"
+              onClick={() => navigate('/activities')}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0"
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="font-medium text-sm whitespace-nowrap">Find activities</span>
+              <ArrowRight className="w-4 h-4 text-primary-foreground" />
+            </motion.button>
           </div>
-          <motion.button
-            type="button"
-            onClick={() => navigate('/activities')}
-            className="w-full flex items-center justify-center gap-3 h-11 px-4 rounded-xl bg-muted/80 hover:bg-muted border border-border/50 hover:border-primary/20 transition-all mb-4"
-            whileTap={{ scale: 0.99 }}
-          >
-            <span className="font-medium text-foreground text-sm">Find activities</span>
-          </motion.button>
           <div className="space-y-3">
                 <AnimatePresence>
                   {meetupsLoading ? (
@@ -895,17 +898,18 @@ const HomePage = () => {
 
         {/* Venue list Section */}
         <section>
-          <div className="mb-1">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <h2 className="text-xl font-bold text-foreground">Venue list</h2>
+            <motion.button
+              type="button"
+              onClick={() => navigate('/venues')}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0"
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="font-medium text-sm whitespace-nowrap">Explore venues</span>
+              <ArrowRight className="w-4 h-4 text-primary-foreground" />
+            </motion.button>
           </div>
-          <motion.button
-            type="button"
-            onClick={() => navigate('/venues')}
-            className="w-full flex items-center justify-center gap-3 h-11 px-4 rounded-xl bg-muted/80 hover:bg-muted border border-border/50 hover:border-primary/20 transition-all mb-4"
-            whileTap={{ scale: 0.99 }}
-          >
-            <span className="font-medium text-foreground text-sm">Explore venues</span>
-          </motion.button>
           <div className="grid grid-cols-2 gap-3 items-stretch">
             {venuesLoading ? (
               <div className="text-center py-8 col-span-2">

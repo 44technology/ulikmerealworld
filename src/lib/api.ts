@@ -101,14 +101,19 @@ export const API_ENDPOINTS = {
     MY_CLASSES: `${API_BASE_URL}/classes/my-classes`,
     DETAIL: (id: string) => `${API_BASE_URL}/classes/${id}`,
     CREATE: `${API_BASE_URL}/classes`,
+    UPDATE: (id: string) => `${API_BASE_URL}/classes/${id}`,
     ENROLL: (id: string) => `${API_BASE_URL}/classes/${id}/enroll`,
     CANCEL_ENROLLMENT: (id: string) => `${API_BASE_URL}/classes/${id}/enroll`,
   },
-  // Payments (breakdown for payment screen, create payment)
+  // Payments (breakdown for payment screen, create payment). 4.7: 5% Ulikme commission when paid mode enabled
   PAYMENTS: {
     BREAKDOWN: `${API_BASE_URL}/payments/breakdown`,
     LIST: `${API_BASE_URL}/payments`,
     CREATE: `${API_BASE_URL}/payments`,
+  },
+  // Platform settings (4.7: paidActivitiesEnabled, ulikmeCommissionPercent)
+  SETTINGS: {
+    PLATFORM: `${API_BASE_URL}/settings/platform`,
   },
   // Tickets
   TICKETS: {

@@ -93,16 +93,18 @@ function AppRoutes() {
               <Route path="/refunds" element={<RefundsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               
+              {/* General menu: Chat & Ads (not venue-specific) */}
+              <Route path="/chat" element={<VenueChatPage />} />
+              <Route path="/ads" element={<VenueAdsPage />} />
+              
               {/* Content (Admin - same as instructor content) */}
               <Route path="/content" element={<InstructorContentPage />} />
-              {/* Venue Features (Admin can access all) */}
+              {/* Venue features (under Venues / Review page quick links) */}
               <Route path="/venue/content" element={<VenueContentPage />} />
-              <Route path="/venue/chat" element={<VenueChatPage />} />
               <Route path="/venue/vibes" element={<VenueVibesPage />} />
               <Route path="/venue/events" element={<VenueEventsPage />} />
               <Route path="/venue/campaigns" element={<VenueCampaignsPage />} />
               <Route path="/venue/discounts" element={<VenueDiscountsPage />} />
-              <Route path="/venue/ads" element={<VenueAdsPage />} />
               
               {/* Instructor Features (Admin can access all) */}
               <Route path="/instructor/content" element={<InstructorContentPage />} />

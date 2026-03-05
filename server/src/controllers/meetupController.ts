@@ -4,6 +4,7 @@ import { AppError } from '../middleware/errorHandler.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { uploadToCloudinary } from '../utils/upload.js';
 import { getBoundingBox, calculateDistance } from '../utils/geolocation.js';
+import { getPaymentSettings } from '../services/paymentService.js';
 
 export const createMeetup = async (
   req: AuthRequest,
@@ -28,6 +29,18 @@ export const createMeetup = async (
       pricePerPerson,
       isBlindMeet,
     } = req.body;
+
+    // 4.7: Paid activities disabled initially; only free activities allowed until paid mode is enabled
+    const isPaid = isFree === false || (pricePerPerson != null && Number(pricePerPerson) > 0);
+    if (isPaid) {
+      const { paidActivitiesEnabled } = await getPaymentSettings(prisma);
+      if (!paidActivitiesEnabled) {
+        throw new AppError(
+          'Paid activities are not enabled yet. Please create this as a free activity. Paid activities will be available soon.',
+          400
+        );
+      }
+    }
 
     let imageUrl = null;
     if (req.file) {

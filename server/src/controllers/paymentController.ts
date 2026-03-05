@@ -3,6 +3,7 @@ import prisma from '../config/database.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { 
   getPaymentBreakdown,
+  getPaymentSettings,
   generatePaymentNumber, 
   generatePayoutNumber,
 } from '../services/paymentService.js';
@@ -42,7 +43,16 @@ export const createPayment = async (
       throw new AppError('Either classId or meetupId is required', 400);
     }
 
-    // Calculate payment breakdown (venue rent $0 for now, Ulikme % from settings)
+    // 4.7: Paid activities are disabled initially; reject any paid payment when paid mode is off
+    const { paidActivitiesEnabled } = await getPaymentSettings(prisma);
+    if (!paidActivitiesEnabled && Number(grossAmount) > 0) {
+      throw new AppError(
+        'Paid activities are not enabled yet. All activities, classes and communities are currently free.',
+        400
+      );
+    }
+
+    // Calculate payment breakdown (Ulikme % from settings, e.g. 5%)
     const breakdown = await getPaymentBreakdown(prisma, {
       grossAmount: Number(grossAmount),
       classId: classId || undefined,

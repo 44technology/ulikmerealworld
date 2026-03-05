@@ -44,6 +44,8 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Venues', href: '/venues', icon: Building2 },
+  { name: 'Chat', href: '/chat', icon: MessageSquare },
+  { name: 'Ads', href: '/ads', icon: Camera },
   { name: 'Content', href: '/content', icon: FileText },
   { name: 'Refunds', href: '/refunds', icon: ArrowLeftRight },
   { name: 'Settings', href: '/settings', icon: Settings },

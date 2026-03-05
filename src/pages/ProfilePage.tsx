@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Settings, ChevronRight, MapPin, Star, Trophy, Users, Calendar, CalendarRange, Heart, Share2, Edit, GraduationCap, X, Music, ExternalLink, Sparkles, Play, Image as ImageIcon, Video as VideoIcon, Check, CheckCircle, Ticket, Users2, Wallet, Activity } from 'lucide-react';
+import { Settings, ChevronRight, MapPin, Star, Trophy, Users, Calendar, CalendarRange, Heart, Share2, Edit, GraduationCap, X, Music, ExternalLink, Sparkles, Play, Image as ImageIcon, Video as VideoIcon, Check, CheckCircle, Ticket, Users2, Wallet, Activity, MessageCircle } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -804,6 +804,7 @@ const ProfilePage = () => {
             {[
               { label: 'My Tickets', icon: Ticket, route: '/tickets' },
               { label: 'Schedule', icon: CalendarRange, route: '/schedule' },
+              { label: 'Ready to Meet', icon: MessageCircle, route: '/manage-meetups' },
               { label: 'Earnings & Payouts', icon: Wallet, route: '/payouts' },
               { label: 'Saved Venues', icon: Heart, route: '/venues' },
               { label: 'Settings', icon: Settings, route: '/settings' },

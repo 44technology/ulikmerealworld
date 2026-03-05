@@ -340,6 +340,20 @@ async function main() {
 
   console.log('✅ Created meetup members');
 
+  // 4.7: Platform payment settings — paid mode off initially, 5% Ulikme commission when enabled
+  const now = new Date();
+  await prisma.platformSetting.upsert({
+    where: { key: 'ulikme_commission_percent' },
+    create: { key: 'ulikme_commission_percent', value: '5', updatedAt: now },
+    update: {},
+  });
+  await prisma.platformSetting.upsert({
+    where: { key: 'paid_activities_enabled' },
+    create: { key: 'paid_activities_enabled', value: 'false', updatedAt: now },
+    update: {},
+  });
+  console.log('✅ Platform settings (5% commission, paid_activities_enabled=false)');
+
   console.log('🎉 Seeding completed!');
   console.log('\n📝 Test Credentials:');
   console.log('  User 1: user1@example.com / password123');

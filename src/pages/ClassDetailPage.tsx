@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, MapPin, Clock, DollarSign, Users, Calendar, Phone, Globe, CreditCard, AlertCircle, Info, Star, CheckCircle2, X, Monitor, CheckCircle, Sparkles, MessageCircle, ChevronRight, FileText, ListChecks, PlayCircle, TrendingUp, ShoppingBag, Download, Gift, Package, Send, Plus, Ticket, QrCode, Check } from 'lucide-react';
+import { ArrowLeft, BookOpen, MapPin, Clock, DollarSign, Users, Calendar, Phone, Globe, CreditCard, AlertCircle, Info, Star, CheckCircle2, X, Monitor, CheckCircle, Sparkles, MessageCircle, ChevronRight, FileText, ListChecks, PlayCircle, TrendingUp, ShoppingBag, Download, Gift, Package, Send, Plus, Ticket, QrCode, Check, Settings } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -62,6 +62,8 @@ const ClassDetailPage = () => {
   const [saveCardToWallet, setSaveCardToWallet] = useState(true);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'new' | string>('new');
   const [savedCardCVC, setSavedCardCVC] = useState('');
+  const [discountCodeInput, setDiscountCodeInput] = useState('');
+  const [isDiscountApplied, setIsDiscountApplied] = useState(false);
   const { cards: walletCards, addCard } = useWallet();
   const [paymentInvoice, setPaymentInvoice] = useState<{
     invoiceNumber: string;
@@ -71,7 +73,17 @@ const ClassDetailPage = () => {
     cardLast4?: string;
   } | null>(null);
 
-  const grossAmount = classItem?.price ?? 0;
+  const basePrice = classItem?.price ?? 0;
+  const hasConfiguredDiscount =
+    !!classItem &&
+    !!(classItem as any).discountCode &&
+    typeof (classItem as any).discountedPrice === 'number' &&
+    (classItem as any).discountedPrice > 0 &&
+    (classItem as any).discountedPrice < basePrice;
+  const effectivePrice = hasConfiguredDiscount && isDiscountApplied
+    ? Number((classItem as any).discountedPrice)
+    : basePrice;
+  const grossAmount = effectivePrice;
   const paymentBreakdownOpts =
     showPaymentDialog && !isMentorClass && !!id && grossAmount > 0
       ? { classId: id, grossAmount }
@@ -108,6 +120,12 @@ const ClassDetailPage = () => {
   
   const cardType = getCardType(cardNumber);
 
+  // Reset discount input when class changes or dialog closes
+  useEffect(() => {
+    setIsDiscountApplied(false);
+    setDiscountCodeInput('');
+  }, [id, classItem?.id, showPaymentDialog]);
+
   // Check if user is enrolled - check both enrollments array and ticket
   const isEnrolledFromEnrollments = user && classItem?.enrollments?.some((e) => 
     (typeof e.user === 'object' ? e.user?.id : e.userId) === user.id
@@ -129,6 +147,12 @@ const ClassDetailPage = () => {
     : null;
   const isWithin24Hours = hoursSinceEnrollment !== null && hoursSinceEnrollment < 24;
   const canCancelWithRefund = isPaid && isWithin24Hours;
+  
+  // Check if current user is the class creator (can manage)
+  const isCreator = !!user?.id && !!classItem && (
+    (classItem as any).creatorId === user.id ||
+    (classItem as any).creator?.id === user.id
+  );
   
   // Check if class is online
   const isOnline = !classItem?.latitude || !classItem?.longitude;
@@ -207,7 +231,7 @@ const ClassDetailPage = () => {
       const invoiceNumber = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       const invoiceData = {
         invoiceNumber,
-        amount: classItem?.price || 0,
+        amount: effectivePrice || 0,
         date: new Date().toISOString(),
         paymentMethod: 'Card',
         cardLast4: cardNumber.slice(-4).replace(/\s/g, ''),
@@ -336,7 +360,18 @@ const ClassDetailPage = () => {
               <ArrowLeft className="w-6 h-6 text-foreground" />
             </motion.button>
             <h1 className="font-bold text-foreground">Class Details</h1>
-            <div className="w-10" />
+            {isCreator ? (
+              <motion.button
+                onClick={() => navigate(`/class/${id}/manage`)}
+                className="p-2 rounded-xl hover:bg-muted/80 flex items-center gap-1.5 text-sm font-medium text-primary"
+                whileTap={{ scale: 0.95 }}
+              >
+                <Settings className="w-5 h-5" />
+                Manage
+              </motion.button>
+            ) : (
+              <div className="w-10" />
+            )}
           </div>
         </div>
 
@@ -413,15 +448,24 @@ const ClassDetailPage = () => {
               <h2 className="text-3xl font-bold text-card mb-2 drop-shadow-lg">
                 {classItem.title || `${classItem.category ? classItem.category.charAt(0).toUpperCase() + classItem.category.slice(1) : 'Class'} Course`}
               </h2>
-              <div className="flex items-center gap-2">
-                {(classItem.price === undefined || classItem.price === null || classItem.price === 0) ? (
-                  <span className="px-2 py-1 rounded-full bg-friendme/20 text-friendme text-sm font-medium">
-                    Free
-                  </span>
-                ) : (
-                  <span className="text-2xl font-bold text-card drop-shadow-lg">
-                    ${classItem.price}
-                  </span>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  {(classItem.price === undefined || classItem.price === null || classItem.price === 0) ? (
+                    <span className="px-2 py-1 rounded-full bg-friendme/20 text-friendme text-sm font-medium">
+                      Free
+                    </span>
+                  ) : (
+                    <span className="text-2xl font-bold text-card drop-shadow-lg">
+                      ${effectivePrice}
+                    </span>
+                  )}
+                </div>
+                {hasConfiguredDiscount && (
+                  <p className="text-xs text-card/80 drop-shadow-sm">
+                    Normal: ${basePrice.toFixed(2)} • Kod{' '}
+                    <span className="font-semibold">{(classItem as any).discountCode}</span> ile{' '}
+                    ${(classItem as any).discountedPrice.toFixed(2)}
+                  </p>
                 )}
               </div>
             </div>
@@ -867,9 +911,20 @@ const ClassDetailPage = () => {
                 <DollarSign className="w-5 h-5 text-primary" />
                 <div>
                   <p className="text-sm text-muted-foreground">Price</p>
-                  <p className="font-medium text-foreground">
-                    {(classItem.price === undefined || classItem.price === null || classItem.price === 0) ? 'Free' : `$${classItem.price}`}
-                  </p>
+                  <div className="flex flex-col gap-0.5">
+                    <p className="font-medium text-foreground">
+                      {(classItem.price === undefined || classItem.price === null || classItem.price === 0)
+                        ? 'Free'
+                        : `$${effectivePrice}`}
+                    </p>
+                    {hasConfiguredDiscount && (
+                      <p className="text-xs text-muted-foreground">
+                        Normal: ${basePrice.toFixed(2)} • Kod{' '}
+                        <span className="font-semibold">{(classItem as any).discountCode}</span> ile{' '}
+                        ${(classItem as any).discountedPrice.toFixed(2)}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1040,8 +1095,8 @@ const ClassDetailPage = () => {
                   ? 'Joining...'
                   : classItem.maxStudents && (classItem._count?.enrollments || 0) >= classItem.maxStudents
                   ? 'Class Full'
-                  : classItem.price && classItem.price > 0
-                  ? `Join the Class - $${classItem.price}`
+                  : effectivePrice && effectivePrice > 0
+                  ? `Join the Class - $${effectivePrice}`
                   : 'Join the Class (Free)'}
               </Button>
               {isEnrolled && (
@@ -1066,7 +1121,7 @@ const ClassDetailPage = () => {
             <DialogHeader>
               <DialogTitle>Complete Payment</DialogTitle>
               <DialogDescription>
-                Pay ${classItem?.price} to enroll in this class
+                Pay ${effectivePrice} to enroll in this class
               </DialogDescription>
             </DialogHeader>
             
@@ -1201,6 +1256,51 @@ const ClassDetailPage = () => {
                 </label>
               )}
 
+              {/* Optional discount code */}
+              {hasConfiguredDiscount && effectivePrice > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground mb-1 block">
+                    Discount code (optional)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder={(classItem as any).discountCode || 'Enter discount code'}
+                      value={discountCodeInput}
+                      onChange={(e) => setDiscountCodeInput(e.target.value)}
+                      className="flex-1 h-11 px-3 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-11 px-4 rounded-xl"
+                      onClick={() => {
+                        const expected = String((classItem as any).discountCode || '').trim().toLowerCase();
+                        const entered = discountCodeInput.trim().toLowerCase();
+                        if (!entered) {
+                          toast.error('Please enter a discount code');
+                          return;
+                        }
+                        if (expected && entered === expected) {
+                          setIsDiscountApplied(true);
+                          toast.success('Discount code applied');
+                        } else {
+                          toast.error('Invalid discount code');
+                          setIsDiscountApplied(false);
+                        }
+                      }}
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                  {isDiscountApplied && (
+                    <p className="text-xs text-green-600">
+                      Discount applied! New price: ${effectivePrice.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Payment breakdown — no platform commission; payment goes directly to instructor */}
               {breakdown && (
                 <div className="space-y-2 rounded-xl bg-muted/50 p-3 text-sm">
@@ -1227,7 +1327,7 @@ const ClassDetailPage = () => {
               {/* Total */}
               <div className="flex items-center justify-between pt-3 border-t border-border">
                 <span className="font-semibold text-foreground">Total</span>
-                <span className="text-2xl font-bold text-primary">${classItem?.price}</span>
+                <span className="text-2xl font-bold text-primary">${effectivePrice}</span>
               </div>
             </div>
 
@@ -1254,7 +1354,7 @@ const ClassDetailPage = () => {
                 }
                 className="flex-1 bg-gradient-primary"
               >
-                {enrollInClass.isPending ? 'Processing...' : `Pay $${classItem?.price}`}
+                {enrollInClass.isPending ? 'Processing...' : `Pay $${effectivePrice}`}
               </Button>
             </div>
           </DialogContent>
