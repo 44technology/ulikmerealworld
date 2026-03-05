@@ -1021,7 +1021,6 @@ const ClassesPage = () => {
                   <SelectItem value="all">All languages</SelectItem>
                   <SelectItem value="English">English</SelectItem>
                   <SelectItem value="Spanish">Spanish</SelectItem>
-                  <SelectItem value="Turkish">Turkish</SelectItem>
                   <SelectItem value="French">French</SelectItem>
                   <SelectItem value="German">German</SelectItem>
                   <SelectItem value="Portuguese">Portuguese</SelectItem>

@@ -32,7 +32,7 @@
     --popover: var(--color-white);
     --popover-foreground: var(--color-black-steel);
 
-    /* Primary: Vivid Tangelo (#ED6C27) – venue ile uyumlu turuncu */
+    /* Primary: Vivid Tangelo (#ED6C27) – orange aligned with venue */
     --primary: var(--color-tangelo);
     --primary-foreground: var(--color-white);
 
@@ -43,7 +43,7 @@
     --muted: 120 8% 94%;
     --muted-foreground: 210 10% 45%;
 
-    /* Accent: Tangelo – turuncu aile */
+    /* Accent: Tangelo – orange family */
     --accent: 19 85% 96%;
     --accent-foreground: var(--color-tangelo);
 
@@ -57,7 +57,7 @@
 
     --radius: 1rem;
 
-    /* Module Colors – turuncu ağırlıklı palet */
+    /* Module Colors – orange-weighted palette */
     --friendme: 204 60% 55%;
     --friendme-foreground: var(--color-white);
     
@@ -67,19 +67,19 @@
     --connectme: var(--color-orange);
     --connectme-foreground: var(--color-black-steel);
 
-    /* Gradients – turuncu tonları (venue’dan farklı: açık turuncu → tangelo) */
+    /* Gradients – orange tones (light orange to tangelo) */
     --gradient-primary: linear-gradient(135deg, hsl(var(--color-orange)) 0%, hsl(var(--color-tangelo)) 100%);
     --gradient-secondary: linear-gradient(135deg, hsl(var(--color-tangelo)) 0%, hsl(19, 85%, 42%) 100%);
     --gradient-hero: linear-gradient(180deg, hsl(var(--color-tangelo) / 0.12) 0%, transparent 50%);
     
-    /* Shadows – turuncu glow */
+    /* Shadows – orange glow */
     --shadow-sm: 0 1px 2px 0 hsl(var(--color-black-steel) / 0.05);
     --shadow-md: 0 4px 6px -1px hsl(var(--color-black-steel) / 0.1), 0 2px 4px -2px hsl(var(--color-black-steel) / 0.1);
     --shadow-lg: 0 10px 15px -3px hsl(var(--color-black-steel) / 0.1), 0 4px 6px -4px hsl(var(--color-black-steel) / 0.1);
     --shadow-xl: 0 20px 25px -5px hsl(var(--color-black-steel) / 0.1), 0 8px 10px -6px hsl(var(--color-black-steel) / 0.1);
     --shadow-glow: 0 0 20px hsl(var(--color-tangelo) / 0.35);
     
-    /* Sidebar – turuncu tema */
+    /* Sidebar – orange theme */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: var(--color-tangelo);
@@ -112,7 +112,7 @@
     --muted: 210 20% 15%;
     --muted-foreground: 120 8% 70%;
 
-    /* Accent: turuncu aile */
+    /* Accent: orange family */
     --accent: 19 85% 20%;
     --accent-foreground: 19 85% 90%;
 
