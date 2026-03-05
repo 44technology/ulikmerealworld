@@ -14,6 +14,10 @@ import {
   XCircle,
   AlertCircle,
   Image as ImageIcon,
+  Megaphone,
+  Sparkles,
+  Percent,
+  Video,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -54,6 +58,15 @@ const getVenueById = (id: string) => {
       businessHours: 'Mon–Fri 7:00–20:00, Sat–Sun 8:00–21:00',
       logoUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=150',
       coverUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
+      images: [
+        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
+        'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400',
+        'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400',
+        'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=400',
+      ],
+      videos: [
+        { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', title: 'Venue tour' },
+      ],
       verificationStatus: 'pending',
       ownerName: 'Jane Smith',
       ownerEmail: 'jane@coffeehouse.com',
@@ -82,6 +95,12 @@ const getVenueById = (id: string) => {
       businessHours: 'Tue–Sun 18:00–23:00',
       logoUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=150',
       coverUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
+      images: [
+        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
+        'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400',
+        'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400',
+      ],
+      videos: [],
       verificationStatus: 'approved',
       ownerName: 'John Doe',
       ownerEmail: 'john@finedining.com',
@@ -358,6 +377,127 @@ export default function VenueDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Images & Videos */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="w-5 h-5" />
+            Images & Videos
+          </CardTitle>
+          <CardDescription>Photos and videos for this venue</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Images */}
+          <div>
+            <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-muted-foreground" />
+              Images ({venue.images?.length ?? 0})
+            </h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {(venue.images && venue.images.length > 0 ? venue.images : [venue.coverUrl || venue.logoUrl].filter(Boolean)).map((src: string, i: number) => (
+                <a
+                  key={i}
+                  href={src}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block aspect-video rounded-lg overflow-hidden bg-muted border border-border hover:opacity-90 transition-opacity"
+                >
+                  <img
+                    src={src}
+                    alt={`${venue.name} ${i + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+          {/* Videos */}
+          <div>
+            <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+              <Video className="w-4 h-4 text-muted-foreground" />
+              Videos ({venue.videos?.length ?? 0})
+            </h4>
+            {venue.videos && venue.videos.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {venue.videos.map((v: { url: string; title?: string }, i: number) => (
+                  <div key={i} className="rounded-lg overflow-hidden border border-border bg-muted">
+                    <div className="aspect-video relative">
+                      <iframe
+                        src={v.url}
+                        title={v.title || `Video ${i + 1}`}
+                        className="w-full h-full absolute inset-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                    {v.title && (
+                      <p className="text-sm font-medium text-foreground p-2 truncate">{v.title}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No videos uploaded yet.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Venue management – under Review */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="w-5 h-5" />
+            Venue management
+          </CardTitle>
+          <CardDescription>Manage content, campaigns, activities and discounts for this venue</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <Link
+              to="/venue/content"
+              className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+            >
+              <FileText className="w-5 h-5 text-primary shrink-0" />
+              <div>
+                <span className="font-medium block">Content</span>
+                <span className="text-sm text-muted-foreground">Posts, Stories, Reels</span>
+              </div>
+            </Link>
+            <Link
+              to="/venue/campaigns"
+              className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+            >
+              <Megaphone className="w-5 h-5 text-primary shrink-0" />
+              <div>
+                <span className="font-medium block">Campaigns</span>
+                <span className="text-sm text-muted-foreground">Marketing campaigns</span>
+              </div>
+            </Link>
+            <Link
+              to="/venue/vibes"
+              className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+            >
+              <Sparkles className="w-5 h-5 text-primary shrink-0" />
+              <div>
+                <span className="font-medium block">Activities</span>
+                <span className="text-sm text-muted-foreground">Event management</span>
+              </div>
+            </Link>
+            <Link
+              to="/venue/discounts"
+              className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+            >
+              <Percent className="w-5 h-5 text-primary shrink-0" />
+              <div>
+                <span className="font-medium block">Discounts</span>
+                <span className="text-sm text-muted-foreground">Promotional offers</span>
+              </div>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Approve Dialog */}
       <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>

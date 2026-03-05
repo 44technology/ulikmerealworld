@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Edit, Upload, Video, Image as ImageIcon, MapPin, Eye, Plus, Building2, FileText, Megaphone, Sparkles, Percent } from 'lucide-react';
+import { Search, Edit, Upload, Video, Image as ImageIcon, MapPin, Eye, Plus } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
@@ -139,54 +139,14 @@ export default function VenuesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Venues (Review)</h1>
-          <p className="text-muted-foreground mt-1">Review and manage venues; quick links to venue content</p>
+          <h1 className="text-3xl font-bold text-foreground">Venues</h1>
+          <p className="text-muted-foreground mt-1">Review and manage venues</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add New Venue
         </Button>
       </div>
-
-      {/* Venue management quick links */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Building2 className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Venue management</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <Link to="/venue/content" className="p-4 rounded-lg border border-border hover:bg-muted transition-colors flex items-center gap-3">
-              <FileText className="w-5 h-5 text-primary" />
-              <div>
-                <span className="font-medium block">Content</span>
-                <span className="text-sm text-muted-foreground">Posts, Stories, Reels</span>
-              </div>
-            </Link>
-            <Link to="/venue/campaigns" className="p-4 rounded-lg border border-border hover:bg-muted transition-colors flex items-center gap-3">
-              <Megaphone className="w-5 h-5 text-primary" />
-              <div>
-                <span className="font-medium block">Campaigns</span>
-                <span className="text-sm text-muted-foreground">Marketing campaigns</span>
-              </div>
-            </Link>
-            <Link to="/venue/vibes" className="p-4 rounded-lg border border-border hover:bg-muted transition-colors flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <div>
-                <span className="font-medium block">Activities</span>
-                <span className="text-sm text-muted-foreground">Event management</span>
-              </div>
-            </Link>
-            <Link to="/venue/discounts" className="p-4 rounded-lg border border-border hover:bg-muted transition-colors flex items-center gap-3">
-              <Percent className="w-5 h-5 text-primary" />
-              <div>
-                <span className="font-medium block">Discounts</span>
-                <span className="text-sm text-muted-foreground">Promotional offers</span>
-              </div>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Search & Filter */}
       <Card>

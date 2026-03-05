@@ -59,6 +59,8 @@ import MonetizationPricingPage from './pages/instructor/MonetizationPricingPage'
 import MonetizationRevenuePage from './pages/instructor/MonetizationRevenuePage';
 import MonetizationPayoutsPage from './pages/instructor/MonetizationPayoutsPage';
 import MonetizationAnalyticsPage from './pages/instructor/MonetizationAnalyticsPage';
+import MonetizationMarketplacePage from './pages/instructor/MonetizationMarketplacePage';
+import MonetizationAffiliatesPage from './pages/instructor/MonetizationAffiliatesPage';
 import VenueMonetizationPricingPage from './pages/venue/MonetizationPricingPage';
 import VenueSignupPage from './pages/VenueSignupPage';
 import VenueCheckinPage from './pages/venue/CheckinPage';
@@ -164,7 +166,9 @@ function AppRoutes() {
               <Route path="/monetization/revenue" element={<MonetizationRevenuePage />} />
               <Route path="/monetization/payouts" element={<MonetizationPayoutsPage />} />
               <Route path="/monetization/analytics" element={<MonetizationAnalyticsPage />} />
-              
+<Route path="/monetization/marketplace" element={<MonetizationMarketplacePage />} />
+              <Route path="/monetization/affiliates" element={<MonetizationAffiliatesPage />} />
+
               <Route path="/settings" element={<VenueSettingsPage />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -202,7 +206,9 @@ function AppRoutes() {
               <Route path="/monetization/revenue" element={<MonetizationRevenuePage />} />
               <Route path="/monetization/payouts" element={<MonetizationPayoutsPage />} />
               <Route path="/monetization/analytics" element={<MonetizationAnalyticsPage />} />
-              
+<Route path="/monetization/marketplace" element={<MonetizationMarketplacePage />} />
+              <Route path="/monetization/affiliates" element={<MonetizationAffiliatesPage />} />
+
               <Route path="/settings" element={<InstructorSettingsPage />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

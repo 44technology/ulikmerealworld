@@ -39,8 +39,8 @@ const defaultAds: AdItem[] = [
   {
     id: 1,
     companyName: 'Acme Coffee',
-    title: 'Yaz Kampanyası',
-    description: 'Tüm soğuk içeceklerde %20 indirim.',
+    title: 'Summer Campaign',
+    description: '20% off all cold drinks.',
     destinationUrl: 'https://acmecoffee.com/summer',
     type: 'image',
     status: 'approved',
@@ -50,8 +50,8 @@ const defaultAds: AdItem[] = [
   {
     id: 2,
     companyName: 'TechStart Inc',
-    title: 'Yeni Menü Lansmanı',
-    description: 'Yeni atıştırmalık menüsünü keşfedin.',
+    title: 'New Menu Launch',
+    description: 'Discover our new snack menu.',
     destinationUrl: 'https://techstart.io/menu',
     type: 'video',
     status: 'pending',
@@ -61,8 +61,8 @@ const defaultAds: AdItem[] = [
   {
     id: 3,
     companyName: 'Wellness Studio',
-    title: 'Sevgililer Günü Özel',
-    description: 'İkili masaj paketi - sınırlı süre.',
+    title: 'Valentine\'s Day Special',
+    description: 'Couples massage package - limited time.',
     destinationUrl: 'https://wellnessstudio.com/valentine',
     type: 'image',
     status: 'rejected',
@@ -113,29 +113,29 @@ export default function AdsPage() {
 
   const handleSubmit = () => {
     if (!form.companyName.trim()) {
-      toast.error('Şirket adı girin');
+      toast.error('Enter company name');
       return;
     }
     if (!form.title.trim()) {
-      toast.error('Reklam başlığı girin');
+      toast.error('Enter ad title');
       return;
     }
     if (!form.destinationUrl.trim()) {
-      toast.error('Tıklanınca gidilecek link (URL) girin');
+      toast.error('Enter destination URL');
       return;
     }
     try {
       new URL(form.destinationUrl);
     } catch {
-      toast.error('Geçerli bir URL girin (örn. https://...)');
+      toast.error('Enter a valid URL (e.g. https://...)');
       return;
     }
     if (!form.startDate || !form.endDate) {
-      toast.error('Başlangıç ve bitiş tarihi girin');
+      toast.error('Enter start and end date');
       return;
     }
     if (!editingId && !selectedFile) {
-      toast.error('Reklam için görsel veya video yükleyin');
+      toast.error('Upload an image or video for the ad');
       return;
     }
 
@@ -152,7 +152,7 @@ export default function AdsPage() {
             : a
         )
       );
-      toast.success('Reklam güncellendi.');
+      toast.success('Ad updated.');
     } else {
       const newAd: AdItem = {
         id: Math.max(0, ...ads.map((a) => a.id)) + 1,
@@ -161,7 +161,7 @@ export default function AdsPage() {
         mediaUrl: selectedFile ? URL.createObjectURL(selectedFile) : undefined,
       };
       setAds([newAd, ...ads]);
-      toast.success('Reklam eklendi. Onay bekliyor.');
+      toast.success('Ad added. Pending approval.');
     }
     setForm(emptyForm);
     setSelectedFile(null);
@@ -184,7 +184,7 @@ export default function AdsPage() {
     try {
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch {
-      toast.error('Link açılamadı');
+      toast.error('Could not open link');
     }
   };
 
@@ -192,49 +192,49 @@ export default function AdsPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Reklam Yönetimi</h1>
+          <h1 className="text-3xl font-bold text-foreground">Advertisement Management</h1>
           <p className="text-muted-foreground mt-2">
-            Şirket reklamlarını yönetin. Reklama tıklandığında kullanıcı belirttiğiniz linke yönlendirilir.
+            Manage company advertisements. When a user clicks an ad, they are redirected to the link you specify.
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingId(null); }}>
           <DialogTrigger asChild>
             <Button onClick={openCreate}>
               <Plus className="w-4 h-4 mr-2" />
-              Yeni Reklam
+              New Advertisement
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingId ? 'Reklamı Düzenle' : 'Yeni Reklam Ekle'}</DialogTitle>
+              <DialogTitle>{editingId ? 'Edit Advertisement' : 'Add New Advertisement'}</DialogTitle>
               <DialogDescription>
-                Reklam veren şirket bilgileri ve tıklanınca gidilecek linki girin.
+                Enter advertiser company details and the destination URL for when users click the ad.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Building2 className="w-4 h-4" />
-                  Şirket / Reklam veren adı
+                  Company / Advertiser name
                 </Label>
                 <Input
-                  placeholder="Örn: Acme Coffee"
+                  placeholder="e.g. Acme Coffee"
                   value={form.companyName}
                   onChange={(e) => setForm((f) => ({ ...f, companyName: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Reklam başlığı</Label>
+                <Label>Ad title</Label>
                 <Input
-                  placeholder="Örn: Yaz Kampanyası"
+                  placeholder="e.g. Summer Campaign"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Kısa açıklama (isteğe bağlı)</Label>
+                <Label>Short description (optional)</Label>
                 <Input
-                  placeholder="Reklam metni veya kampanya özeti"
+                  placeholder="Ad copy or campaign summary"
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 />
@@ -242,20 +242,20 @@ export default function AdsPage() {
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <LinkIcon className="w-4 h-4" />
-                  Tıklanınca gidilecek link (URL) *
+                  Destination URL *
                 </Label>
                 <Input
                   type="url"
-                  placeholder="https://sirket.com/kampanya"
+                  placeholder="https://example.com/campaign"
                   value={form.destinationUrl}
                   onChange={(e) => setForm((f) => ({ ...f, destinationUrl: e.target.value }))}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Kullanıcı reklama tıkladığında bu adres yeni sekmede açılır.
+                  This URL opens in a new tab when the user clicks the ad.
                 </p>
               </div>
               <div className="space-y-2">
-                <Label>Medya türü</Label>
+                <Label>Media type</Label>
                 <div className="flex gap-2">
                   <Button
                     type="button"
@@ -264,7 +264,7 @@ export default function AdsPage() {
                     className="flex-1"
                   >
                     <Image className="w-4 h-4 mr-2" />
-                    Görsel
+                    Image
                   </Button>
                   <Button
                     type="button"
@@ -279,7 +279,7 @@ export default function AdsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Başlangıç tarihi</Label>
+                  <Label>Start date</Label>
                   <Input
                     type="date"
                     value={form.startDate}
@@ -287,7 +287,7 @@ export default function AdsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Bitiş tarihi</Label>
+                  <Label>End date</Label>
                   <Input
                     type="date"
                     value={form.endDate}
@@ -296,7 +296,7 @@ export default function AdsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Medya yükle {editingId ? '(değiştirmek için)' : ''}</Label>
+                <Label>Upload media {editingId ? '(to replace)' : ''}</Label>
                 <div className="border-2 border-dashed rounded-lg p-6 text-center">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                   <Input
@@ -311,7 +311,7 @@ export default function AdsPage() {
                 </div>
               </div>
               <Button onClick={handleSubmit} className="w-full">
-                {editingId ? 'Güncelle' : 'Reklam Ekle'}
+                {editingId ? 'Update' : 'Add Advertisement'}
               </Button>
             </div>
           </DialogContent>
@@ -340,7 +340,7 @@ export default function AdsPage() {
                       ad.status === 'approved' ? 'default' : ad.status === 'pending' ? 'secondary' : 'destructive'
                     }
                   >
-                    {ad.status === 'approved' ? 'Onaylı' : ad.status === 'pending' ? 'Bekliyor' : 'Reddedildi'}
+                    {ad.status === 'approved' ? 'Approved' : ad.status === 'pending' ? 'Pending' : 'Rejected'}
                   </Badge>
                 </div>
               </div>
@@ -367,7 +367,7 @@ export default function AdsPage() {
                   onClick={() => openLink(ad.destinationUrl)}
                 >
                   <ExternalLink className="w-4 h-4 mr-1" />
-                  Linke git
+                  Go to link
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => openEdit(ad)}>
                   <Pencil className="w-4 h-4" />

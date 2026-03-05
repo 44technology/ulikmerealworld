@@ -22,6 +22,8 @@ import {
   MessageSquare,
   Users,
   QrCode,
+  FileText,
+  Link2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -60,6 +62,8 @@ const navigation: Array<{
       { name: 'Revenue Split', href: '/monetization/revenue', icon: PieChart },
       { name: 'Payouts', href: '/monetization/payouts', icon: Wallet },
       { name: 'Analytics', href: '/monetization/analytics', icon: BarChart3 },
+      { name: 'Digital products', href: '/monetization/marketplace', icon: FileText },
+      { name: 'Affiliates', href: '/monetization/affiliates', icon: Link2 },
     ]
   },
   { name: 'Settings', href: '/settings', icon: Settings },
