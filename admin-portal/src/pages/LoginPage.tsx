@@ -7,13 +7,20 @@ import { Label } from '../components/ui/label';
 import { Shield, Mail, Lock, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+const DEFAULT_EMAIL_BY_ROLE = { admin: 'admin@ulikme.com', venue: 'venue@ulikme.com' } as const;
+
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<'admin' | 'venue'>('admin');
+  const [email, setEmail] = useState(DEFAULT_EMAIL_BY_ROLE.admin);
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleRoleChange = (role: 'admin' | 'venue') => {
+    setSelectedRole(role);
+    setEmail(DEFAULT_EMAIL_BY_ROLE[role]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,14 +51,14 @@ export default function LoginPage() {
             <p className="text-muted-foreground">Sign in to manage your account</p>
           </div>
 
-          {/* Role Selection */}
+          {/* Role Selection - tek linkten Admin veya Venue girişi */}
           <div className="mb-6">
             <Label className="mb-3 block">Select Role</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant={selectedRole === 'admin' ? 'default' : 'outline'}
-                onClick={() => setSelectedRole('admin')}
+                onClick={() => handleRoleChange('admin')}
                 className="flex flex-col items-center gap-2 h-auto py-3"
               >
                 <Shield className="w-5 h-5" />
@@ -60,7 +67,7 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant={selectedRole === 'venue' ? 'default' : 'outline'}
-                onClick={() => setSelectedRole('venue')}
+                onClick={() => handleRoleChange('venue')}
                 className="flex flex-col items-center gap-2 h-auto py-3"
               >
                 <Building2 className="w-5 h-5" />
@@ -78,7 +85,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@ulikme.com"
+                  placeholder={selectedRole === 'admin' ? 'admin@ulikme.com' : 'venue@ulikme.com'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
