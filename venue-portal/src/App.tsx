@@ -7,6 +7,7 @@ import ContentPage from './pages/ContentPage';
 import CampaignsPage from './pages/CampaignsPage';
 import VibesPage from './pages/VibesPage';
 import DiscountsPage from './pages/DiscountsPage';
+import ClassesPage from './pages/ClassesPage';
 import AdsPage from './pages/AdsPage';
 import SettingsPage from './pages/SettingsPage';
 import VenueLayout from './layouts/VenueLayout';
@@ -43,6 +44,7 @@ function AppRoutes() {
                   <Route path="/campaigns" element={<CampaignsPage />} />
                   <Route path="/vibes" element={<VibesPage />} />
                   <Route path="/discounts" element={<DiscountsPage />} />
+                  <Route path="/classes" element={<ClassesPage />} />
                   <Route path="/ads" element={<AdsPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />

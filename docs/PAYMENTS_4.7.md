@@ -114,3 +114,115 @@ Creators (instructors or venues) can optionally define a **discount code** and a
 | Discounted price | Optional; must be &lt; regular price and ≥ min paid price (e.g. $10). |
 | Create screens | Class and Activity creation support optional discount code + discounted price. |
 | Payment screens | User enters code; if valid, charge discounted amount; commission/payout on actual amount. |
+
+---
+
+## 4.9 Digital products (monetization)
+
+### Overview
+
+Venues and instructors can sell **digital products** or promote **affiliate** digital offerings from the Monetization section. This is separate from class/activity payments: it covers PDFs, recordings, e-books, partner app subscriptions, and similar items.
+
+### Where it appears
+
+- **Admin portal:** Under **Monetization → Digital products** (route: `/monetization/marketplace`), for both **venue** and **instructor** roles.
+- **Sidebar:** Icon **FileText** (digital/document), label **"Digital products"**.
+
+### Product types
+
+| Type | Description |
+|------|-------------|
+| **My product** | Creator’s own digital product (e.g. guide PDF, workshop recording). Has optional **price** and a **product/checkout URL**. |
+| **Affiliate** | Partner or third-party product. Creator promotes via link and earns **commission %**. Optional **commission %**; **affiliate link** required. |
+
+### Rules (product and UI)
+
+1. **Add product:** One form for both types. User chooses **My product** or **Affiliate** (tabs or toggle).
+2. **Fields:**
+   - **Title** (required).
+   - **Description** (optional).
+   - **Product / checkout URL** or **Affiliate link** (required). Must be a valid URL.
+   - **My product:** Optional **price** ($). If set, must be ≥ 0.
+   - **Affiliate:** Optional **commission %** (0–100).
+   - **Image** (optional): cover/thumbnail; used in cards and listing.
+3. **Listing:** Tabs or filters: **All**, **My digital products**, **Affiliate**. Each item shown as a card (optional image, title, description, type badge, price if any, commission % if affiliate).
+4. **Action:** Each card has a **Get / Buy** or **Get offer** button linking to the product/affiliate URL (open in new tab).
+5. **Empty state:** If no items, show message e.g. “No digital products or affiliate links yet. Add your first item to start monetizing.” with FileText icon.
+
+### Frontend reference
+
+- **Page:** `admin-portal/src/pages/instructor/MonetizationMarketplacePage.tsx` (shared for venue and instructor).
+- **Route:** `/monetization/marketplace`.
+- **Layouts:** Venue and Instructor sidebars include **Digital products** under Monetization with **FileText** icon.
+
+### Summary
+
+| Item | Rule |
+|------|------|
+| Types | My product (own digital) and Affiliate (promote and earn commission %). |
+| Required | Title and product/affiliate URL. |
+| My product | Optional price; optional image. |
+| Affiliate | Optional commission %; optional image. |
+| Listing | Cards with optional image, badge (type), price/commission, link button. |
+
+---
+
+## 4.10 Affiliates (referral program)
+
+### Overview
+
+Venues and instructors can earn **commission** when they refer users to **create or join** classes, activities, or communities on Ulikme. The **Affiliates** page shows referral stats, a unique **affiliate link**, and a list of **referrals**.
+
+### Where it appears
+
+- **Admin portal:** Under **Monetization → Affiliates** (route: `/monetization/affiliates`), for both **venue** and **instructor** roles.
+- **Sidebar:** **Link2** icon, label **"Affiliates"**.
+
+### Page structure (UI rules)
+
+1. **Header**
+   - Title: **Affiliates**.
+   - Description: e.g. “Earn commission when you invite somebody to create or join a class, activity, or community on Ulikme.”
+
+2. **Commission statistics (three cards)**
+   - **Last 30 days:** Commission earned in the last 30 days (e.g. $0.00).
+   - **Lifetime:** Total commission earned (e.g. $0.00).
+   - **Account balance:** Current balance available for payout (e.g. $0.00).
+   - Next to **Account balance:** **PAYOUT** button (disabled when balance ≤ 0).
+   - Below PAYOUT: text like “$0.00 available soon” (or similar when balance is zero or pending).
+
+3. **Your affiliate links**
+   - Section title: **Your affiliate links**.
+   - **Platform pill:** e.g. “Ulikme platform” (single option or selector if multiple link types exist).
+   - **Commission text:** e.g. “Earn 5% commission when you invite somebody to create a class or join a paid activity on Ulikme.” (Use platform commission % from settings, e.g. 5%.)
+   - **Referral URL:** Unique link (e.g. `https://app.ulikme.com/signup?ref=<ref_id>`). Displayed as a clickable link.
+   - **COPY** button: Copies the referral URL to clipboard; show success toast.
+   - **Status:** e.g. “Active” with dropdown (for future: Active / Paused).
+
+4. **Referrals list**
+   - Area for listing referred users/sign-ups (or referral events).
+   - **Empty state:** Icon (e.g. CircleDollarSign) and text: “Your referrals will show here” plus short line: “When someone signs up or pays using your link, they’ll appear in this list.”
+
+### Backend (intended)
+
+- **Affiliate ref ID:** Per user (venue/instructor), a unique `ref` (or `affiliate_id`) used in signup/payment URLs.
+- **Commission:** Use platform commission % (e.g. 5%) or a separate affiliate commission % from settings.
+- **Stats:** Last 30 days, lifetime, and account balance from payments/referrals where the current user is the referrer.
+- **Payout:** PAYOUT action triggers payout flow (e.g. same as existing Payouts); minimum balance and “available soon” logic as per business rules.
+- **Referrals list:** API returns list of referred users or referral events (sign-up, first payment, etc.) for the current affiliate.
+
+### Frontend reference
+
+- **Page:** `admin-portal/src/pages/instructor/MonetizationAffiliatesPage.tsx` (shared for venue and instructor).
+- **Route:** `/monetization/affiliates`.
+- **Layouts:** Venue and Instructor sidebars include **Affiliates** under Monetization with **Link2** icon.
+
+### Summary
+
+| Item | Rule |
+|------|------|
+| Purpose | Earn commission by referring users to create/join classes, activities, or communities. |
+| Stats | Last 30 days, Lifetime, Account balance; PAYOUT button + “available soon” when applicable. |
+| Link | Unique referral URL; COPY button; commission % stated in copy. |
+| Status | Display Active (or Paused) for the affiliate link. |
+| Referrals | List (or empty state) where referred users/events will appear. |

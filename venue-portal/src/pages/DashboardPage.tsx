@@ -1,5 +1,6 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Megaphone, Sparkles, Percent, Upload, Image, TrendingUp } from 'lucide-react';
+import { Megaphone, Sparkles, Percent, Upload, Image, TrendingUp, ArrowRight } from 'lucide-react';
 
 export default function DashboardPage() {
   const stats = [
@@ -32,6 +33,41 @@ export default function DashboardPage() {
             </Card>
           );
         })}
+      </div>
+
+      {/* Campaign & Discount – quick access like admin portal */}
+      <div>
+        <h2 className="text-lg font-semibold text-foreground mb-3">Campaign & Discount</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Link to="/campaigns">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-primary/20 hover:border-primary/40">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Megaphone className="h-4 w-4 text-primary" />
+                  Campaigns
+                </CardTitle>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Create and manage marketing campaigns</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/discounts">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-primary/20 hover:border-primary/40">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Percent className="h-4 w-4 text-primary" />
+                  Discounts
+                </CardTitle>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Manage discounts for products and services</p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

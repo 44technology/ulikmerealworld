@@ -5,7 +5,6 @@ import { Button } from '../components/ui/button';
 import {
   LayoutDashboard,
   Image,
-  FileVideo,
   Megaphone,
   Sparkles,
   Percent,
@@ -15,6 +14,7 @@ import {
   Menu,
   X,
   Building2,
+  GraduationCap,
 } from 'lucide-react';
 
 interface VenueLayoutProps {
@@ -25,8 +25,9 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Posts & Stories', href: '/content', icon: Image },
   { name: 'Campaigns', href: '/campaigns', icon: Megaphone },
-  { name: 'Create Vibe', href: '/vibes', icon: Sparkles },
   { name: 'Discounts', href: '/discounts', icon: Percent },
+  { name: 'Create Vibe', href: '/vibes', icon: Sparkles },
+  { name: 'On-Site Classes', href: '/classes', icon: GraduationCap },
   { name: 'Ads', href: '/ads', icon: Upload },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
