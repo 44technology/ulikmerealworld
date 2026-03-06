@@ -1,11 +1,8 @@
 # Admin Portal Netlify Configuration
-# 
-# GitHub Repository Structure:
-# main/Downloads/meetupapp/vibe-connect-main/admin-portal
 #
-# Netlify Dashboard Settings:
-# - Base directory: Downloads/meetupapp/vibe-connect-main/admin-portal
-# - Build command: npm install --legacy-peer-deps && npm run build
+# Netlify Dashboard (Build & deploy → Build settings):
+# - Base directory: admin-portal  (zorunlu)
+# - Build command: (bu dosyadan alınır veya aynı komut)
 # - Publish directory: dist
 
 [build]
