@@ -21,7 +21,6 @@ import {
   MessageCircle,
   MessageSquare,
   Users,
-  QrCode,
   FileText,
   Link2,
   Megaphone,
@@ -49,7 +48,6 @@ const navigation: Array<{
   { name: 'Chat', href: '/chat', icon: MessageSquare },
   { name: 'Activities', href: '/vibes', icon: Users },
   { name: 'Events', href: '/events', icon: Calendar },
-  { name: 'Tickets & QR Check-in', href: '/checkin', icon: QrCode },
   {
     name: 'Visibility',
     href: '#',

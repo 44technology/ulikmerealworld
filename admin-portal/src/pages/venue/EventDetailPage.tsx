@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
@@ -182,13 +182,19 @@ export default function EventDetailPage() {
             </CardTitle>
             <CardDescription>Check-in / share</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center">
+          <CardContent className="flex flex-col items-center gap-2">
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/meetup/${eventData.id}` : `https://app.example.com/meetup/${eventData.id}`)}`}
               alt="QR Code"
               className="rounded border border-border"
             />
             <p className="text-xs text-muted-foreground mt-2 text-center">Scan for event page</p>
+            <Link to={`/checkin?eventId=${eventData.id}&title=${encodeURIComponent(eventData.title)}`}>
+              <Button variant="outline" size="sm" className="w-full mt-1">
+                <QrCode className="w-3.5 h-3.5 mr-1.5" />
+                QR Check-in
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

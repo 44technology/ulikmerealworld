@@ -67,8 +67,8 @@ const MeetupCard = ({
   onJoin,
   showJoinButton = false,
 }: MeetupCardProps) => {
-  const isEvent = type === 'event';
-  const typeLabel = getVibeTypeLabel(type);
+  const isEvent = type === 'event' || (maxAttendees != null && maxAttendees >= 15);
+  const typeLabel = getVibeTypeLabel(type, maxAttendees);
   const isPaid = pricePerPerson != null && pricePerPerson > 0 && !isFree;
   // Normalize data - support both mock data and backend data
   const hostData = host || (creator ? {

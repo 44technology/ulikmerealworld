@@ -57,7 +57,7 @@ export default function EventsPage() {
                 <p className="text-sm text-muted-foreground">Discover professional events</p>
               </div>
               <Button
-                onClick={() => navigate('/create-event')}
+                onClick={() => navigate('/create')}
                 className="rounded-full bg-gradient-primary"
                 size="icon"
               >
@@ -103,15 +103,15 @@ export default function EventsPage() {
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-1">No events found</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  {searchQuery ? 'Try a different search' : 'Be the first to create an event!'}
+                  {searchQuery ? 'Try a different search' : 'Event\'ler 15+ kişilik etkinliklerdir. Activity oluşturup katılımcı sayısını 15+ seçin.'}
                 </p>
                 {!searchQuery && (
                   <Button
-                    onClick={() => navigate('/create-event')}
+                    onClick={() => navigate('/create')}
                     className="bg-gradient-primary"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Event
+                    Create Activity
                   </Button>
                 )}
               </div>

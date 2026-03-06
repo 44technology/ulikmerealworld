@@ -115,6 +115,8 @@ export default function CheckinPage() {
   const locale = language === 'es' ? 'es-ES' : 'en-US';
 
   const classIdParam = searchParams.get('classId');
+  const vibeIdParam = searchParams.get('vibeId');
+  const eventIdParam = searchParams.get('eventId');
   const classTitleParam = searchParams.get('title') ?? '';
 
   const [attendees, setAttendees] = useState<Attendee[]>(mockAttendees);
@@ -124,6 +126,8 @@ export default function CheckinPage() {
       const id = parseInt(classIdParam, 10);
       return isNaN(id) ? 0 : CLASS_ID_OFFSET + id;
     }
+    if (vibeIdParam) return parseInt(vibeIdParam, 10) || 0;
+    if (eventIdParam) return parseInt(eventIdParam, 10) || 0;
     return 0;
   });
   const [cameraActive, setCameraActive] = useState(false);
@@ -245,8 +249,14 @@ export default function CheckinPage() {
     if (classIdParam) {
       const id = parseInt(classIdParam, 10);
       if (!isNaN(id)) setSelectedSourceId(CLASS_ID_OFFSET + id);
+    } else if (vibeIdParam) {
+      const id = parseInt(vibeIdParam, 10);
+      if (!isNaN(id)) setSelectedSourceId(id);
+    } else if (eventIdParam) {
+      const id = parseInt(eventIdParam, 10);
+      if (!isNaN(id)) setSelectedSourceId(id);
     }
-  }, [classIdParam]);
+  }, [classIdParam, vibeIdParam, eventIdParam]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -327,7 +337,7 @@ export default function CheckinPage() {
               {classTitleParam && (
                 <CardDescription className="flex items-center gap-1">
                   <GraduationCap className="w-3.5 h-3.5" />
-                  Class: {decodeURIComponent(classTitleParam)}
+                  {decodeURIComponent(classTitleParam)}
                 </CardDescription>
               )}
             </CardHeader>

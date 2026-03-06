@@ -1,12 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
-import { Plus, Calendar, MapPin, Users, Ticket, DollarSign, Gift, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Calendar, MapPin, Users, Ticket, Plus, ArrowRight, Info, DollarSign, Gift, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 
@@ -50,144 +47,38 @@ export default function EventsPage() {
       ] as EventTicket[],
     },
   ]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [location, setLocation] = useState('');
-  const [maxParticipants, setMaxParticipants] = useState('');
-  const [eventType, setEventType] = useState<'networking' | 'workshop' | 'seminar' | 'conference'>('networking');
-  
-  // Ticket dialog state
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [isTicketDialogOpen, setIsTicketDialogOpen] = useState(false);
   const [newTicketPrice, setNewTicketPrice] = useState('');
   const [newTicketType, setNewTicketType] = useState<'paid' | 'free'>('paid');
   const [newTicketAvailable, setNewTicketAvailable] = useState('');
 
-  const handleSubmit = () => {
-    if (!title.trim() || !description.trim() || !date || !time || !location || !maxParticipants) {
-      toast.error('Please fill all fields');
-      return;
-    }
-    const newEvent = {
-      id: events.length + 1,
-      title,
-      description,
-      date,
-      time,
-      location,
-      maxParticipants: parseInt(maxParticipants),
-      currentParticipants: 0,
-      type: eventType,
-      tickets: [] as EventTicket[],
-    };
-    setEvents([newEvent, ...events]);
-    setTitle('');
-    setDescription('');
-    setDate('');
-    setTime('');
-    setLocation('');
-    setMaxParticipants('');
-    setEventType('networking');
-    setIsDialogOpen(false);
-    toast.success('Event created successfully!');
-  };
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Events</h1>
-          <p className="text-muted-foreground mt-2">Organize professional events and workshops</p>
+          <p className="text-muted-foreground mt-2">Event'ler, 15+ kişi ile oluşturduğunuz etkinliklerdir. Bağımsız event oluşturma kaldırıldı.</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Event
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create New Event</DialogTitle>
-              <DialogDescription>Organize a professional event or workshop</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Title</Label>
-                <Input
-                  placeholder="e.g., Networking Mixer"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Event Type</Label>
-                <Select value={eventType} onValueChange={(value) => setEventType(value as 'networking' | 'workshop' | 'seminar' | 'conference')}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="networking">Networking</SelectItem>
-                    <SelectItem value="workshop">Workshop</SelectItem>
-                    <SelectItem value="seminar">Seminar</SelectItem>
-                    <SelectItem value="conference">Conference</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  placeholder="Describe your event..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Date</Label>
-                  <Input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Time</Label>
-                  <Input
-                    type="time"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Location</Label>
-                <Input
-                  placeholder="e.g., Conference Center"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Max Participants</Label>
-                <Input
-                  type="number"
-                  placeholder="e.g., 50"
-                  value={maxParticipants}
-                  onChange={(e) => setMaxParticipants(e.target.value)}
-                />
-              </div>
-              <Button onClick={handleSubmit} className="w-full">
-                Create Event
+      </div>
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-foreground">Event nasıl oluşturulur?</p>
+              <p className="text-sm text-muted-foreground mt-1">Event artık ayrı oluşturulmaz. <strong>Activities</strong> sayfasında bir etkinlik oluşturup <strong>Max Participants</strong> değerini <strong>15 veya üzeri</strong> yaptığınızda otomatik olarak Event etiketi alır.</p>
+              <Button asChild variant="default" className="mt-4">
+                <Link to="/vibes">
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Activities sayfasına git
+                </Link>
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {events.map((event) => (

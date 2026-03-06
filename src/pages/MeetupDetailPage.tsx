@@ -444,7 +444,7 @@ const MeetupDetailPage = () => {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${(meetup as any)?.type === 'event' ? 'bg-violet-500/90 text-white' : 'bg-primary/90 text-white'}`}>
                       {(meetup as any)?.type === 'event' && <Ticket className="w-3.5 h-3.5" />}
-                      {getVibeTypeLabel((meetup as any)?.type)}
+                      {getVibeTypeLabel((meetup as any)?.type, meetup.maxAttendees)}
                     </span>
                     {meetup.category && (
                       <span className="px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm text-card text-sm font-medium">
@@ -855,7 +855,7 @@ const MeetupDetailPage = () => {
                       className="w-full h-12 bg-gradient-primary"
                     >
                       <Edit className="w-5 h-5 mr-2" />
-                      Edit {getVibeTypeLabel((meetup as any)?.type)}
+                      Edit {getVibeTypeLabel((meetup as any)?.type, meetup.maxAttendees)}
                     </Button>
                     <Button
                       variant="outline"

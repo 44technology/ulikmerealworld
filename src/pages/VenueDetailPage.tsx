@@ -342,7 +342,7 @@ const VenueDetailPage = () => {
                               ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400'
                               : 'bg-secondary/10 text-secondary'
                           }`}>
-                            {event.type === 'class' ? 'Class' : getVibeTypeLabel(event.type)}
+                            {event.type === 'class' ? 'Class' : getVibeTypeLabel(event.type, event.maxAttendees)}
                           </span>
                           {(event.price !== undefined && event.price !== null) || event.pricePerPerson != null ? (
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${

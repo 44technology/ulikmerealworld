@@ -121,11 +121,7 @@ const CreateVibePage = () => {
   const [searchVenue, setSearchVenue] = useState('');
   const [showVenueDetail, setShowVenueDetail] = useState(false);
   const [selectedVenueDetail, setSelectedVenueDetail] = useState<any>(null);
-  const [eventType, setEventType] = useState<'activity' | 'event'>('activity');
-  const [showTypeRecommendationModal, setShowTypeRecommendationModal] = useState(false);
   const [communityId, setCommunityId] = useState(communityIdFromQuery);
-  const [recommendedType, setRecommendedType] = useState<'activity' | 'event' | null>(null);
-  const [recommendedMaxAttendees, setRecommendedMaxAttendees] = useState<number>(0);
   const [skillLevel, setSkillLevel] = useState<string>('');
   const [showFeeTypePicker, setShowFeeTypePicker] = useState(false);
   const [showSkillPicker, setShowSkillPicker] = useState(false);
@@ -269,7 +265,7 @@ const CreateVibePage = () => {
         isPublic: visibility === 'public',
         isFree: pricing === 'free',
         location: venueAddress || venue || undefined,
-        type: eventType, // 'activity' or 'event'
+        type: maxAttendees >= 15 ? 'event' : 'activity',
         communityId: communityId || undefined,
       };
       
@@ -556,33 +552,11 @@ const CreateVibePage = () => {
                   const v = e.target.value;
                   setCustomGroupSize(v);
                   if (v) setGroupSize('custom');
-                  const num = parseInt(v, 10);
-                  if (!isNaN(num) && num >= 15 && eventType === 'activity') {
-                    setRecommendedType('event');
-                    setRecommendedMaxAttendees(num);
-                    setShowTypeRecommendationModal(true);
-                  }
                 }}
                 className="h-10 w-24 rounded-xl text-right"
               />
             </div>
-            <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border bg-muted/30">
-              <p className="text-sm text-muted-foreground">Planning an event with 15+ people?</p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-xl gap-1.5 shrink-0"
-                onClick={() => {
-                  setRecommendedType('event');
-                  setRecommendedMaxAttendees(15);
-                  setShowTypeRecommendationModal(true);
-                }}
-              >
-                <Ticket className="w-4 h-4" />
-                Event (15+)
-              </Button>
-            </div>
+            <p className="text-xs text-muted-foreground">15+ kişi seçilirse etkinlik &quot;Event&quot; olarak listelenir.</p>
             {pricing === 'paid' && (
               <>
                 <div className="flex items-center justify-between gap-4">
@@ -1039,107 +1013,6 @@ const CreateVibePage = () => {
               </div>
             </>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Activity/Event Recommendation Modal */}
-      <Dialog open={showTypeRecommendationModal} onOpenChange={setShowTypeRecommendationModal}>
-        <DialogContent className="max-w-md mx-4 rounded-2xl p-0 overflow-hidden">
-          <DialogHeader className="p-6 pb-4">
-            <div className="text-center mb-4">
-              <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 ${
-                recommendedType === 'event' 
-                  ? 'bg-primary/20' 
-                  : 'bg-secondary/20'
-              }`}>
-                {recommendedType === 'event' ? (
-                  <Ticket className="w-8 h-8 text-primary" />
-                ) : (
-                  <Users2 className="w-8 h-8 text-secondary" />
-                )}
-              </div>
-            </div>
-            <DialogTitle className="text-center text-xl font-bold">
-              {recommendedType === 'event' ? 'Event Recommended' : 'Activity Recommended'}
-            </DialogTitle>
-            <DialogDescription className="text-center">
-              {recommendedType === 'event' 
-                ? 'Event mode is recommended for this attendance size. Ticket, check-in, and visibility features will be enabled.'
-                : 'Activity mode is recommended for this attendance size. A more intimate and flexible gathering.'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 pb-6 space-y-4">
-
-            <div className={`p-4 rounded-xl ${
-              recommendedType === 'event' 
-                ? 'bg-primary/10 border-2 border-primary/20' 
-                : 'bg-secondary/10 border-2 border-secondary/20'
-            }`}>
-              {recommendedType === 'event' ? (
-                <div className="space-y-2">
-                  <p className="text-sm text-foreground font-medium">
-                    Event is more suitable for this attendance size.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Ticket, check-in, and visibility features will be enabled.
-                  </p>
-                  <div className="mt-3 space-y-1.5">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                      <span>Ticket management</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                      <span>QR Check-in</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                      <span>Enhanced visibility</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-foreground font-medium">
-                    This is an Activity. A more intimate and flexible gathering.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Ideal for small groups, a more casual experience.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowTypeRecommendationModal(false);
-                  if (recommendedType === 'event') {
-                    setEventType('activity'); // User can choose to keep as activity
-                  }
-                }}
-                className="flex-1"
-              >
-                {recommendedType === 'event' ? 'Keep as Activity' : 'OK'}
-              </Button>
-              {recommendedType === 'event' && (
-                <Button
-                  onClick={() => {
-                    setEventType('event');
-                    setGroupSize('custom');
-                    setCustomGroupSize(String(recommendedMaxAttendees || 15));
-                    setShowTypeRecommendationModal(false);
-                    toast.success('Event mode activated! Ticket and check-in features are now available.');
-                  }}
-                  className="flex-1 bg-gradient-primary"
-                >
-                  Use Event Mode
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </AppLayout>

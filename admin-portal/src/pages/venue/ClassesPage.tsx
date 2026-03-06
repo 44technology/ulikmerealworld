@@ -20,6 +20,7 @@ type PendingRequest = {
 
 const classCategories = [
   { id: 'fitness', label: 'Fitness' },
+  { id: 'padel', label: 'Padel' },
   { id: 'yoga', label: 'Yoga' },
   { id: 'dance', label: 'Dance' },
   { id: 'music', label: 'Music' },
@@ -29,6 +30,16 @@ const classCategories = [
   { id: 'business', label: 'Business' },
   { id: 'other', label: 'Other' },
 ];
+
+const WEEKDAYS = [
+  { id: 'monday', label: 'Mon' },
+  { id: 'tuesday', label: 'Tue' },
+  { id: 'wednesday', label: 'Wed' },
+  { id: 'thursday', label: 'Thu' },
+  { id: 'friday', label: 'Fri' },
+  { id: 'saturday', label: 'Sat' },
+  { id: 'sunday', label: 'Sun' },
+] as const;
 
 type ClassItem = {
   id: number;
@@ -40,10 +51,15 @@ type ClassItem = {
   currentStudents: number;
   locationId: string;
   roomOrArea?: string;
+  scheduleType: 'one_time' | 'recurring_weekly' | 'custom';
   date: string;
   time: string;
   duration: string;
   frequency: string;
+  recurringDays?: string[];
+  startTime?: string;
+  endTime?: string;
+  customScheduleText?: string;
   description: string;
   pendingRequests?: PendingRequest[];
 };
@@ -60,6 +76,7 @@ export default function VenueClassesPage() {
       currentStudents: 8,
       locationId: 'loc-1',
       roomOrArea: 'Studio A',
+      scheduleType: 'one_time',
       date: '2025-03-10',
       time: '09:00',
       duration: '1 hour',
@@ -69,6 +86,27 @@ export default function VenueClassesPage() {
         { id: 'req-1', userName: 'Ayşe Yılmaz', email: 'ayse@example.com', requestedAt: '2025-03-05' },
         { id: 'req-2', userName: 'Mehmet Kaya', email: 'mehmet@example.com', requestedAt: '2025-03-06' },
       ],
+    },
+    {
+      id: 2,
+      title: 'Padel Dersi',
+      category: 'padel',
+      type: 'onsite',
+      price: 40,
+      maxStudents: 8,
+      currentStudents: 3,
+      locationId: 'loc-1',
+      roomOrArea: 'Kort 1',
+      scheduleType: 'recurring_weekly',
+      date: '',
+      time: '',
+      duration: '1 hour',
+      frequency: 'Weekly',
+      recurringDays: ['tuesday', 'thursday'],
+      startTime: '10:00',
+      endTime: '11:00',
+      description: 'Her hafta Salı ve Perşembe sabah 10-11 arası padel dersi.',
+      pendingRequests: [],
     },
   ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -83,11 +121,31 @@ export default function VenueClassesPage() {
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState('');
   const [frequency, setFrequency] = useState('once');
+  const [scheduleType, setScheduleType] = useState<'one_time' | 'recurring_weekly' | 'custom'>('one_time');
+  const [recurringDays, setRecurringDays] = useState<string[]>([]);
+  const [startTime, setStartTime] = useState('10:00');
+  const [endTime, setEndTime] = useState('11:00');
+  const [customScheduleText, setCustomScheduleText] = useState('');
   const [description, setDescription] = useState('');
 
   const getLocationDisplay = (cls: ClassItem) => {
     const locName = getLocationNameById(cls.locationId);
     return cls.roomOrArea ? `${locName} – ${cls.roomOrArea}` : locName;
+  };
+
+  const getScheduleDisplay = (cls: ClassItem) => {
+    if (cls.scheduleType === 'custom' && cls.customScheduleText?.trim()) {
+      return cls.customScheduleText.trim();
+    }
+    const isRecurring = cls.scheduleType === 'recurring_weekly' && (cls.recurringDays?.length ?? 0) > 0 && cls.startTime && cls.endTime;
+    if (isRecurring) {
+      const days = (cls.recurringDays ?? []).map((d) => WEEKDAYS.find((w) => w.id === d)?.label ?? d).join(', ');
+      return `Every ${days} · ${cls.startTime}–${cls.endTime}`;
+    }
+    if (cls.date && cls.time) {
+      return `${cls.date} at ${cls.time} · ${cls.duration}`;
+    }
+    return cls.duration ? `${cls.duration} (${cls.frequency})` : cls.frequency;
   };
 
   const resetForm = () => {
@@ -102,7 +160,18 @@ export default function VenueClassesPage() {
     setTime('');
     setDuration('');
     setFrequency('once');
+    setScheduleType('one_time');
+    setRecurringDays([]);
+    setStartTime('10:00');
+    setEndTime('11:00');
+    setCustomScheduleText('');
     setDescription('');
+  };
+
+  const toggleRecurringDay = (dayId: string) => {
+    setRecurringDays((prev) =>
+      prev.includes(dayId) ? prev.filter((d) => d !== dayId) : [...prev, dayId]
+    );
   };
 
   const openEdit = (cls: ClassItem) => {
@@ -113,62 +182,86 @@ export default function VenueClassesPage() {
     setMaxStudents(String(cls.maxStudents));
     setLocationId(cls.locationId);
     setRoomOrArea(cls.roomOrArea ?? '');
+    setScheduleType(cls.scheduleType ?? 'one_time');
     setDate(cls.date);
     setTime(cls.time);
     setDuration(cls.duration);
     setFrequency(cls.frequency === 'One time' ? 'once' : cls.frequency === 'Weekly' ? 'weekly' : 'custom');
+    setRecurringDays(cls.recurringDays ?? []);
+    setStartTime(cls.startTime ?? '10:00');
+    setEndTime(cls.endTime ?? '11:00');
+    setCustomScheduleText(cls.customScheduleText ?? '');
     setDescription(cls.description ?? '');
     setIsDialogOpen(true);
   };
 
   const handleSubmit = () => {
-    if (!title.trim() || !maxStudents || !date || !time || !duration.trim()) {
-      toast.error('Please fill all required fields');
+    if (!title.trim() || !maxStudents) {
+      toast.error('Please fill title and max students');
       return;
     }
     if (!locationId) {
       toast.error('Please select a location');
       return;
     }
-    const frequencyDisplay = frequency === 'once' ? 'One time' : frequency === 'weekly' ? 'Weekly' : 'Custom';
+    if (scheduleType === 'one_time') {
+      if (!date || !time || !duration.trim()) {
+        toast.error('Please fill date, time and duration for one-time class');
+        return;
+      }
+    } else if (scheduleType === 'recurring_weekly') {
+      if (recurringDays.length === 0) {
+        toast.error('Select at least one day for weekly schedule');
+        return;
+      }
+      if (!startTime || !endTime) {
+        toast.error('Please set start and end time');
+        return;
+      }
+    } else {
+      if (!customScheduleText.trim()) {
+        toast.error('Please enter custom schedule description');
+        return;
+      }
+    }
+    const frequencyDisplay = scheduleType === 'recurring_weekly'
+      ? `Weekly (${recurringDays.map((d) => WEEKDAYS.find((w) => w.id === d)?.label ?? d).join(', ')})`
+      : scheduleType === 'custom'
+        ? 'Custom'
+        : frequency === 'once'
+          ? 'One time'
+          : frequency === 'weekly'
+            ? 'Weekly'
+            : 'Custom';
+    const payload = {
+      title: title.trim(),
+      category: category || 'other',
+      price: price ? parseFloat(price) : 0,
+      maxStudents: parseInt(maxStudents, 10),
+      locationId,
+      roomOrArea: roomOrArea.trim() || undefined,
+      scheduleType,
+      date: scheduleType === 'one_time' ? date : '',
+      time: scheduleType === 'one_time' ? time : startTime,
+      duration: scheduleType === 'recurring_weekly' ? `${startTime}–${endTime}` : duration.trim(),
+      frequency: frequencyDisplay,
+      recurringDays: scheduleType === 'recurring_weekly' ? recurringDays : undefined,
+      startTime: scheduleType === 'recurring_weekly' ? startTime : undefined,
+      endTime: scheduleType === 'recurring_weekly' ? endTime : undefined,
+      customScheduleText: scheduleType === 'custom' ? customScheduleText.trim() : undefined,
+      description: description.trim(),
+    };
     if (editingClassId !== null) {
       setClasses((prev) =>
-        prev.map((c) =>
-          c.id === editingClassId
-            ? {
-                ...c,
-                title: title.trim(),
-                category: category || 'other',
-                price: price ? parseFloat(price) : 0,
-                maxStudents: parseInt(maxStudents, 10),
-                locationId,
-                roomOrArea: roomOrArea.trim() || undefined,
-                date,
-                time,
-                duration: duration.trim(),
-                frequency: frequencyDisplay,
-                description: description.trim(),
-              }
-            : c
-        )
+        prev.map((c) => (c.id === editingClassId ? { ...c, ...payload } : c))
       );
       toast.success('Class updated successfully!');
     } else {
       const newClass: ClassItem = {
         id: Math.max(0, ...classes.map((c) => c.id)) + 1,
-        title: title.trim(),
-        category: category || 'other',
+        ...payload,
         type: 'onsite',
-        price: price ? parseFloat(price) : 0,
-        maxStudents: parseInt(maxStudents, 10),
         currentStudents: 0,
-        locationId,
-        roomOrArea: roomOrArea.trim() || undefined,
-        date,
-        time,
-        duration: duration.trim(),
-        frequency: frequencyDisplay,
-        description: description.trim(),
         pendingRequests: [],
       };
       setClasses([newClass, ...classes]);
@@ -260,32 +353,103 @@ export default function VenueClassesPage() {
               </div>
               <div className="space-y-2">
                 <Label>Room / Area (optional)</Label>
-                <Input placeholder="e.g., Studio A, Main Hall" value={roomOrArea} onChange={(e) => setRoomOrArea(e.target.value)} />
+                <Input placeholder="e.g., Studio A, Kort 1" value={roomOrArea} onChange={(e) => setRoomOrArea(e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Date</Label>
-                  <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Time</Label>
-                  <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+
+              <div className="space-y-3">
+                <Label>Schedule</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={scheduleType === 'one_time' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setScheduleType('one_time')}
+                  >
+                    One-time
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={scheduleType === 'recurring_weekly' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setScheduleType('recurring_weekly')}
+                  >
+                    Recurring weekly
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={scheduleType === 'custom' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setScheduleType('custom')}
+                  >
+                    Custom
+                  </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              {scheduleType === 'custom' && (
                 <div className="space-y-2">
-                  <Label>Duration</Label>
-                  <Input placeholder="e.g., 1 hour" value={duration} onChange={(e) => setDuration(e.target.value)} />
+                  <Label>Custom schedule</Label>
+                  <Input
+                    placeholder="e.g. Her 2 haftada bir Pazartesi, Ayda bir Cumartesi"
+                    value={customScheduleText}
+                    onChange={(e) => setCustomScheduleText(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">Serbest metin: takvime uymayan tekrarlar için</p>
                 </div>
-                <div className="space-y-2">
-                  <Label>Frequency</Label>
-                  <select value={frequency} onChange={(e) => setFrequency(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option value="once">One time</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="custom">Custom</option>
-                  </select>
-                </div>
-              </div>
+              )}
+
+              {scheduleType === 'one_time' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Date</Label>
+                      <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Time</Label>
+                      <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Duration</Label>
+                    <Input placeholder="e.g., 1 hour" value={duration} onChange={(e) => setDuration(e.target.value)} />
+                  </div>
+                </>
+              )}
+
+              {scheduleType === 'recurring_weekly' && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Days of week</Label>
+                    <p className="text-xs text-muted-foreground">e.g. Her hafta Salı ve Perşembe</p>
+                    <div className="flex flex-wrap gap-2">
+                      {WEEKDAYS.map((day) => (
+                        <Button
+                          key={day.id}
+                          type="button"
+                          variant={recurringDays.includes(day.id) ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => toggleRecurringDay(day.id)}
+                        >
+                          {day.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Start time</Label>
+                      <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>End time</Label>
+                      <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">e.g. 10:00–11:00 = sabah 1 saatlik ders</p>
+                </>
+              )}
+
               <div className="space-y-2">
                 <Label>Description (optional)</Label>
                 <Textarea placeholder="Brief description of the class..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
@@ -326,11 +490,7 @@ export default function VenueClassesPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span>{cls.date} at {cls.time}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span>{cls.duration} ({cls.frequency})</span>
+                  <span>{getScheduleDisplay(cls)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="w-4 h-4 text-muted-foreground" />
