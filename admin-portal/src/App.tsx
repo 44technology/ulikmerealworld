@@ -24,6 +24,7 @@ import VenueVibeDetailPage from './pages/venue/VibeDetailPage';
 import VenueEventsPage from './pages/venue/EventsPage';
 import VenueEventDetailPage from './pages/venue/EventDetailPage';
 import VenueDiscountsPage from './pages/venue/DiscountsPage';
+import VenueClassesPage from './pages/venue/ClassesPage';
 import VenueAdsPage from './pages/venue/AdsPage';
 import VenueSettingsPage from './pages/venue/SettingsPage';
 import LocationsPage from './pages/venue/LocationsPage';
@@ -154,6 +155,7 @@ function AppRoutes() {
               <Route path="/checkin" element={<VenueCheckinPage />} />
               <Route path="/campaigns" element={<VenueCampaignsPage />} />
               <Route path="/discounts" element={<VenueDiscountsPage />} />
+              <Route path="/classes" element={<VenueClassesPage />} />
               
               {/* Visibility */}
               <Route path="/visibility/boosts" element={<VisibilityBoostsPage />} />

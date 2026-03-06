@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
-import { QrCode, CheckCircle2, XCircle, ScanLine, Calendar, Users, Camera, CameraOff } from 'lucide-react';
+import { QrCode, CheckCircle2, XCircle, ScanLine, Calendar, Users, Camera, CameraOff, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -26,19 +27,24 @@ type Attendee = {
   checkedInAt: string | null;
 };
 
-// Mock: events and their ticket holders. In production, ticket codes would come from API.
+// Mock: events + classes and their ticket holders. eventId 1,2 = events; 101+ = classes (classId 1 → 101).
 const mockAttendees: Attendee[] = [
   { id: 1, name: 'John Doe', email: 'john@example.com', ticketCode: 'T-BOWL-1001', eventTitle: 'Bowling Night', eventId: 1, checkedIn: true, checkedInAt: '2025-01-24 18:00' },
   { id: 2, name: 'Jane Smith', email: 'jane@example.com', ticketCode: 'T-BOWL-1002', eventTitle: 'Bowling Night', eventId: 1, checkedIn: false, checkedInAt: null },
   { id: 3, name: 'Bob Johnson', email: 'bob@example.com', ticketCode: 'T-BOWL-1003', eventTitle: 'Bowling Night', eventId: 1, checkedIn: true, checkedInAt: '2025-01-24 18:05' },
   { id: 4, name: 'Alice Brown', email: 'alice@example.com', ticketCode: 'T-KARA-2001', eventTitle: 'Karaoke Evening', eventId: 2, checkedIn: false, checkedInAt: null },
   { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', ticketCode: 'T-KARA-2002', eventTitle: 'Karaoke Evening', eventId: 2, checkedIn: true, checkedInAt: '2025-01-24 19:00' },
+  { id: 6, name: 'Ayşe Yılmaz', email: 'ayse@example.com', ticketCode: 'T-CLS-1-001', eventTitle: 'Yoga Morning', eventId: 101, checkedIn: true, checkedInAt: '2025-03-10 08:55' },
+  { id: 7, name: 'Mehmet Kaya', email: 'mehmet@example.com', ticketCode: 'T-CLS-1-002', eventTitle: 'Yoga Morning', eventId: 101, checkedIn: false, checkedInAt: null },
+  { id: 8, name: 'Zeynep Demir', email: 'zeynep@example.com', ticketCode: 'T-CLS-1-003', eventTitle: 'Yoga Morning', eventId: 101, checkedIn: false, checkedInAt: null },
 ];
 
-const mockEvents = [
-  { id: 0, title: 'All events' },
-  { id: 1, title: 'Bowling Night' },
-  { id: 2, title: 'Karaoke Evening' },
+// Events (id 1,2) and classes (id 100+). classId 1 → eventId 101 for filter.
+const mockSources = [
+  { id: 0, title: 'All events & classes', type: 'all' as const },
+  { id: 1, title: 'Bowling Night', type: 'event' as const },
+  { id: 2, title: 'Karaoke Evening', type: 'event' as const },
+  { id: 101, title: 'Yoga Morning (Class)', type: 'class' as const },
 ];
 
 const checkinEn = {
@@ -60,8 +66,8 @@ const checkinEn = {
   ticketNotFound: 'Ticket not found. Check the code.',
   alreadyCheckedIn: 'Already checked in',
   checkedInSuccess: 'Checked in.',
-  event: 'Event',
-  allEvents: 'All events',
+  event: 'Event / Class',
+  allEvents: 'All events & classes',
   checkinList: 'Check-in List',
   checkedInCount: 'checked in',
   noTicketsForEvent: 'No tickets for this event.',
@@ -89,8 +95,8 @@ const checkinEs = {
   ticketNotFound: 'Entrada no encontrada. Comprueba el código.',
   alreadyCheckedIn: 'Ya registrado',
   checkedInSuccess: 'Entrada registrada.',
-  event: 'Evento',
-  allEvents: 'Todos los eventos',
+  event: 'Evento / Clase',
+  allEvents: 'Todos los eventos y clases',
   checkinList: 'Lista de entradas',
   checkedInCount: 'registrados',
   noTicketsForEvent: 'No hay entradas para este evento.',
@@ -100,14 +106,26 @@ const checkinEs = {
   checkedInAt: 'Entrada',
 };
 
+const CLASS_ID_OFFSET = 100; // classId 1 → eventId 101 for filter
+
 export default function CheckinPage() {
   const { language } = useLanguage();
+  const [searchParams] = useSearchParams();
   const t = language === 'es' ? checkinEs : checkinEn;
   const locale = language === 'es' ? 'es-ES' : 'en-US';
 
+  const classIdParam = searchParams.get('classId');
+  const classTitleParam = searchParams.get('title') ?? '';
+
   const [attendees, setAttendees] = useState<Attendee[]>(mockAttendees);
   const [ticketCode, setTicketCode] = useState('');
-  const [selectedEventId, setSelectedEventId] = useState(0);
+  const [selectedSourceId, setSelectedSourceId] = useState(() => {
+    if (classIdParam) {
+      const id = parseInt(classIdParam, 10);
+      return isNaN(id) ? 0 : CLASS_ID_OFFSET + id;
+    }
+    return 0;
+  });
   const [cameraActive, setCameraActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -219,9 +237,16 @@ export default function CheckinPage() {
   };
 
   const filteredAttendees =
-    selectedEventId === 0
+    selectedSourceId === 0
       ? attendees
-      : attendees.filter((a) => a.eventId === selectedEventId);
+      : attendees.filter((a) => a.eventId === selectedSourceId);
+
+  useEffect(() => {
+    if (classIdParam) {
+      const id = parseInt(classIdParam, 10);
+      if (!isNaN(id)) setSelectedSourceId(CLASS_ID_OFFSET + id);
+    }
+  }, [classIdParam]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -299,16 +324,22 @@ export default function CheckinPage() {
                 <Calendar className="w-4 h-4" />
                 {t.event}
               </CardTitle>
+              {classTitleParam && (
+                <CardDescription className="flex items-center gap-1">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  Class: {decodeURIComponent(classTitleParam)}
+                </CardDescription>
+              )}
             </CardHeader>
             <CardContent>
               <select
-                value={selectedEventId}
-                onChange={(e) => setSelectedEventId(Number(e.target.value))}
+                value={selectedSourceId}
+                onChange={(e) => setSelectedSourceId(Number(e.target.value))}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
               >
-                {mockEvents.map((ev) => (
-                  <option key={ev.id} value={ev.id}>
-                    {ev.id === 0 ? t.allEvents : ev.title}
+                {mockSources.map((src) => (
+                  <option key={src.id} value={src.id}>
+                    {src.id === 0 ? t.allEvents : src.title}
                   </option>
                 ))}
               </select>

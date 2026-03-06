@@ -24,6 +24,9 @@ import {
   QrCode,
   FileText,
   Link2,
+  Megaphone,
+  Percent,
+  GraduationCap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -38,12 +41,15 @@ const navigation: Array<{
   children?: Array<{ name: string; href: string; icon: LucideIcon }>;
 }> = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Campaigns', href: '/campaigns', icon: Megaphone },
+  { name: 'Discounts', href: '/discounts', icon: Percent },
+  { name: 'On-Site Classes', href: '/classes', icon: GraduationCap },
   { name: 'Locations', href: '/locations', icon: MapPin },
   { name: 'Content', href: '/content', icon: Image },
   { name: 'Chat', href: '/chat', icon: MessageSquare },
   { name: 'Activities', href: '/vibes', icon: Users },
   { name: 'Events', href: '/events', icon: Calendar },
-  { name: 'Check-in (QR)', href: '/checkin', icon: QrCode },
+  { name: 'Tickets & QR Check-in', href: '/checkin', icon: QrCode },
   {
     name: 'Visibility',
     href: '#',

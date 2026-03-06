@@ -1,5 +1,6 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Megaphone, Sparkles, Percent, Image, TrendingUp } from 'lucide-react';
+import { Megaphone, Sparkles, Percent, Image, TrendingUp, ArrowRight, GraduationCap } from 'lucide-react';
 
 export default function DashboardPage() {
   const stats = [
@@ -13,6 +14,55 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground mt-2">Manage your venue activities</p>
+      </div>
+
+      {/* Campaign, Discount & On-Site Classes – quick access */}
+      <div>
+        <h2 className="text-lg font-semibold text-foreground mb-3">Campaign, Discount & Classes</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Link to="/campaigns">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-primary/20 hover:border-primary/40">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Megaphone className="h-4 w-4 text-primary" />
+                  Campaigns
+                </CardTitle>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Create and manage marketing campaigns</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/discounts">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-primary/20 hover:border-primary/40">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Percent className="h-4 w-4 text-primary" />
+                  Discounts
+                </CardTitle>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Manage discounts for products and services</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/classes">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-primary/20 hover:border-primary/40">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-primary" />
+                  On-Site Classes
+                </CardTitle>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Create classes, edit and approve join requests</p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

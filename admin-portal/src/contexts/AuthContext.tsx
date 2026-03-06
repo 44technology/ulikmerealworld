@@ -4,14 +4,15 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'super_admin' | 'admin' | 'moderator' | 'support' | 'analyst';
+  venueName?: string;
+  role: 'super_admin' | 'admin' | 'moderator' | 'support' | 'analyst' | 'venue' | 'instructor';
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, role?: 'admin' | 'venue' | 'instructor') => Promise<void>;
   logout: () => void;
 }
 
