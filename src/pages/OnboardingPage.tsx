@@ -4,12 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import uliMascot from '@/assets/uli-mascot.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronRight, Check, Users, Heart, Briefcase, Home, Phone, Mail, Smartphone, Camera, X, Upload, Sparkles, Coffee, Dumbbell, Music, Gamepad2, BookOpen, Plane, UtensilsCrossed, Film, ShoppingBag, GraduationCap, TrendingUp, Building2, Target, Lightbulb, MapPin, DollarSign, Zap } from 'lucide-react';
+import { LiraAvatarScreen } from '@/components/LiraAvatarScreen';
+import { ChevronRight, Check, Users, Heart, Briefcase, Home, Phone, Mail, Smartphone, Camera, X, Upload, Sparkles, Coffee, Dumbbell, Music, Gamepad2, BookOpen, Plane, UtensilsCrossed, Film, ShoppingBag, GraduationCap, TrendingUp, Building2, Target, Lightbulb, MapPin, DollarSign, Zap, ShieldCheck, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { API_ENDPOINTS, apiRequest } from '@/lib/api';
 
-type OnboardingStep = 'welcome' | 'method' | 'phone' | 'otp' | 'name' | 'birthday' | 'gender' | 'occupation' | 'lookingFor' | 'interests' | 'bio' | 'photos' | 'selfie' | 'complete';
+type OnboardingStep = 'welcome' | 'method' | 'phone' | 'otp' | 'email' | 'name' | 'birthday' | 'accountCreated' | 'location' | 'gender' | 'occupation' | 'lookingFor' | 'interests' | 'profilePhoto' | 'photos' | 'faceScan' | 'selfie' | 'bio' | 'complete';
 
 // Mexico cities for location preference (optional)
 const mexicoCities = [
@@ -27,10 +28,9 @@ const signupMethods = [
 ];
 
 const genderOptions = [
-  { id: 'male', label: 'Male', emoji: '👨' },
-  { id: 'female', label: 'Female', emoji: '👩' },
-  { id: 'nonbinary', label: 'Non-binary', emoji: '🧑' },
-  { id: 'prefer-not', label: 'Prefer not to say', emoji: '🤐' },
+  { id: 'female', label: 'Women', emoji: '👩' },
+  { id: 'male', label: 'Men', emoji: '👨' },
+  { id: 'other', label: 'Other', emoji: '🧑' },
 ];
 
 const occupationOptions = [
@@ -174,6 +174,10 @@ const messages: Record<OnboardingStep, string[]> = {
     "We've sent a verification code to your phone.",
     "Enter the code below to verify your number.",
   ],
+  email: [
+    "Got it!",
+    "What's your email address?",
+  ],
   name: [
     "Perfect! Let's start with the basics.",
     "What should I call you? 😊",
@@ -181,6 +185,13 @@ const messages: Record<OnboardingStep, string[]> = {
   birthday: [
     "Nice to meet you!",
     "When's your birthday? I promise I won't forget it! 🎂",
+  ],
+  location: [
+    "Great!",
+    "We use your location to show nearby places and better recommendations.",
+  ],
+  accountCreated: [
+    "Your account is successfully created! Let's continue.",
   ],
   gender: [
     "Got it!",
@@ -225,6 +236,14 @@ const messages: Record<OnboardingStep, string[]> = {
     "You're all set! 🎉",
     "Welcome to Ulikme! Let's connect you with real entrepreneurs and expert-led classes!",
   ],
+  profilePhoto: [
+    "Upload your photo.",
+    "This helps us confirm your identity and keep the community safe.",
+  ],
+  faceScan: [
+    "Let's verify it's you.",
+    "We'll compare your selfie with your uploaded photo.",
+  ],
 };
 
 const OnboardingPage = () => {
@@ -237,6 +256,7 @@ const OnboardingPage = () => {
   const [phone, setPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -246,6 +266,7 @@ const OnboardingPage = () => {
   const [lookingFor, setLookingFor] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
   const [bio, setBio] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
   const [selfie, setSelfie] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -357,9 +378,9 @@ const OnboardingPage = () => {
       // For mockup, accept any 6-digit code or '123456'
       const response = await verifyOTP(formattedPhone, otpCode);
       
-      // Phone verified - continue to profile setup
-      toast.success('Phone verified! Please complete your profile.');
-      setStep('name');
+      // Phone verified - continue to email
+      toast.success('Phone verified!');
+      setStep('email');
     } catch (error: any) {
       console.error('OTP verification error:', error);
       toast.error(error.message || 'Invalid verification code. Please try again.');
@@ -367,6 +388,11 @@ const OnboardingPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEmailNext = () => {
+    if (!email.trim()) return;
+    setStep('name');
   };
 
   const handleNameNext = () => {
@@ -473,6 +499,7 @@ const OnboardingPage = () => {
         
         await register({
           phone: formattedPhone,
+          email: email.trim() || undefined,
           firstName: finalFirstName,
           lastName: finalLastName,
           displayName: name,
@@ -486,6 +513,7 @@ const OnboardingPage = () => {
         const finalLastName = lastName || nameParts.slice(1).join(' ') || nameParts[0] || '';
         
         await register({
+          email: email.trim() || undefined,
           firstName: finalFirstName,
           lastName: finalLastName,
           displayName: name,
@@ -530,7 +558,6 @@ const OnboardingPage = () => {
 
       toast.success('Welcome to ULIKME!');
       setStep('complete');
-      setTimeout(() => navigate('/home'), 1500);
     } catch (error: any) {
       toast.error(error.message || 'Registration failed');
     } finally {
@@ -539,7 +566,7 @@ const OnboardingPage = () => {
   };
 
   const handleNext = () => {
-    const steps: OnboardingStep[] = ['welcome', 'method', 'phone', 'otp', 'name', 'birthday', 'gender', 'occupation', 'lookingFor', 'interests', 'photos', 'selfie', 'bio', 'complete'];
+    const steps: OnboardingStep[] = ['welcome', 'method', 'phone', 'otp', 'email', 'name', 'birthday', 'accountCreated', 'location', 'gender', 'occupation', 'lookingFor', 'interests', 'profilePhoto', 'photos', 'faceScan', 'selfie', 'bio', 'complete'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1) {
       const nextStep = steps[currentIndex + 1];
@@ -552,7 +579,21 @@ const OnboardingPage = () => {
         }
       }
       
-      // Check if moving from photos to selfie - require at least 2 photos
+      // Check if moving from photos to faceScan - require at least 2 photos
+      if (step === 'photos' && nextStep === 'faceScan') {
+        if (photos.length < 2) {
+          toast.error('Please add at least 2 photos before continuing');
+          return;
+        }
+      }
+      
+      // Check if moving from faceScan to selfie
+      if (step === 'faceScan' && nextStep !== 'selfie') {
+        setStep('selfie');
+        return;
+      }
+      
+      // Check if moving from photos to selfie (legacy path) - require at least 2 photos
       if (step === 'photos' && nextStep === 'selfie') {
         if (photos.length < 2) {
           toast.error('Please add at least 2 photos before continuing to selfie');
@@ -560,8 +601,14 @@ const OnboardingPage = () => {
         }
       }
       
-      // Check if moving from interests to photos - ensure photos step is shown
-      if (step === 'interests' && nextStep !== 'photos') {
+      // Check if moving from interests to profilePhoto
+      if (step === 'interests' && nextStep !== 'profilePhoto') {
+        setStep('profilePhoto');
+        return;
+      }
+      
+      // Check if moving from profilePhoto to photos
+      if (step === 'profilePhoto' && nextStep !== 'photos') {
         setStep('photos');
         return;
       }
@@ -665,6 +712,9 @@ const OnboardingPage = () => {
 
     switch (step) {
       case 'welcome':
+        // welcome artık LiraAvatarScreen ile erken dönüldü; bu case sadece fallback
+        return null;
+      case 'method':
         return (
           <div className="space-y-3 mt-4">
             {signupMethods.map((method) => {
@@ -1278,9 +1328,49 @@ const OnboardingPage = () => {
 
       case 'complete':
         return (
-          <Button onClick={() => navigate('/home')} className="w-full bg-gradient-primary h-14 text-lg font-semibold shadow-glow">
-            Start Exploring! <ChevronRight className="ml-2" />
-          </Button>
+          <div className="min-h-screen bg-white flex flex-col">
+            <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+                aria-label="Back"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+            </header>
+
+            <div className="flex-1 px-6 flex flex-col items-center">
+              <div className="mt-6 mb-6">
+                <div className="w-40 h-40 rounded-full bg-[#FDE7D3] flex items-center justify-center">
+                  <div className="w-28 h-28 rounded-full bg-[#ED6C27] flex items-center justify-center">
+                    <ShieldCheck className="w-16 h-16 text-white" />
+                  </div>
+                </div>
+              </div>
+
+              <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
+                You&apos;re verified ✓
+              </h2>
+              <p className="text-sm text-gray-600 text-center max-w-xs">
+                Your selfie was successfully matched with your photo. Your profile is now verified and trusted by the
+                community.
+              </p>
+            </div>
+
+            <div className="px-6 pb-6">
+              <button
+                type="button"
+                onClick={() => navigate('/home')}
+                className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base"
+              >
+                Get Started
+              </button>
+            </div>
+          </div>
         );
 
       default:
@@ -1288,24 +1378,928 @@ const OnboardingPage = () => {
     }
   };
 
-  // Photos step - render full screen without chat bubbles
-  if (step === 'photos') {
+  // Signup ilk ekranı: login ekranı ile aynı stil (kalabalık arka plan + 3 buton)
+  if (step === 'welcome') {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="relative flex-1 flex flex-col px-6 pt-12 pb-8 max-w-md mx-auto w-full">
-          {/* Header with back button */}
-          <div className="flex items-center gap-4 mb-6">
-            <motion.button
-              onClick={() => setStep('interests')}
-              className="p-2 -ml-2"
-              whileTap={{ scale: 0.9 }}
-            >
-              <ChevronRight className="w-6 h-6 text-foreground rotate-180" />
-            </motion.button>
-            <h1 className="text-xl font-bold text-foreground">Add Photos</h1>
+      <div className="min-h-screen flex flex-col relative overflow-hidden">
+        {/* Arka plan: kalabalık görsel + koyu overlay */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.45)), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=80')",
+          }}
+        />
+        <div className="relative flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-10 max-w-md mx-auto w-full">
+          {/* Logo: beyaz kare, yumuşak köşeler, soldan sağa hafif mavi–turuncu gradient, içinde siyah U */}
+          <div
+            className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4"
+            style={{
+              background: 'linear-gradient(to right, #b8daf0 0%, #ffffff 50%, #ffdfb8 100%)',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
+            }}
+          >
+            <span className="text-4xl font-black text-black leading-none">U</span>
           </div>
-          {renderInput()}
+
+          {/* ULIKME */}
+          <h1 className="text-4xl font-extrabold text-white uppercase tracking-tight mb-8">
+            ULIKME
+          </h1>
+
+          {/* Create your Account */}
+          <div className="text-center mb-2">
+            <p className="text-white text-lg">Create your</p>
+            <p className="text-white text-2xl font-bold">Account</p>
+          </div>
+          <p className="text-white/90 text-sm mb-8">
+            Choose how you&apos;d like to get started
+          </p>
+
+          {/* Üç buton: beyaz, yuvarlatılmış, açık gri yazı, hafif gölge */}
+          <div className="w-full space-y-3">
+            {signupMethods.map((method) => {
+              const Icon = method.icon;
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => handleMethodSelect(method.id)}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-3 py-4 px-4 rounded-xl bg-white text-gray-600 font-medium hover:bg-gray-50 active:scale-[0.99] transition-colors disabled:opacity-60 shadow-md"
+                >
+                  <Icon className="w-5 h-5 shrink-0" />
+                  <span>{method.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Sign in link */}
+          <p className="mt-8 text-center text-white/90 text-sm">
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="font-semibold text-white underline underline-offset-2 hover:no-underline"
+            >
+              Sign in
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Telefon – Lira soruyor
+  if (step === 'phone') {
+    return (
+      <LiraAvatarScreen
+        title="Lira"
+        onBack={() => setStep('welcome')}
+        message="What's your phone number? I'll send you a verification code."
+        showMediaControls={false}
+        onNext={handleSendOTP}
+        nextLabel="Send code"
+        nextLoading={loading}
+        nextDisabled={!phone.trim()}
+      >
+        <Input
+          type="tel"
+          placeholder="+1 (555) 123-4567"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          className="h-12 rounded-xl border-gray-200"
+          disabled={loading}
+        />
+      </LiraAvatarScreen>
+    );
+  }
+
+  // OTP – Lira doğrulama
+  if (step === 'otp') {
+    return (
+      <LiraAvatarScreen
+        title="Lira"
+        onBack={() => { setStep('phone'); setOtpCode(''); }}
+        message={
+          <>
+            I&apos;ve sent a code to your phone.
+            <br />
+            Enter it below to continue.
+          </>
+        }
+        showMediaControls={false}
+        onNext={handleVerifyOTP}
+        nextLabel="Verify"
+        nextLoading={loading}
+        nextDisabled={otpCode.length !== 6}
+      >
+        <div className="flex justify-center gap-2">
+          {[0, 1, 2, 3, 4, 5].map((index) => (
+            <Input
+              key={index}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={otpCode[index] || ''}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 1) {
+                  const newCode = otpCode.split('');
+                  newCode[index] = value;
+                  setOtpCode(newCode.join('').slice(0, 6));
+                  if (value && index < 5) document.getElementById(`otp-${index + 1}`)?.focus();
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Backspace' && !otpCode[index] && index > 0) {
+                  document.getElementById(`otp-${index - 1}`)?.focus();
+                }
+              }}
+              id={`otp-${index}`}
+              className="w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-200"
+              disabled={loading}
+            />
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 text-center">Code sent to {phone}</p>
+        <button type="button" onClick={handleSendOTP} disabled={loading} className="text-sm text-[#ED6C27] font-medium">
+          Resend code
+        </button>
+      </LiraAvatarScreen>
+    );
+  }
+
+  // Email – Lira soruyor
+  if (step === 'email') {
+    return (
+      <LiraAvatarScreen
+        title="Lira"
+        onBack={() => setStep('otp')}
+        message="What's your email address?"
+        showMediaControls={false}
+        onNext={handleEmailNext}
+        nextLabel="Next"
+        nextDisabled={!email.trim()}
+      >
+        <Input
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="h-12 rounded-xl border-gray-200"
+        />
+      </LiraAvatarScreen>
+    );
+  }
+
+  // İsim – Lira soruyor
+  if (step === 'name') {
+    return (
+      <LiraAvatarScreen
+        title="Lira"
+        onBack={() => setStep('email')}
+        message="What should I call you?"
+        showMediaControls={false}
+        onNext={handleNameNext}
+        nextLabel="Next"
+        nextLoading={loading}
+        nextDisabled={!name.trim()}
+      >
+        <Input
+          placeholder="Your full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="h-12 rounded-xl border-gray-200 text-center"
+        />
+      </LiraAvatarScreen>
+    );
+  }
+
+  // Doğum tarihi – Lira soruyor
+  if (step === 'birthday') {
+    return (
+      <LiraAvatarScreen
+        title="Lira"
+        onBack={() => setStep('name')}
+        message="When's your birthday? I promise I won't forget it!"
+        showMediaControls={false}
+        onNext={() => setStep('accountCreated')}
+        nextLabel="Next"
+        nextDisabled={!birthday}
+      >
+        <Input
+          type="date"
+          value={birthday}
+          onChange={(e) => setBirthday(e.target.value)}
+          className="h-12 rounded-xl border-gray-200 text-center"
+        />
+      </LiraAvatarScreen>
+    );
+  }
+
+  // Account created – Location Services'tan önce
+  if (step === 'accountCreated') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('birthday')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col items-center justify-center">
+          {/* Turuncu/sarı → mor gradient blob */}
+          <div
+            className="w-48 h-48 rounded-full mb-8 flex-shrink-0"
+            style={{
+              background: 'radial-gradient(ellipse 80% 70% at 50% 30%, #F5B027 0%, #ED6C27 30%, #9B59B6 70%, #2C3E50 100%)',
+              boxShadow: '0 12px 40px rgba(237, 108, 39, 0.25)',
+            }}
+          />
+          <p className="text-gray-500 text-center text-base">Your account</p>
+          <p className="text-gray-900 font-bold text-center text-lg mt-1">
+            is successfully created! Let&apos;s continue.
+          </p>
+        </div>
+
+        <div className="px-6 pb-8">
+          <button
+            type="button"
+            onClick={() => setStep('location')}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Lokasyon ekranı – ULIKME başlığı, ikon ve alt metin
+  if (step === 'location') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('accountCreated')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col items-center">
+          {/* Büyük turuncu lokasyon ikonu */}
+          <div className="mt-4 mb-6">
+            <div className="w-32 h-32 rounded-full bg-[#ED6C27] flex items-center justify-center">
+              <MapPin className="w-16 h-16 text-white" />
+            </div>
+          </div>
+
+          <h2 className="text-xl font-bold text-gray-900 mb-2 text-center">Location Services</h2>
+          <p className="text-sm text-gray-600 text-center max-w-xs mb-auto">
+            We use your location to show nearby places, improve recommendations, and enhance your overall experience.
+          </p>
+        </div>
+
+        <div className="px-6 pb-6">
+          <button
+            type="button"
+            onClick={() => setStep('gender')}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Cinsiyet ekranı – üç satırlı seçim + alt turuncu Next
+  if (step === 'gender') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('location')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6 text-center">What&apos;s your gender?</h2>
+
+          <div className="space-y-3 mb-auto">
+            {genderOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setGender(option.id)}
+                className={`w-full h-12 rounded-full px-4 flex items-center justify-between text-base font-medium ${
+                  gender === option.id
+                    ? 'bg-[#FFF3E8] text-gray-900 border border-[#ED6C27]'
+                    : 'bg-[#F7F7F7] text-gray-800 border border-transparent'
+                }`}
+              >
+                <span>{option.label}</span>
+                <span
+                  className={`w-5 h-5 rounded-full border ${
+                    gender === option.id ? 'bg-[#ED6C27] border-[#ED6C27]' : 'border-gray-400 bg-white'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-6 pb-6">
+          <button
+            type="button"
+            onClick={() => setStep('occupation')}
+            disabled={!gender}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Meslek ekranı – gender ekranıyla aynı stil
+  if (step === 'occupation') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('gender')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col">
+          <h2 className="text-xl font-semibold text-gray-900 mt-2 text-center">What do you do?</h2>
+          <p className="text-xs text-gray-500 text-center mb-6">
+            Your job, role, or what you&apos;re currently working as
+          </p>
+
+          <div className="space-y-3 mb-auto">
+            {occupationOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setOccupation(option.id)}
+                className={`w-full h-12 rounded-full px-4 flex items-center justify-between text-base font-medium ${
+                  occupation === option.id
+                    ? 'bg-[#FFF3E8] text-gray-900 border border-[#ED6C27]'
+                    : 'bg-[#F7F7F7] text-gray-800 border border-transparent'
+                }`}
+              >
+                <span>{option.label}</span>
+                <span
+                  className={`w-5 h-5 rounded-full border ${
+                    occupation === option.id ? 'bg-[#ED6C27] border-[#ED6C27]' : 'border-gray-400 bg-white'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-6 pb-6">
+          <button
+            type="button"
+            onClick={() => setStep('lookingFor')}
+            disabled={!occupation}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Learn / Achieve ekranı – hedefler (lookingFor)
+  if (step === 'lookingFor') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('occupation')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col">
+          <h2 className="text-xl font-semibold text-gray-900 mt-2 text-center">
+            What do you want to achieve
+          </h2>
+          <p className="text-xs text-gray-500 text-center mb-6">
+            Select all that apply! We&apos;ll match you with the right classes and mentors!
+          </p>
+
+          <div className="grid grid-cols-3 gap-3 mb-auto">
+            {lookingForOptions.map((option) => {
+              const isSelected = lookingFor.includes(option.id);
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => toggleLookingFor(option.id)}
+                  className={`h-24 rounded-2xl px-2 py-2 text-xs font-medium text-center flex flex-col items-center justify-center gap-2 transition-colors ${
+                    isSelected
+                      ? 'bg-[#FFF3E8] text-gray-900 border border-[#ED6C27]'
+                      : 'bg-[#F7F7F7] text-gray-800 border border-transparent'
+                  }`}
+                >
+                  <span className="text-xl">{option.emoji}</span>
+                  <span className="leading-tight">{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-6 pb-6">
+          <button
+            type="button"
+            onClick={() => setStep('interests')}
+            disabled={lookingFor.length === 0}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Interests ekranı – ilgi alanları listesi
+  if (step === 'interests') {
+    const minInterests = 5;
+
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('lookingFor')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col">
+          <h2 className="text-xl font-semibold text-gray-900 mt-2 text-center">
+            Please select your interest
+          </h2>
+          <p className="text-xs text-[#ED6C27] font-medium text-center mt-1">
+            Select at least {minInterests} options.
+          </p>
+
+          <div className="mt-6 grid grid-cols-2 gap-3 mb-auto">
+            {interestOptions.map((option) => {
+              const isSelected = interests.includes(option.id);
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => toggleInterest(option.id)}
+                  className={`h-12 rounded-xl px-4 flex items-center justify-between text-sm font-medium ${
+                    isSelected
+                      ? 'bg-[#FFF3E8] text-gray-900 border border-[#ED6C27]'
+                      : 'bg-[#F7F7F7] text-gray-800 border border-transparent'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span>{option.emoji}</span>
+                    <span>{option.label}</span>
+                  </span>
+                  <span
+                    className={`w-5 h-5 rounded-sm border ${
+                      isSelected ? 'bg-[#ED6C27] border-[#ED6C27]' : 'border-gray-400 bg-white'
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-6 pb-6">
+          <button
+            type="button"
+            onClick={() => setStep('profilePhoto')}
+            disabled={interests.length < minInterests}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Sayfa 1: Upload your photo (boş) / Sayfa 2: Aynı ekran, fotoğraf yüklendi
+  if (step === 'profilePhoto') {
+    const handleProfilePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (ev.target?.result) setProfilePhoto(ev.target.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+      e.target.value = '';
+    };
+
+    const goToPhotos = () => {
+      if (profilePhoto) setPhotos(prev => [profilePhoto, ...prev]);
+      setStep('photos');
+    };
+
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('interests')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col">
+          <h2 className="text-xl font-semibold text-gray-900 mt-4 text-center">
+            Upload your photo
+          </h2>
+          <p className="text-sm text-gray-500 text-center mt-2 mb-8">
+            This helps us confirm your identity and keep the community safe.
+          </p>
+
+          <div className="relative flex-1 flex items-center justify-center min-h-[280px]">
+            <label className="w-full aspect-[4/5] max-w-sm rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden cursor-pointer relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePhotoSelect}
+                className="sr-only"
+                id="profile-photo-upload"
+              />
+              {profilePhoto ? (
+                <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <Camera className="w-16 h-16 text-gray-400" />
+              )}
+              <span
+                className="absolute bottom-3 right-3 w-12 h-12 rounded-full bg-[#ED6C27] flex items-center justify-center text-white shadow-lg"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('profile-photo-upload')?.click();
+                }}
+              >
+                <span className="text-2xl leading-none">+</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div className="px-6 pb-8">
+          <button
+            type="button"
+            onClick={goToPhotos}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Çoklu foto sayfası – ekteki gibi: Add your best Photos, 2x3 grid, + butonları
+  if (step === 'photos') {
+    const slotCount = 6;
+    const slots = Array.from({ length: slotCount }, (_, i) => photos[i] ?? null);
+
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('profilePhoto')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col">
+          <h2 className="text-xl font-bold text-gray-900 mt-2">
+            Add your best Photos
+          </h2>
+          <p className="text-sm text-gray-700 mt-1 mb-6">
+            Let&apos;s add your 2 photos to start.
+          </p>
+
+          <div className="grid grid-cols-3 gap-3 mb-auto">
+            {slots.map((photo, index) => (
+              <div key={index} className="aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200 relative">
+                {photo ? (
+                  <>
+                    {photo.startsWith('data:video') ? (
+                      <video src={photo} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={photo} alt="" className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </>
+                ) : (
+                  <label className="absolute inset-0 flex items-center justify-center cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      className="sr-only"
+                      onChange={handlePhotoUpload}
+                    />
+                    <Camera className="w-10 h-10 text-gray-400 pointer-events-none" />
+                    <span className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-[#ED6C27] flex items-center justify-center text-white text-xl leading-none pointer-events-none">
+                      +
+                    </span>
+                  </label>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-6 pb-8">
+          <button
+            type="button"
+            onClick={() => photos.length >= 2 && setStep('faceScan')}
+            disabled={photos.length < 2}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Face scan sayfası – Let's verify it's you
+  if (step === 'faceScan') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('photos')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col items-center">
+          <h2 className="text-xl font-bold text-gray-900 mt-4 text-center">
+            Let&apos;s verify it&apos;s you
+          </h2>
+          <p className="text-sm text-gray-600 text-center mt-2 mb-8 max-w-xs">
+            We&apos;ll compare your selfie with your uploaded photo to make sure it&apos;s really you. This helps keep everyone safe.
+          </p>
+
+          {/* İllüstrasyon: telefon + kilit + tik */}
+          <div className="relative flex items-center justify-center w-48 h-48 mb-8">
+            <div className="absolute w-32 h-32 rounded-full bg-gray-100" />
+            <div className="relative w-24 h-40 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg">
+              <Lock className="w-10 h-10 text-[#ED6C27]" />
+            </div>
+            <div className="absolute top-2 right-6 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center border-2 border-white">
+              <Check className="w-5 h-5 text-white" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-green-500" />
+            <div className="absolute bottom-4 -left-2 w-3 h-3 rounded-full bg-[#ED6C27]" />
+            <div className="absolute top-8 -left-4 w-2 h-2 rounded-full bg-red-400" />
+          </div>
+        </div>
+
+        <div className="px-6 pb-8">
+          <button
+            type="button"
+            onClick={() => setStep('selfie')}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Tell us about you – son iki sayfadan biri
+  if (step === 'bio') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('selfie')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col">
+          <h2 className="text-xl font-bold text-gray-900 mt-4 text-center">
+            Tell us about you
+          </h2>
+          <p className="text-sm text-gray-500 text-center mt-2 mb-6">
+            Share a little about yourself so others get to know you
+          </p>
+
+          <textarea
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            placeholder="A short intro, anything you'd like others to know..."
+            rows={6}
+            maxLength={500}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ED6C27]/20 resize-none"
+          />
+        </div>
+
+        <div className="px-6 pb-8">
+          <button
+            type="button"
+            onClick={async () => {
+              await handleComplete();
+            }}
+            disabled={loading}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base disabled:opacity-50"
+          >
+            {loading ? '...' : 'Next'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Success sayfası – Congratulations + profile summary
+  if (step === 'complete') {
+    const lookingForLabels = lookingFor
+      .map((id) => lookingForOptions.find((o) => o.id === id)?.label)
+      .filter(Boolean);
+    const interestLabels = interests
+      .map((id) => interestOptions.find((o) => o.id === id)?.label)
+      .filter(Boolean);
+    const occupationLabel = occupationOptions.find((o) => o.id === occupation)?.label ?? '—';
+
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center justify-center relative px-4 pt-12 pb-4">
+          <button
+            type="button"
+            onClick={() => setStep('bio')}
+            className="absolute left-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-xl font-bold text-[#ED6C27]">ULIKME</span>
+        </header>
+
+        <div className="flex-1 px-6 flex flex-col items-center overflow-auto">
+          <h2 className="text-xl font-bold text-[#ED6C27] uppercase tracking-tight mt-4 mb-4">
+            Congratulations
+          </h2>
+
+          <div className="relative mb-4">
+            <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+              {photos[0] ? (
+                <img src={photos[0]} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-4xl text-gray-400">👤</span>
+              )}
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center border-2 border-white">
+              <Check className="w-5 h-5 text-white" />
+            </div>
+          </div>
+
+          <p className="text-base font-bold text-gray-900 mb-1">
+            Your profile is ready <span className="text-green-500">✓</span>
+          </p>
+          <p className="text-sm text-gray-500 text-center mb-6">
+            You can now start meeting people who match your vibe.
+          </p>
+
+          <p className="text-sm font-medium text-gray-900 mb-2">Profile summary</p>
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-gray-50/50 p-4 space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-900">Looking for</span>
+              <span className="text-gray-600 text-right">
+                {lookingForLabels.length ? lookingForLabels.slice(0, 2).join(', ') + (lookingForLabels.length > 2 ? ', +' + (lookingForLabels.length - 2) : '') : '—'}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-900">Activities</span>
+              <span className="text-gray-600 text-right">
+                {interestLabels.length ? interestLabels.slice(0, 3).join(', ') + (interestLabels.length > 3 ? ', +' + (interestLabels.length - 3) : '') : '—'}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-900">Personality</span>
+              <span className="text-gray-600">—</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-900">Availability</span>
+              <span className="text-gray-600">Weekends, Anytime</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-900">Values</span>
+              <span className="text-gray-600">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 pb-8 pt-4">
+          <button
+            type="button"
+            onClick={() => navigate('/home')}
+            className="w-full h-12 rounded-xl bg-[#ED6C27] text-white font-semibold text-base"
+          >
+            Next
+          </button>
         </div>
       </div>
     );
@@ -1364,8 +2358,8 @@ const OnboardingPage = () => {
         </AnimatePresence>
         </div>
 
-        {/* Sign in link */}
-        {step === 'welcome' && (
+        {/* Sign in link (welcome artık avatar ekranında; method ekranında göster) */}
+        {step === 'method' && (
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Already have an account?{' '}

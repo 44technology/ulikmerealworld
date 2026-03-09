@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
   base: "/",
   server: {
     host: "0.0.0.0", // Tüm network interface'lerinde dinle (mobil erişim için)
-    port: 8080,
+    port: 8082,
     hmr: {
       overlay: false,
     },
