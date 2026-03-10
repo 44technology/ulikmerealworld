@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper, UserPlus, Check, X, Share2, Link2, Copy, Shield, ShieldCheck, UserCog, Tag, CheckCircle2, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Users, Plus, GraduationCap, Settings, Globe, Lock, Calendar, DollarSign, User, Send, AlertCircle, Heart, MessageCircle, PartyPopper, UserPlus, Check, X, Share2, Link2, Copy, Shield, ShieldCheck, UserCog, Tag, CheckCircle2, ChevronRight, Camera, Image as ImageIcon, MapPin } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import BottomNav from '@/components/layout/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -65,6 +65,8 @@ interface CommunityPost {
   id: string;
   content: string;
   image?: string;
+  isVideo?: boolean;
+  location?: string;
   userId: string;
   userDisplayName: string;
   userAvatar?: string;
@@ -150,6 +152,13 @@ export default function CommunityDetailPage() {
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
+  const [newPostMedia, setNewPostMedia] = useState<File | null>(null);
+  const [newPostMediaPreview, setNewPostMediaPreview] = useState<string | null>(null);
+  const [newPostIsVideo, setNewPostIsVideo] = useState(false);
+  const [newPostLocation, setNewPostLocation] = useState('');
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const newPostFileInputRef = useRef<HTMLInputElement>(null);
+  const newPostCameraInputRef = useRef<HTMLInputElement>(null);
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
   const [postComments, setPostComments] = useState<PostComment[]>([]);
   const [newCommentText, setNewCommentText] = useState('');
@@ -378,24 +387,77 @@ export default function CommunityDetailPage() {
   }, [id]);
 
   const handleCreatePost = () => {
-    if (!newPostContent.trim() || !user || !id) return;
-    const post: CommunityPost = {
+    if (!user || !id) return;
+    const hasContent = newPostContent.trim().length > 0;
+    const hasMedia = !!newPostMediaPreview;
+    if (!hasContent && !hasMedia) return;
+
+    const buildPost = (imageData?: string, isVideo?: boolean): CommunityPost => ({
       id: `post-${Date.now()}`,
       content: newPostContent.trim(),
+      image: imageData,
+      isVideo: isVideo ?? false,
+      location: newPostLocation.trim() || undefined,
       userId: user.id,
       userDisplayName: user.displayName || user.firstName || 'You',
       userAvatar: user.avatar,
       createdAt: new Date().toISOString(),
       likes: 0,
       comments: 0,
-    };
-    const next = [post, ...posts];
-    setPosts(next);
-    saveCommunityPosts(id, next);
+    });
+
+    if (newPostMedia && newPostMediaPreview) {
+      const next = [buildPost(newPostMediaPreview, newPostIsVideo), ...posts];
+      setPosts(next);
+      saveCommunityPosts(id, next);
+    } else {
+      const next = [buildPost(), ...posts];
+      setPosts(next);
+      saveCommunityPosts(id, next);
+    }
+
     setNewPostContent('');
+    setNewPostMedia(null);
+    setNewPostMediaPreview(null);
+    setNewPostIsVideo(false);
+    setNewPostLocation('');
     setShowCreatePost(false);
     toast.success('Post shared!');
   };
+
+  const handleNewPostMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewPostMedia(file);
+      setNewPostIsVideo(file.type.startsWith('video/'));
+      const reader = new FileReader();
+      reader.onloadend = () => setNewPostMediaPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
+  const handleAddLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Konum desteklenmiyor');
+      return;
+    }
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setNewPostLocation(`Konum: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        setIsGettingLocation(false);
+        toast.success('Konum eklendi');
+      },
+      () => {
+        setIsGettingLocation(false);
+        toast.error('Konum alınamadı');
+      }
+    );
+  };
+
+  const canSubmitNewPost = (newPostContent.trim().length > 0) || !!newPostMediaPreview;
 
   const openPostDetail = (post: CommunityPost) => {
     setSelectedPost(post);
@@ -681,21 +743,83 @@ export default function CommunityDetailPage() {
                     </motion.button>
                   ) : (
                     <div className="p-4 rounded-xl border border-border bg-card space-y-3">
-                      <Textarea
-                        placeholder="Share something with the community..."
-                        value={newPostContent}
-                        onChange={(e) => setNewPostContent(e.target.value)}
-                        rows={3}
-                        className="resize-none"
-                      />
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => { setShowCreatePost(false); setNewPostContent(''); }}>
-                          Cancel
+                      {/* Header: Cancel, Title, Post */}
+                      <div className="flex items-center justify-between mb-2">
+                        <Button variant="outline" size="icon" className="rounded-full h-9 w-9" onClick={() => { setShowCreatePost(false); setNewPostContent(''); setNewPostMedia(null); setNewPostMediaPreview(null); setNewPostIsVideo(false); setNewPostLocation(''); }}>
+                          <X className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" onClick={handleCreatePost} disabled={!newPostContent.trim()}>
-                          Post
+                        <span className="font-bold text-foreground">New Post</span>
+                        <Button size="icon" className="rounded-full h-9 w-9 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreatePost} disabled={!canSubmitNewPost}>
+                          <Check className="h-4 w-4" />
                         </Button>
                       </div>
+                      {/* User + placeholder */}
+                      <div className="flex gap-3">
+                        <UserAvatar src={user?.avatar} alt={user?.displayName || 'You'} size="md" />
+                        <Textarea
+                          placeholder="What's happening at your Activity?"
+                          value={newPostContent}
+                          onChange={(e) => setNewPostContent(e.target.value)}
+                          rows={2}
+                          className="resize-none flex-1 border-0 focus-visible:ring-0 bg-transparent p-0 min-h-[60px]"
+                        />
+                      </div>
+                      {/* Media preview */}
+                      {newPostMediaPreview && (
+                        <div className="relative rounded-lg overflow-hidden border border-border">
+                          {newPostIsVideo ? (
+                            <video src={newPostMediaPreview} controls playsInline className="w-full max-h-64 object-contain bg-black" />
+                          ) : (
+                            <img src={newPostMediaPreview} alt="" className="w-full max-h-64 object-cover" />
+                          )}
+                          <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full" onClick={() => { setNewPostMedia(null); setNewPostMediaPreview(null); setNewPostIsVideo(false); }}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      {newPostLocation && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-4 w-4 shrink-0" />
+                          {newPostLocation}
+                          <button type="button" onClick={() => setNewPostLocation('')} className="text-destructive ml-1">×</button>
+                        </p>
+                      )}
+                      {/* Camera, Photo, Location - orange/brown style like reference */}
+                      <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
+                        <button
+                          type="button"
+                          onClick={() => newPostCameraInputRef.current?.click()}
+                          className="flex items-center gap-2 text-[#b45309] hover:text-[#8a3f07] focus:outline-none"
+                        >
+                          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#fef3e2]">
+                            <Camera className="w-4 h-4" />
+                          </span>
+                          <span className="text-sm font-medium">Camera</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => newPostFileInputRef.current?.click()}
+                          className="flex items-center gap-2 text-[#b45309] hover:text-[#8a3f07] focus:outline-none"
+                        >
+                          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#fef3e2]">
+                            <ImageIcon className="w-4 h-4" />
+                          </span>
+                          <span className="text-sm font-medium">Photo</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAddLocation}
+                          disabled={isGettingLocation}
+                          className="flex items-center gap-2 text-[#b45309] hover:text-[#8a3f07] focus:outline-none disabled:opacity-50"
+                        >
+                          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#fef3e2]">
+                            <MapPin className="w-4 h-4" />
+                          </span>
+                          <span className="text-sm font-medium">{isGettingLocation ? '...' : 'Location'}</span>
+                        </button>
+                      </div>
+                      <input ref={newPostFileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleNewPostMediaSelect} />
+                      <input ref={newPostCameraInputRef} type="file" accept="image/*,video/*" capture="environment" className="hidden" onChange={handleNewPostMediaSelect} />
                     </div>
                   )}
                 </div>
@@ -734,8 +858,18 @@ export default function CommunityDetailPage() {
                         <p className="text-foreground text-sm whitespace-pre-wrap break-words">{post.content}</p>
                         {post.image && (
                           <div className="mt-3 rounded-lg overflow-hidden border border-border">
-                            <img src={post.image} alt="" className="w-full max-h-80 object-cover object-center" />
+                            {post.isVideo ? (
+                              <video src={post.image} controls playsInline className="w-full max-h-80 object-contain bg-black" />
+                            ) : (
+                              <img src={post.image} alt="" className="w-full max-h-80 object-cover object-center" />
+                            )}
                           </div>
+                        )}
+                        {post.location && (
+                          <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 shrink-0" />
+                            {post.location}
+                          </p>
                         )}
                         <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border text-muted-foreground">
                           <span className="flex items-center gap-1 text-xs">
@@ -1111,6 +1245,21 @@ export default function CommunityDetailPage() {
                   </button>
                 </div>
                 <p className="text-foreground text-sm whitespace-pre-wrap break-words">{selectedPost.content}</p>
+                {selectedPost.image && (
+                  <div className="mt-3 rounded-lg overflow-hidden border border-border">
+                    {selectedPost.isVideo ? (
+                      <video src={selectedPost.image} controls playsInline className="w-full max-h-80 object-contain bg-black" />
+                    ) : (
+                      <img src={selectedPost.image} alt="" className="w-full max-h-80 object-cover object-center" />
+                    )}
+                  </div>
+                )}
+                {selectedPost.location && (
+                  <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                    {selectedPost.location}
+                  </p>
+                )}
                 <div className="flex items-center gap-4 mt-3 pt-3 border-b border-border text-muted-foreground">
                   <span className="flex items-center gap-1 text-xs">
                     <Heart className="w-4 h-4" />

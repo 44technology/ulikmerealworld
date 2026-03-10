@@ -700,12 +700,7 @@ const OnboardingPage = () => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Auto-fill selfie with dummy data
-  useEffect(() => {
-    if (step === 'selfie' && !selfie) {
-      setSelfie('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400');
-    }
-  }, [step, selfie]);
+  // Auto-fill selfie removed – user must take their own selfie
 
   const renderInput = () => {
     if (!showInput) return null;
@@ -1264,7 +1259,7 @@ const OnboardingPage = () => {
 
       case 'selfie':
         return (
-          <div className="space-y-4 mt-4">
+          <div className="space-y-4 mt-0">
             <div className="text-center mb-4">
               <p className="text-base font-semibold text-foreground mb-1">
                 Take Your Selfie
@@ -2310,8 +2305,9 @@ const OnboardingPage = () => {
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-hero" />
       
-      <div className="relative flex-1 flex flex-col px-6 pt-12 pb-8 max-w-md mx-auto w-full">
-        {/* Lira Mascot */}
+      <div className={`relative flex-1 flex flex-col px-6 pb-8 max-w-md mx-auto w-full ${step === 'selfie' ? 'pt-6' : 'pt-12'}`}>
+        {/* Lira Mascot – hidden on selfie step */}
+        {step !== 'selfie' && (
         <motion.div 
           className="flex justify-center mb-8"
           initial={{ scale: 0, rotate: -180 }}
@@ -2326,8 +2322,10 @@ const OnboardingPage = () => {
             transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
           />
         </motion.div>
+        )}
 
-        {/* Chat bubbles */}
+        {/* Chat bubbles – hidden on selfie step (no message effects) */}
+        {step !== 'selfie' && (
         <div className="flex-1 space-y-3">
           <AnimatePresence>
             {currentMessages.slice(0, messageIndex).map((message, index) => (
@@ -2343,6 +2341,8 @@ const OnboardingPage = () => {
               </motion.div>
             ))}
           </AnimatePresence>
+        </div>
+        )}
 
         {/* Input area */}
         <AnimatePresence>
@@ -2356,7 +2356,6 @@ const OnboardingPage = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        </div>
 
         {/* Sign in link (welcome artık avatar ekranında; method ekranında göster) */}
         {step === 'method' && (
